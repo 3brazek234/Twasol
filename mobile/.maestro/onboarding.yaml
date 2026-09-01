@@ -1,0 +1,10 @@
+appId: com.tawasol.app
+---
+- launchApp
+- tapOn: "Sign Up"
+- inputText: "maestro@test.com"
+- tapOn: "Email"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Register"
+- assertVisible: "Verification"

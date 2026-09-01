@@ -1,0 +1,16 @@
+../service/src/socket/index.ts:        console.log(`[SOCKET AUTH] New handshake attempt — socket.id=${socket.id}, hasCookie=${!!cookieHeader}, hasAuthToken=${!!tokenAuth}`);
+../service/src/socket/index.ts:        if (process.env.DEBUG_SOCKET_AUTH) console.log(`[SOCKET AUTH] ✅ COOKIE AUTH SUCCESS — socket.id=${socket.id}, userId=${payload.userId}, role=${payload.role}`);
+../service/src/socket/index.ts:        if (process.env.DEBUG_SOCKET_AUTH) console.log(`[SOCKET AUTH] ✅ TOKEN AUTH SUCCESS — socket.id=${socket.id}, userId=${payload.userId}, role=${payload.role}`);
+../service/src/socket/index.ts:      if (process.env.DEBUG_SOCKET_AUTH) console.log(`[SOCKET AUTH] ❌ REJECTED — socket.id=${socket.id}, reason=${err.message}`);
+../service/src/socket/index.ts:      if (process.env.DEBUG_SOCKET_AUTH) console.log(`[SOCKET AUTH] ✅ Joined 'admins' room — socket.id=${socket.id}, userId=${userId}`);
+src/screens/verification/DocumentUploadScreen.tsx:      console.log('Error picking document:', err);
+src/screens/main/JobDetailScreen.tsx:        console.log('[Apply] onSuccess raw data:', JSON.stringify(data));
+src/screens/main/JobDetailScreen.tsx:        console.log('[Apply] conversationId:', convId);
+src/screens/main/JobDetailScreen.tsx:        console.log('[Apply] onError:', JSON.stringify(err));
+src/api/notifications.api.ts:  console.log('GET /notifications raw response:', JSON.stringify(response.data));
+src/api/jobs.api.ts:  console.log('[applyToJob] raw response:', JSON.stringify(res.data));
+src/socket/socketClient.ts:    console.log('Socket connected:', socketInstance?.id);
+src/socket/socketClient.ts:    console.log('Socket disconnected:', reason);
+../admin/src/api/socket.ts:      console.log('Admin socket connected');
+../admin/src/api/socket.ts:      console.log(`Admin socket disconnected: ${reason}`);
+../admin/src/api/socket.ts:      console.log('Admin socket reconnected');

@@ -1,0 +1,63 @@
+mobile/src/stores/chatStore.ts:25:      socket?.emit('conversation:leave', { conversationId: currentId });
+mobile/src/stores/chatStore.ts:31:      socket?.emit('conversation:join', { conversationId });
+mobile/src/stores/chatStore.ts:86:      socket.emit('message:send', { 
+mobile/src/utils/upload.ts:40:    xhr.send({ uri: localUri, type: contentType, name: localUri.split('/').pop() } as any);
+mobile/src/schemas/message.schema.ts:8:  type: z.enum(['text', 'offer', 'offer_accepted', 'offer_rejected']).default('text'),
+mobile/src/schemas/message.schema.ts:11:  status: z.enum(['pending', 'sent', 'error']).default('sent'), // local state
+mobile/src/schemas/auth.schema.ts:9:  verificationStatus: z.enum(['UNVERIFIED', 'PENDING_UPLOAD', 'PENDING', 'APPROVED', 'REJECTED']).default('UNVERIFIED'),
+mobile/src/schemas/auth.schema.ts:10:  subscriptionStatus: z.enum(['NOT_REQUIRED', 'PENDING_PAYMENT', 'ACTIVE', 'EXPIRED', 'SUSPENDED']).default('PENDING_PAYMENT'),
+mobile/src/schemas/auth.schema.ts:11:  accountMode: z.enum(['GIG', 'HIRING', 'BOTH']).default('BOTH'),
+mobile/src/screens/auth/LanguageSelectScreen.tsx:38:        const registerRes = await apiClient.post('/auth/register', {
+mobile/src/screens/auth/LanguageSelectScreen.tsx:68:      Alert.alert('Registration Failed', message);
+mobile/src/screens/auth/RegisterScreen.tsx:47:      const registerRes = await apiClient.post('/auth/register', {
+mobile/src/screens/auth/RegisterScreen.tsx:66:      Alert.alert('Registration Failed', message);
+mobile/src/screens/auth/RegisterScreen.tsx:195:              <Text className="text-white text-lg font-body font-bold">{t('auth.registerButton')}</Text>
+mobile/src/screens/auth/RegisterScreen.tsx:200:              <Text className="text-muted text-sm font-body">{t('auth.haveAccount')}</Text>
+mobile/src/screens/verification/DocumentUploadScreen.tsx:39:      const { data: urlData } = await apiClient.post('/verification/upload-url', {
+mobile/src/screens/verification/DocumentUploadScreen.tsx:53:      await apiClient.post('/verification/confirm', {
+mobile/src/screens/verification/AccountModeScreen.tsx:27:        Alert.alert('Error', 'Failed to update account mode. Please try again.');
+mobile/src/screens/main/SubscriptionScreen.tsx:31:      const res = await apiClient.get('/subscription/plans');
+mobile/src/screens/main/SubscriptionScreen.tsx:67:      const { data: urlData } = await apiClient.post('/subscription/receipt-upload-url', {
+mobile/src/screens/main/SubscriptionScreen.tsx:80:      await apiClient.post('/subscription/submit', {
+mobile/src/screens/main/LawyerProfileScreen.tsx:36:      Alert.alert('Error', 'Failed to start conversation.');
+mobile/src/screens/main/ChatScreen.tsx:13:const { width } = Dimensions.get('window');
+mobile/src/screens/main/ChatScreen.tsx:114:      setOfferAmount('');
+mobile/src/screens/main/ChatScreen.tsx:118:    setInputText('');
+mobile/src/screens/main/ChangePasswordScreen.tsx:13:      Alert.alert('Error', 'Please fill out all fields.');
+mobile/src/screens/main/ChangePasswordScreen.tsx:18:      Alert.alert('Error', 'New passwords do not match.');
+mobile/src/screens/main/ChangePasswordScreen.tsx:23:      Alert.alert('Error', 'Password must be at least 8 characters long.');
+mobile/src/screens/main/ChangePasswordScreen.tsx:31:      Alert.alert('Success', 'Password has been updated.', [
+mobile/src/screens/main/JobDetailScreen.tsx:49:        Alert.alert('Translation failed', err.message || 'Could not translate case description.');
+mobile/src/screens/main/JobDetailScreen.tsx:70:        Alert.alert('System Alert', err.message || 'Application could not be submitted.');
+mobile/src/screens/main/JobDetailScreen.tsx:112:              t('jobDetail.scanningPresence')
+mobile/src/screens/main/JobDetailScreen.tsx:114:              t('jobDetail.activeLawyers', { count: activeLawyers?.length || 0 })
+mobile/src/screens/main/JobDetailScreen.tsx:121:      <Text style={styles.sectionHeader}>{t('jobDetail.description').toUpperCase()}</Text>
+mobile/src/screens/main/JobDetailScreen.tsx:134:                {isTranslated ? 'Show Original' : t('jobDetail.translate')}
+mobile/src/screens/main/JobDetailScreen.tsx:144:            <Text style={styles.machineTranslatedLabel}>• {t('jobDetail.machineTranslated')}</Text>
+mobile/src/screens/main/JobDetailScreen.tsx:174:                  <Text style={styles.applyButtonText}>{t('jobDetail.applyButton')}</Text>
+mobile/src/screens/main/EditProfileScreen.tsx:37:      Alert.alert('Error', 'Could not save profile changes.');
+mobile/src/screens/main/SettingsScreen.tsx:23:      t('settings.logout'),
+mobile/src/screens/main/SettingsScreen.tsx:35:      t('settings.restartTitle'),
+mobile/src/screens/main/SettingsScreen.tsx:36:      t('settings.restartBody'),
+mobile/src/screens/main/SettingsScreen.tsx:51:              t('settings.restartTitle'),
+mobile/src/screens/main/SettingsScreen.tsx:52:              t('settings.restartBody')
+mobile/src/screens/main/SettingsScreen.tsx:68:          Alert.alert('Account Deleted', 'Your account has been deleted.');
+mobile/src/screens/main/SettingsScreen.tsx:85:        const res = await api.get('/support/conversations/mine');
+mobile/src/screens/main/SettingsScreen.tsx:89:          const createRes = await api.post('/support/conversations');
+mobile/src/screens/main/SettingsScreen.tsx:105:      Alert.alert('Error', `Could not open support chat: ${error.message || JSON.stringify(error)}`);
+mobile/src/screens/main/SettingsScreen.tsx:171:            label={t('settings.language')} 
+mobile/src/screens/main/SettingsScreen.tsx:172:            value={i18n.language === 'ar' ? t('settings.arabic') : t('settings.english')} 
+mobile/src/screens/main/JobsFeedScreen.tsx:70:    { label: t('docket.activeCases'), value: 'OPEN' },
+mobile/src/screens/main/JobsFeedScreen.tsx:71:    { label: t('docket.inMediation'), value: 'NEGOTIATING' },
+mobile/src/screens/main/JobsFeedScreen.tsx:72:    { label: t('docket.allBriefs'), value: undefined },
+mobile/src/screens/main/JobsFeedScreen.tsx:93:                placeholder={t('docket.searchPlaceholder')}
+mobile/src/screens/main/JobsFeedScreen.tsx:127:          <Text className="text-docket text-base font-bodyMedium">{t('error')}</Text>
+mobile/src/screens/main/JobsFeedScreen.tsx:166:              headline={t('docket.noBriefsFound')}
+mobile/src/screens/main/JobsFeedScreen.tsx:167:              body={t('docket.noBriefsBody')}
+mobile/src/screens/main/JobsFeedScreen.tsx:168:              ctaText={t('docket.manageJurisdictions')}
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:39:        Alert.alert('Brief Posted', 'The delegated brief has been published to the docket.', [
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:45:        Alert.alert('System Error', errorMsg);
+mobile/src/components/FloatingTabBar.tsx:8:const { width } = Dimensions.get('window');
+mobile/src/hooks/usePushNotifications.ts:64:          await apiClient.post('/users/push-token', { token: token.data });
+mobile/src/hooks/useCourts.ts:63:      Alert.alert('Could not add court', msg);
+mobile/src/api/verification.api.ts:5:    const res = await apiClient.get('/verification/status');

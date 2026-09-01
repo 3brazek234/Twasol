@@ -1,0 +1,9 @@
+appId: com.tawasol.app
+---
+- launchApp
+- tapOn: "Settings"
+- tapOn: "Contact Support"
+- assertVisible: "Support Chat"
+- inputText: "Hello support"
+- tapOn: "Send"
+- assertVisible: "Hello support"

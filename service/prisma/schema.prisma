@@ -1,0 +1,451 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  LAWYER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Locale {
+  EN
+  AR
+}
+
+enum JobStatus {
+  OPEN
+  NEGOTIATING
+  AGREED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum MessageType {
+  TEXT
+  OFFER
+  SYSTEM
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING_UPLOAD
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  NEW_JOB
+  JOB_INVITE
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  NEW_MESSAGE
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  NEW_USER_SIGNUP
+  SUBSCRIPTION_PAYMENT_PENDING  // الإيصال قيد المراجعة
+  SUBSCRIPTION_ACTIVATED        // تم تفعيل الاشتراك
+  SUBSCRIPTION_REJECTED         // تم رفض الإيصال
+}
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum AccountMode {
+  GIG
+  HIRING
+  BOTH
+}
+
+enum ConversationType {
+  JOB
+  DIRECT_INQUIRY
+  SUPPORT
+}
+
+enum SupportStatus {
+  OPEN
+  RESOLVED
+}
+
+enum CourtType {
+  PARTIAL
+  PRIMARY
+  APPEAL
+  CASSATION
+}
+
+// حالة اشتراك المحامي في التطبيق
+enum SubscriptionStatus {
+  NOT_REQUIRED    // للمستخدمين الإداريين
+  PENDING_PAYMENT // الحساب موثق، لكن ينتظر تأكيد الدفع
+  ACTIVE          // الاشتراك نشط وسارٍ
+  EXPIRED         // انتهت صلاحية الاشتراك
+  SUSPENDED       // تم إيقاف الاشتراك يدوياً
+}
+
+// طريقة الدفع (يدوي فقط في الوقت الحالي)
+enum PaymentMethod {
+  MANUAL_BANK_TRANSFER // تحويل بنكي
+  MANUAL_VODAFONE_CASH // فودافون كاش
+  MANUAL_CASH          // نقدي / مقر الشركة
+}
+
+// حالة إيصال الدفع
+enum PaymentStatus {
+  PENDING // تم إرسال الإيصال وفي انتظار مراجعة الإدارة
+  SUCCESS // تم تأكيد الدفع من الإدارة
+  FAILED  // الإيصال مرفوض
+}
+
+model Governorate {
+  id     String  @id @default(uuid())
+  nameAr String  @map("name_ar")
+  nameEn String  @map("name_en")
+  courts Court[]
+  users  User[]
+
+  @@map("governorates")
+}
+
+model Court {
+  id            String     @id @default(uuid())
+  nameAr        String     @map("name_ar")
+  nameEn        String     @map("name_en")
+  type          CourtType
+  governorateId String?    @map("governorate_id")
+  parentCourtId String?    @map("parent_court_id")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  governorate   Governorate?  @relation(fields: [governorateId], references: [id])
+  parentCourt   Court?        @relation("CourtHierarchy", fields: [parentCourtId], references: [id])
+  childCourts   Court[]       @relation("CourtHierarchy")
+  lawyers       LawyerCourt[]
+  jobs          Job[]
+
+  @@map("courts")
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String             @map("password_hash")
+  role               Role               @default(LAWYER)
+  accountMode        AccountMode        @default(BOTH) @map("account_mode")
+  fullName           String             @map("full_name")
+  barNumber          String?            @unique @map("bar_number")
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  preferredLocale    Locale             @default(EN) @map("preferred_locale")
+  bio                String?
+  isActive           Boolean            @default(false) @map("is_active")
+  canActivate        Boolean            @default(true) @map("can_activate")
+  isOnline           Boolean            @default(false) @map("is_online")
+  deletedAt             DateTime?          @map("deleted_at")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  governorateId         String?            @map("governorate_id")
+  // ─── حقول نقابة المحامين والاشتراك ──────────────────────────────────────────
+  barId                 String?            @map("bar_id")                   // رقم القيد بنقابة المحامين
+  subscriptionStatus    SubscriptionStatus @default(PENDING_PAYMENT)         @map("subscription_status")
+  subscriptionExpiresAt DateTime?          @map("subscription_expires_at")  // تاريخ انتهاء الاشتراك
+  // ─── الإشعارات ─────────────────────────────────────────────────────────────
+  pushTokens            String[]           @default([]) @map("push_tokens")  // Expo Push Tokens
+
+  governorate          Governorate?              @relation(fields: [governorateId], references: [id])
+  courts               LawyerCourt[]
+  postedJobs           Job[]                     @relation("PostedJobs")
+  assignedJobs         Job[]                     @relation("AssignedJobs")
+  assignedSupportConversations Conversation[]    @relation("AssignedSupportConversations")
+  applications         JobApplication[]
+  messages             Message[]
+  notifications        Notification[]
+  participants         ConversationParticipant[]
+  verificationDocs     VerificationDocument[]
+  reviewsGiven         Review[]                  @relation("ReviewsGiven")
+  reviewsReceived      Review[]                  @relation("ReviewsReceived")
+  reportsSubmitted     Report[]                  @relation("ReportsSubmitted")
+  reportsReceived      Report[]                  @relation("ReportsReceived")
+  invitedJobs          Job[]                     @relation("InvitedJobs")
+  auditLogs            AuditLog[]
+  conflictDeclarations ConflictDeclaration[]
+  subscriptionPayments SubscriptionPayment[]     // سجل مدفوعات الاشتراك
+
+  @@index([isActive, isOnline])
+  @@map("users")
+}
+
+model LawyerCourt {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  courtId   String   @map("court_id")
+  isActive     Boolean  @default(true) @map("is_active")
+  canActivate  Boolean  @default(true) @map("can_activate")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courtId])
+  @@index([courtId, isActive])
+  @@map("lawyer_courts")
+}
+
+model Job {
+  id               String    @id @default(uuid())
+  title            String
+  description      String
+  postedByUserId   String    @map("posted_by_user_id")
+  status           JobStatus @default(OPEN)
+  salaryMin        Decimal?  @map("salary_min") @db.Decimal(12, 2)
+  salaryMax        Decimal?  @map("salary_max") @db.Decimal(12, 2)
+  agreedSalary     Decimal?  @map("agreed_salary") @db.Decimal(12, 2)
+  currency         String    @default("EGP")
+  contentLocale    Locale?   @map("content_locale")
+  assignedLawyerId String?   @map("assigned_lawyer_id")
+  invitedLawyerId  String?   @map("invited_lawyer_id")
+  courtId          String?   @map("court_id")
+  version          Int       @default(0)
+  expiresAt        DateTime? @map("expires_at")
+  searchVector     Unsupported("tsvector")? @map("search_vector")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  postedBy       User             @relation("PostedJobs", fields: [postedByUserId], references: [id])
+  assignedLawyer User?            @relation("AssignedJobs", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
+  invitedLawyer  User?            @relation("InvitedJobs", fields: [invitedLawyerId], references: [id], onDelete: SetNull)
+  court          Court?           @relation(fields: [courtId], references: [id])
+  applications     JobApplication[]
+  conversations    Conversation[]
+  reviews          Review[]
+  reports          Report[]
+  conflictDeclarations ConflictDeclaration[]
+
+  @@index([status])
+  @@index([postedByUserId])
+  @@index([assignedLawyerId])
+  @@index([courtId])
+  @@map("jobs")
+}
+
+
+model JobApplication {
+  id        String            @id @default(uuid())
+  jobId     String            @map("job_id")
+  lawyerId  String            @map("lawyer_id")
+  status    ApplicationStatus @default(PENDING)
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  lawyer User @relation(fields: [lawyerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, lawyerId])
+  @@map("job_applications")
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  jobId     String?  @map("job_id")
+  type      ConversationType @default(JOB) @map("type")
+  supportStatus SupportStatus? @map("support_status")
+  assignedAdminId String? @map("assigned_admin_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job          Job?                      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  assignedAdmin User?                      @relation("AssignedSupportConversations", fields: [assignedAdminId], references: [id])
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String @id @default(uuid())
+  conversationId String @map("conversation_id")
+  userId         String @map("user_id")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  senderId       String       @map("sender_id")
+  type           MessageType  @default(TEXT)
+  content        String
+  offerAmount    Decimal?     @map("offer_amount") @db.Decimal(12, 2)
+  offerStatus    OfferStatus? @map("offer_status")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  payload   Json
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model VerificationDocument {
+  id           String             @id @default(uuid())
+  userId       String             @map("user_id")
+  documentType String             @map("document_type")
+  fileKey      String             @map("file_key")
+  status       VerificationStatus @default(PENDING_UPLOAD)
+  reviewedBy   String?            @map("reviewed_by")
+  reviewNotes  String?            @map("review_notes")
+  submittedAt  DateTime           @default(now()) @map("submitted_at")
+  reviewedAt   DateTime?          @map("reviewed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("verification_documents")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  jobId      String   @map("job_id")
+  reviewerId String   @map("reviewer_id")
+  revieweeId String   @map("reviewee_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  job      Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  reviewer User @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee User @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+
+  @@unique([jobId, reviewerId])
+  @@index([revieweeId])
+  @@map("reviews")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  before     Json?
+  after      Json?
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+
+
+
+model ConflictDeclaration {
+  id         String   @id @default(uuid())
+  jobId      String   @map("job_id")
+  lawyerId   String   @map("lawyer_id")
+  ipAddress  String?  @map("ip_address")
+  declaredAt DateTime @default(now()) @map("declared_at")
+
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  lawyer User @relation(fields: [lawyerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, lawyerId])
+  @@map("conflict_declarations")
+}
+
+model Report {
+  id              String       @id @default(uuid())
+  reporterId      String       @map("reporter_id")
+  reportedUserId  String?      @map("reported_user_id")
+  reportedJobId   String?      @map("reported_job_id")
+  reason          String
+  status          ReportStatus @default(OPEN)
+  resolutionNotes String?      @map("resolution_notes")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  reporter     User  @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  reportedJob  Job?  @relation(fields: [reportedJobId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([reporterId])
+  @@map("reports")
+}
+
+// ─── سجل مدفوعات الاشتراك ──────────────────────────────────────────────────────
+// يسجّل كل طلب اشتراك مع إيصال الدفع لمراجعة الأدمن وتفعيل الحساب
+model SubscriptionPayment {
+  id             String        @id @default(uuid())
+  userId         String        @map("user_id")
+
+  // تفاصيل المبلغ والمدة
+  amountPiasters Int           @map("amount_piasters") // المبلغ بالقروش (50000 = 500 جنيه)
+  currency       String        @default("EGP")
+  paymentMethod  PaymentMethod @map("payment_method")
+  status         PaymentStatus @default(PENDING)
+  durationMonths Int           @default(12)            @map("duration_months") // مدة الاشتراك بالأشهر
+
+  // إثبات الدفع المرفوع من المحامي
+  receiptFileKey String?       @map("receipt_file_key") // مفتاح الملف في R2 Storage
+  senderNumber   String?       @map("sender_number")    // رقم الهاتف المحوّل منه (فودافون كاش)
+
+  // بيانات مراجعة الأدمن
+  processedAt    DateTime?     @map("processed_at")
+  processedBy    String?       @map("processed_by")     // معرف الأدمن الذي راجع الطلب
+  notes          String?       // سبب الرفض أو ملاحظات الأدمن للمحامي
+
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt      @map("updated_at")
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status])
+  @@map("subscription_payments")
+}

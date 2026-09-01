@@ -1,0 +1,15 @@
+{
+  "name": "tawasol-workspace",
+  "private": true,
+  "workspaces": [
+    "admin",
+    "mobile",
+    "service"
+  ],
+  "scripts": {
+    "dev:service": "npm run dev --workspace=service",
+    "dev:admin": "npm run dev --workspace=admin",
+    "dev:mobile": "npm run start --workspace=mobile",
+    "install:all": "npm install"
+  }
+}

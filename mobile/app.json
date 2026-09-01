@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "extra": {
+      "supportsRTL": true
+    },
+    "name": "Tawasol",
+    "slug": "tawasol-mobile",
+    "scheme": "wakeel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9FAFB",
+      "dark": {
+        "image": "./assets/splash-dark.png",
+        "backgroundColor": "#14181F"
+      }
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rebuy.tawasol",
+      "infoPlist": {
+        "CFBundleDisplayName": "Tawasol"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#F9FAFB"
+      },
+      "package": "com.rebuy.tawasol"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

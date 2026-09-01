@@ -1,0 +1,214 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
+import { MotiView, AnimatePresence } from 'moti';
+import { CreditCard, Upload, FileCheck, X, AlertCircle } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import Toast from 'react-native-toast-message';
+import { useAuthStore } from '../../stores/authStore';
+import { apiClient } from '../../api/client';
+import { uploadFileToR2 } from '../../utils/upload';
+import { tokens } from '../../theme/tokens';
+
+export const SubscriptionScreen = () => {
+  const { user, hydrate } = useAuthStore();
+  const [plans, setPlans] = useState<any[]>([]);
+  const [instructions, setInstructions] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'MANUAL_BANK_TRANSFER' | 'MANUAL_VODAFONE_CASH'>('MANUAL_VODAFONE_CASH');
+  
+  const [file, setFile] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await apiClient.get('/subscription/plans');
+      setPlans(res.data.data.plans);
+      setInstructions(res.data.data.paymentInstructions);
+      if (res.data.data.plans.length > 0) {
+        setSelectedPlanId(res.data.data.plans[0].id);
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'خطأ', text2: 'تعذر جلب خطط الاشتراك' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setFile(result.assets[0]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      Toast.show({ type: 'error', text1: 'مطلوب إيصال', text2: 'يرجى إرفاق صورة إيصال التحويل' });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // 1. Get presigned URL
+      const { data: urlData } = await apiClient.post('/subscription/receipt-upload-url', {
+        contentType: file.mimeType || 'image/jpeg',
+      });
+
+      // 2. Upload to R2
+      await uploadFileToR2({
+        localUri: file.uri,
+        presignedUrl: urlData.data.uploadUrl,
+        contentType: file.mimeType || 'image/jpeg',
+        onProgress: (progress) => setUploadProgress(progress),
+      });
+
+      // 3. Submit Subscription
+      await apiClient.post('/subscription/submit', {
+        planId: selectedPlanId,
+        paymentMethod,
+        receiptFileKey: urlData.data.fileKey,
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'تم استلام طلبك',
+        text2: 'جاري مراجعة الإيصال من الإدارة',
+      });
+
+      // Hydrate state (should remain un-active but perhaps we want to show a success message)
+      await hydrate();
+
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'حدث خطأ', text2: err.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <View className="flex-1 justify-center items-center bg-paper"><ActivityIndicator size="large" color="#1B2A4A" /></View>;
+  }
+
+  // If user has a pending request
+  if (user?.subscriptionStatus === 'PENDING_PAYMENT' && user?.verificationStatus === 'APPROVED' && user?.isActive === false && !isLoading && file && isUploading === false) {
+    // Wait, the API doesn't push a distinct state to the frontend for 'PENDING_REVIEW' of the receipt.
+    // The backend `SubscriptionService.submitPayment` keeps subscriptionStatus as PENDING_PAYMENT but creates a SubscriptionPayment record.
+    // Let's just let the user see the form, but they will get a 409 Conflict if they try to submit again.
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-paper">
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 100 }}>
+        
+        <View className="items-center mb-8">
+          <View className="w-16 h-16 rounded-full bg-signal/10 justify-center items-center mb-4">
+            <CreditCard size={32} color={tokens.colors.signal} />
+          </View>
+          <Text className="text-2xl font-displayBold text-ink text-center mb-2">تفعيل الاشتراك</Text>
+          <Text className="text-base text-muted text-center font-body">
+            حسابك موثق بنجاح. يرجى اختيار الباقة ورفع إيصال الدفع للبدء.
+          </Text>
+        </View>
+
+        {/* Plans Selection */}
+        <Text className="text-sm font-bodySemibold text-muted mb-3">اختر الباقة المناسبة</Text>
+        <View className="flex-row flex-wrap gap-4 mb-8">
+          {plans.map(plan => (
+            <TouchableOpacity
+              key={plan.id}
+              className={`flex-1 p-4 rounded-xl border-2 ${selectedPlanId === plan.id ? 'border-signal bg-signal/5' : 'border-line bg-white'}`}
+              onPress={() => setSelectedPlanId(plan.id)}
+            >
+              <Text className="text-lg font-bodySemibold text-ink mb-1">{plan.nameAr}</Text>
+              <Text className="text-xl font-displayBold text-signal">{(plan.amountPiasters / 100).toFixed(0)} ج.م</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Payment Methods */}
+        <Text className="text-sm font-bodySemibold text-muted mb-3">طريقة الدفع (تحويل يدوي)</Text>
+        <View className="flex-row gap-4 mb-6">
+          <TouchableOpacity 
+            className={`px-4 py-2 rounded-full border ${paymentMethod === 'MANUAL_VODAFONE_CASH' ? 'border-signal bg-signal/10' : 'border-line'}`}
+            onPress={() => setPaymentMethod('MANUAL_VODAFONE_CASH')}
+          >
+            <Text className={`font-bodySemibold ${paymentMethod === 'MANUAL_VODAFONE_CASH' ? 'text-signal' : 'text-muted'}`}>فودافون كاش</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            className={`px-4 py-2 rounded-full border ${paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'border-signal bg-signal/10' : 'border-line'}`}
+            onPress={() => setPaymentMethod('MANUAL_BANK_TRANSFER')}
+          >
+            <Text className={`font-bodySemibold ${paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'text-signal' : 'text-muted'}`}>تحويل بنكي</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Instructions */}
+        <View className="bg-white p-4 rounded-xl border border-line mb-8">
+          {paymentMethod === 'MANUAL_VODAFONE_CASH' && (
+            <>
+              <Text className="font-body text-ink mb-2">يرجى تحويل المبلغ إلى الرقم التالي:</Text>
+              <Text className="text-xl font-monoLarge text-signal text-center my-2 select-all">{instructions?.MANUAL_VODAFONE_CASH?.phoneNumber}</Text>
+              <Text className="font-body text-muted text-center text-sm">باسم: {instructions?.MANUAL_VODAFONE_CASH?.accountName}</Text>
+            </>
+          )}
+          {paymentMethod === 'MANUAL_BANK_TRANSFER' && (
+            <>
+              <Text className="font-body text-ink mb-2">يرجى التحويل إلى الحساب التالي ({instructions?.MANUAL_BANK_TRANSFER?.bankName}):</Text>
+              <Text className="font-mono text-signal mt-2">رقم الحساب: {instructions?.MANUAL_BANK_TRANSFER?.accountNumber}</Text>
+              <Text className="font-mono text-signal text-xs mt-1">IBAN: {instructions?.MANUAL_BANK_TRANSFER?.iban}</Text>
+              <Text className="font-body text-muted text-sm mt-2">باسم: {instructions?.MANUAL_BANK_TRANSFER?.accountName}</Text>
+            </>
+          )}
+        </View>
+
+        {/* Upload Receipt */}
+        <Text className="text-sm font-bodySemibold text-muted mb-3">إرفاق إيصال التحويل (سكرين شوت)</Text>
+        <TouchableOpacity
+          className={`h-40 border-2 rounded-2xl bg-white justify-center items-center mb-8 ${file ? 'border-signal bg-signal/5' : 'border-line border-dashed'}`}
+          onPress={pickImage}
+        >
+          {!file ? (
+            <View className="items-center">
+              <Upload size={24} color={tokens.colors.signal} className="mb-2" />
+              <Text className="font-body text-ink">اضغط لاختيار صورة الإيصال</Text>
+            </View>
+          ) : (
+            <View className="items-center">
+              <FileCheck size={28} color="#38A169" className="mb-2" />
+              <Text className="font-body text-success">تم اختيار الملف بنجاح</Text>
+              <Text className="font-body text-muted text-xs mt-1">اضغط للتغيير</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+      </ScrollView>
+
+      {/* Footer Action */}
+      <View className="absolute bottom-0 w-full p-6 bg-paper border-t border-line">
+        <TouchableOpacity
+          className={`h-14 rounded-xl justify-center items-center ${!file || isUploading ? 'bg-line opacity-60' : 'bg-signal'}`}
+          onPress={handleSubmit}
+          disabled={!file || isUploading}
+        >
+          <Text className="text-white text-base font-bodySemibold">
+            {isUploading ? `جاري الإرسال (${uploadProgress}%)...` : 'إرسال طلب التفعيل'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};

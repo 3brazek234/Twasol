@@ -1,0 +1,8 @@
+appId: com.tawasol.app
+---
+- launchApp
+- tapOn: "Post a Job"
+- inputText: "Test Job"
+- tapOn: "Next"
+- tapOn: "Publish"
+- assertVisible: "Job Posted"

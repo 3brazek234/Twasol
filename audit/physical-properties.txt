@@ -1,0 +1,51 @@
+mobile/src/navigation/stacks/MainTabNavigator.tsx:56:              <View style={{ paddingRight: 16 }}>
+mobile/src/navigation/stacks/MainTabNavigator.tsx:63:              <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 16 }}>
+mobile/src/navigation/stacks/MainTabNavigator.tsx:71:                  style={{ marginLeft: 16 }}
+mobile/src/navigation/stacks/MainTabNavigator.tsx:79:                      style={{ marginLeft: 16 }}
+mobile/src/navigation/stacks/MainTabNavigator.tsx:85:                      style={{ marginLeft: 16 }}
+mobile/src/screens/auth/AccountModeScreen.tsx:124:    marginLeft: tokens.spacing.md,
+mobile/src/screens/main/ConversationsListScreen.tsx:123:    marginLeft: tokens.spacing.sm, // Margin on the left since avatar is on the right
+mobile/src/screens/main/ConversationsListScreen.tsx:128:    right: 0,
+mobile/src/screens/main/NotificationsScreen.tsx:142:    marginRight: tokens.spacing.md,
+mobile/src/screens/main/NotificationsScreen.tsx:161:  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: tokens.colors.docket, marginLeft: 10 },
+mobile/src/screens/main/ChatScreen.tsx:221:                <DollarSign size={16} color={colors.signal} style={{ marginRight: 2 }} />
+mobile/src/screens/main/ChatScreen.tsx:246:          <View style={[styles.textInputWrapper, isSupport && { marginRight: spacing.sm }]}>
+mobile/src/screens/main/ChatScreen.tsx:293:    marginRight: 4,
+mobile/src/screens/main/ChatScreen.tsx:326:    marginRight: 10,
+mobile/src/screens/main/ChatScreen.tsx:398:    marginLeft: spacing.xs,
+mobile/src/screens/main/ChatScreen.tsx:422:    marginRight: spacing.sm,
+mobile/src/screens/main/HiringHomeScreen.tsx:17:            <Search size={16} color={tokens.colors.signal} style={{ marginRight: 6 }} />
+mobile/src/screens/main/HiringHomeScreen.tsx:29:            <Plus size={20} color={tokens.colors.white} style={{ marginRight: 8 }} />
+mobile/src/screens/main/JobDetailScreen.tsx:97:            <Landmark size={20} color={tokens.colors.ink} style={{ marginRight: 8 }} />
+mobile/src/screens/main/JobDetailScreen.tsx:107:          <Users size={16} color={tokens.colors.signal} style={{ marginRight: 8 }} />
+mobile/src/screens/main/JobDetailScreen.tsx:171:                  <Gavel size={18} color="#fff" style={{ marginRight: 8 }} />
+mobile/src/screens/main/JobDetailScreen.tsx:243:    marginLeft: 4,
+mobile/src/screens/main/JobDetailScreen.tsx:269:    marginLeft: 6,
+mobile/src/screens/main/JobDetailScreen.tsx:327:    marginLeft: 6,
+mobile/src/screens/main/SettingsScreen.tsx:202:    marginLeft: tokens.spacing.sm,
+mobile/src/screens/main/FindLawyersScreen.tsx:115:    marginRight: 8,
+mobile/src/screens/main/PostJob/PostJobStepCourts.tsx:60:                <TouchableOpacity onPress={() => removeCourt(id)} hitSlop={10} style={{ marginLeft: 6 }}>
+mobile/src/screens/main/PostJob/PostJobStepCourts.tsx:88:        <Plus size={20} color={tokens.colors.signal} style={{ marginRight: 8 }} />
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:313:                style={[styles.primaryButton, step === 1 && { marginLeft: 0 }]}
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:318:                <ChevronRight size={18} color={tokens.colors.white} style={{ marginLeft: 4 }} />
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:332:                    <Check size={18} color={tokens.colors.white} style={{ marginLeft: 8 }} />
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:420:    marginRight: tokens.spacing.sm,
+mobile/src/screens/main/PostJob/PostJobScreen.tsx:508:    marginLeft: tokens.spacing.md,
+mobile/src/screens/main/MyCourtsScreen.tsx:92:        <Plus size={18} color="#fff" style={{ marginRight: 6 }} />
+mobile/src/screens/main/MyCourtsScreen.tsx:161:    marginRight: 4, 
+mobile/src/screens/main/MyCourtsScreen.tsx:185:    marginLeft: tokens.spacing.md,
+mobile/src/screens/main/MyCourtsScreen.tsx:205:    right: 20, 
+mobile/src/screens/main/MyCourtsScreen.tsx:222:    marginLeft: 6 
+mobile/src/components/LeaveReviewModal.tsx:56:            <TouchableOpacity onPress={handleClose} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+mobile/src/components/CourtPicker.tsx:314:    marginLeft: tokens.spacing.sm,
+mobile/src/components/CourtPicker.tsx:329:    marginRight: 4,
+mobile/src/components/CourtPulse.tsx:132:    marginRight: 6,
+mobile/src/components/CourtPulse.tsx:151:    marginLeft: 8,
+mobile/src/components/VerificationStatusBanner.tsx:93:    marginRight: tokens.spacing.sm,
+mobile/src/components/VerificationStatusBanner.tsx:111:    marginLeft: tokens.spacing.sm,
+mobile/src/components/ModeSwitcher.tsx:39:    marginLeft: spacing.md,
+mobile/src/components/ModeSwitcher.tsx:57:    left: 2,
+mobile/src/components/SettingsRow.tsx:93:    paddingRight: tokens.spacing.md,
+mobile/src/components/SettingsRow.tsx:96:    marginRight: tokens.spacing.md,
+mobile/src/components/SettingsRow.tsx:124:    marginRight: tokens.spacing.sm,
+mobile/src/components/StarRating.tsx:68:    marginRight: 4,

@@ -1,0 +1,17 @@
+import { z } from 'zod';
+
+export const JobSchema = z.object({
+  id: z.string().uuid(),
+  courtId: z.string().uuid(),
+  title: z.string(),
+  description: z.string(),
+  status: z.enum(['OPEN', 'NEGOTIATING', 'ASSIGNED', 'COMPLETED', 'CANCELLED']),
+  posterId: z.string().uuid(),
+  assignedExecutorId: z.string().uuid().nullable().optional(),
+  offerAmount: z.number().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export type Job = z.infer<typeof JobSchema>;
+export const JobFeedResponseSchema = z.array(JobSchema);

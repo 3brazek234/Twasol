@@ -1,0 +1,100 @@
+{
+  "common": {
+    "back": "رجوع",
+    "next": "التالي",
+    "save": "حفظ التغييرات",
+    "saving": "جاري الحفظ...",
+    "cancel": "إلغاء",
+    "error": "خطأ",
+    "success": "نجاح",
+    "search": "بحث...",
+    "currency": "دولار"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "registerTitle": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "barNumber": "رقم القيد بنقابة المحامين",
+    "fullName": "الاسم الكامل",
+    "preferredLanguage": "اللغة المفضلة",
+    "loginButton": "دخول",
+    "registerButton": "تسجيل",
+    "noAccount": "ليس لديك حساب؟ سجل الآن",
+    "haveAccount": "لديك حساب بالفعل؟ سجل دخولك",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+  },
+  "docket": {
+    "feedTitle": "جدول القضايا",
+    "searchPlaceholder": "البحث عن الطلبات بالكلمات المفتاحية...",
+    "activeCases": "القضايا النشطة",
+    "inMediation": "قيد التفاوض",
+    "allBriefs": "كل الطلبات",
+    "allAreas": "جميع التخصصات",
+    "noBriefsFound": "لم يتم العثور على أي طلبات",
+    "noBriefsBody": "لا توجد طلبات مفتوحة في المحاكم المسجل بها حالياً. يمكنك إضافة محكمة أخرى لتوسيع نطاق بحثك.",
+    "manageJurisdictions": "إدارة الاختصاصات القضائية",
+    "negotiable": "قابل للتفاوض",
+    "compensation": "المقابل المالي"
+  },
+  "jobDetail": {
+    "title": "تفاصيل الطلب",
+    "description": "الوصف",
+    "jurisdiction": "الاختصاص القضائي",
+    "practiceAreas": "مجالات الممارسة",
+    "postedBy": "نشر بواسطة",
+    "applyButton": "تقديم عرض تمثيل قانوني",
+    "applied": "تم التقديم",
+    "translate": "ترجمة الوصف",
+    "machineTranslated": "ترجمة آلية",
+    "scanningPresence": "جاري فحص وجود المحامين...",
+    "activeLawyers": "المحامون النشطون في هذه المحكمة: {{count}}"
+  },
+  "postJob": {
+    "title": "نشر طلب جديد",
+    "step1Title": "١. الأساسيات",
+    "step2Title": "٢. الاختصاص والتخصص",
+    "step3Title": "٣. الدعوة والمقابل",
+    "step4Title": "٤. المراجعة والنشر",
+    "briefTitle": "عنوان الطلب (مثال: حضور جلسة)",
+    "descriptionPlaceholder": "تفاصيل الطلب، المتطلبات، الوقت والمكان...",
+    "courtsRequired": "المحاكم (مطلوب)",
+    "practiceAreasOptional": "مجالات الممارسة (اختياري)",
+    "directInviteOptional": "دعوة مباشرة (اختياري)",
+    "directInviteDescription": "أدخل معرف المحامي لتوجيه دعوة مباشرة له دون نشرها علناً.",
+    "compensationOptional": "نطاق المقابل المالي (اختياري)",
+    "minSalary": "الحد الأدنى ($)",
+    "maxSalary": "الحد الأقصى ($)",
+    "publishButton": "نشر الطلب",
+    "reviewTitle": "المراجعة والنشر",
+    "reviewBasics": "الأساسيات",
+    "reviewCourts": "المحاكم",
+    "reviewCompensation": "المقابل المالي",
+    "reviewValueUnspecified": "غير محدد",
+    "briefPostedTitle": "تم نشر الطلب",
+    "briefPostedBody": "لقد تم نشر الطلب بنجاح على جدول القضايا."
+  },
+  "chat": {
+    "messageChambers": "اكتب رسالة...",
+    "addProposalNotes": "أضف ملاحظات العرض...",
+    "offer": "عرض",
+    "contractRate": "قيمة العقد ($):",
+    "acceptOffer": "قبول العرض",
+    "decline": "رفض",
+    "filingAgreement": "جاري توثيق الاتفاق...",
+    "conflictsCheckLabel": "لقد قمت بإجراء فحص تعارض المصالح ولم أجد أي تعارض."
+  },
+  "notifications": {
+    "title": "الإخطارات القانونية",
+    "empty": "لا توجد إخطارات مسجلة."
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "english": "الإنجليزية",
+    "arabic": "العربية",
+    "logout": "تسجيل الخروج",
+    "restartTitle": "إعادة تشغيل مطلوبة",
+    "restartBody": "يجب إعادة تشغيل التطبيق لتطبيق إعدادات اللغة وتغيير الاتجاه."
+  }
+}

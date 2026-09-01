@@ -1,0 +1,7 @@
+appId: com.tawasol.app
+---
+- launchApp
+- tapOn: "Settings"
+- tapOn: "Language"
+- tapOn: "Arabic"
+- assertVisible: "الإعدادات (AR)"
