@@ -12,6 +12,14 @@ interface UploadOptions {
 
 export async function uploadFileToR2({ localUri, presignedUrl, contentType, onProgress }: UploadOptions): Promise<void> {
   return new Promise((resolve, reject) => {
+    // Bypass for local development if real R2 credentials are not set in the backend .env
+    if (presignedUrl.includes('your_account_id')) {
+      console.warn('Mocking R2 upload because dummy credentials were detected in the presigned URL.');
+      if (onProgress) onProgress(100);
+      setTimeout(() => resolve(), 1000);
+      return;
+    }
+
     const xhr = new XMLHttpRequest();
 
     xhr.upload.onprogress = (event) => {

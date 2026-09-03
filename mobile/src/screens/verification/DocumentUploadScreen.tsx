@@ -37,7 +37,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
     try {
       // 1. Get presigned URL
       const { data: urlData } = await apiClient.post('/verification/upload-url', {
-        documentType: 'ID_CARD',
+        documentType: 'bar_license',
         contentType: file.mimeType || 'image/jpeg',
       });
 
@@ -50,8 +50,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
       });
 
       // 3. Confirm upload with the backend
-      await apiClient.post('/verification/confirm', {
-        documentId: urlData.data.documentId,
+      await apiClient.post(`/verification/${urlData.data.documentId}/confirm`, {
         barId: '0000', // Placeholder or add input field for Bar ID
       });
 

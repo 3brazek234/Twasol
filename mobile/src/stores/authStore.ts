@@ -62,6 +62,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   updateAccountMode: async (mode) => {
+    const { usersApi } = require('../api/users.api');
+    await usersApi.updateAccountMode(mode);
+    
     set((state) => {
       if (!state.user) return state;
       const initialSelected = mode === 'BOTH' ? (state.selectedMode || 'GIG') : mode;
