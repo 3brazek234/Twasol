@@ -49,7 +49,7 @@ export const LoginScreen = ({ navigation }: any) => {
             className="items-center mb-8"
           >
             <View className="w-20 h-20 rounded-full bg-white justify-center items-center mb-4 shadow-md">
-              <ShieldCheck size={48} color="#2A8F85" />
+              <ShieldCheck size={48} color="#1B4F72" />
             </View>
             <MotiText
               from={{ opacity: 0, translateY: 10 }}

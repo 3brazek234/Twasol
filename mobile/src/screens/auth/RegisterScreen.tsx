@@ -74,7 +74,7 @@ export const RegisterScreen = () => {
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} className="items-center mb-6 mt-10">
             <View className="w-16 h-16 rounded-full bg-white justify-center items-center mb-2 shadow-md">
-              <ShieldCheck size={40} color="#2A8F85" />
+              <ShieldCheck size={40} color="#1B4F72" />
             </View>
             <Text className="text-3xl font-displayBold text-ink tracking-tight">وكيل</Text>
             <Text className="text-[10px] font-body text-ink uppercase tracking-[1.5px]">شبكة المحامين المهنية</Text>

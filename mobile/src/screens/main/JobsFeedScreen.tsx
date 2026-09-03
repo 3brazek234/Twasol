@@ -36,7 +36,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   const { data, isLoading, error, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useJobs(selectedCourtId, selectedStatus, searchInput);
   
   const { socket } = useSocketStore();
-  const { registerJobEvent, setActiveCount } = useCourtPulseStore();
+  const { registerJobEvent } = useCourtPulseStore();
   
   const queryClient = useQueryClient();
   const flatListRef = useRef<any>(null);
@@ -56,9 +56,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     };
   }, [socket, queryClient, registerJobEvent]);
 
-  useEffect(() => {
-    // Remove fake active count — this was placeholder data
-  }, []);
 
   const jobs = useMemo(() => {
     return data?.pages.flatMap((page) => page.data).filter(Boolean) || [];
@@ -156,8 +153,8 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             <RefreshControl 
               refreshing={isRefetching} 
               onRefresh={refetch} 
-              tintColor="#2A8F85"
-              colors={["#2A8F85"]}
+              tintColor="#1B4F72"
+              colors={["#1B4F72"]}
             />
           }
           ListFooterComponent={() => 
