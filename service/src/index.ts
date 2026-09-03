@@ -13,7 +13,7 @@ if (env.SENTRY_DSN) {
   logger.info('Sentry is configured.');
 }
 
-server.listen(env.PORT, async () => {
+server.listen(env.PORT, '0.0.0.0', async () => {
   await setupRepeatableJobs();
-  logger.info({ port: env.PORT, env: env.NODE_ENV }, '🚀 Server started');
+  logger.info({ port: env.PORT, env: env.NODE_ENV }, '🚀 Server started (0.0.0.0)');
 });

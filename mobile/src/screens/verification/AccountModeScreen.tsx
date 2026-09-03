@@ -1,155 +1,85 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { tokens } from '../../theme/tokens';
-import { Briefcase, Gavel } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
-import { usersApi } from '../../api/users.api';
+import { tokens } from '../../theme/tokens';
+import { Briefcase, Users, Layers } from 'lucide-react-native';
 
 export const AccountModeScreen = ({ navigation }: any) => {
-  const [selectedRole, setSelectedRole] = useState<'poster' | 'lawyer' | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const { user, setUser, submitVerification, updateAccountMode } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<'GIG' | 'HIRING' | 'BOTH' | null>(null);
 
   const handleContinue = async () => {
-    if (!selectedRole) return;
+    if (!selected) return;
+    setLoading(true);
 
-    if (selectedRole === 'poster') {
-      setIsSaving(true);
-      try {
+    try {
+      if (selected === 'HIRING') {
         await updateAccountMode('HIRING');
         
         if (user) {
           setUser({ ...user, accountMode: 'HIRING', verificationStatus: 'APPROVED' });
         }
         submitVerification('APPROVED');
-      } catch (err) {
-        Alert.alert('Error', 'Failed to update account mode. Please try again.');
-        setIsSaving(false);
+      } else {
+        await updateAccountMode(selected);
+        navigation.navigate('VerificationIntro');
       }
-    } else {
-      navigation.navigate('VerificationIntro');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('خطأ', 'فشل في تحديث نوع الحساب. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const options = [
+    { id: 'GIG', label: 'أبحث عن عمل', icon: <Briefcase size={24} color={selected === 'GIG' ? tokens.colors.signal : tokens.colors.muted} />, desc: 'أبحث عن عمل في المحاكم.' },
+    { id: 'HIRING', label: 'أبحث عن محامي', icon: <Users size={24} color={selected === 'HIRING' ? tokens.colors.signal : tokens.colors.muted} />, desc: 'أبحث عن محامي.' },
+    { id: 'BOTH', label: 'كلا الخيارين', icon: <Layers size={24} color={selected === 'BOTH' ? tokens.colors.signal : tokens.colors.muted} />, desc: 'أريد أن أفعل كلا الخيارين.' },
+  ] as const;
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          
-          <View style={styles.header}>
-            <Image 
-              source={require('../../../assets/icon.png')} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>How will you use Wakeel?</Text>
-            <Text style={styles.subtitle}>
-              You can change this later in settings.
-            </Text>
-          </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>من فضلك حدد نوع الحساب</Text>
+        <Text style={styles.subtitle}>يمكنك تغيير ذلك في أي وقت من الإعدادات.</Text>
 
-          <View style={styles.cardsContainer}>
-            {/* Poster Card */}
-            <TouchableOpacity 
+        <View style={styles.optionsContainer}>
+          {options.map((opt) => (
+            <TouchableOpacity
+              key={opt.id}
               style={[
-                styles.card,
-                selectedRole === 'poster' && styles.cardSelected
+                styles.optionCard,
+                selected === opt.id && styles.optionCardSelected
               ]}
-              activeOpacity={0.8}
-              onPress={() => setSelectedRole('poster')}
+              onPress={() => setSelected(opt.id)}
+              activeOpacity={0.7}
             >
-              <View style={styles.cardHeader}>
-                <View style={[
-                  styles.iconContainer,
-                  selectedRole === 'poster' && styles.iconContainerSelected
-                ]}>
-                  <Briefcase 
-                    size={24} 
-                    color={selectedRole === 'poster' ? tokens.colors.white : tokens.colors.signal} 
-                  />
-                </View>
-                <View style={[
-                  styles.radio,
-                  selectedRole === 'poster' && styles.radioSelected
-                ]}>
-                  {selectedRole === 'poster' && <View style={styles.radioInner} />}
-                </View>
+              <View style={styles.optionHeader}>
+                {opt.icon}
+                <Text style={[styles.optionLabel, selected === opt.id && styles.optionLabelSelected]}>
+                  {opt.label}
+                </Text>
               </View>
-              
-              <Text style={styles.cardTitle}>ايجاد محامي</Text>
-              <Text style={styles.cardDescription}>
-                أحتاج إلى تمثيل قانوني أو أريد تفويض ظهوري لمحامي آخر.
-              </Text>
+              <Text style={styles.optionDesc}>{opt.desc}</Text>
             </TouchableOpacity>
-
-            {/* Lawyer Card */}
-            <TouchableOpacity 
-              style={[
-                styles.card,
-                selectedRole === 'lawyer' && styles.cardSelected
-              ]}
-              activeOpacity={0.8}
-              onPress={() => setSelectedRole('lawyer')}
-            >
-              <View style={styles.cardHeader}>
-                <View style={[
-                  styles.iconContainer,
-                  selectedRole === 'lawyer' && styles.iconContainerSelected
-                ]}>
-                  <Gavel 
-                    size={24} 
-                    color={selectedRole === 'lawyer' ? tokens.colors.white : tokens.colors.signal} 
-                  />
-                </View>
-                <View style={[
-                  styles.radio,
-                  selectedRole === 'lawyer' && styles.radioSelected
-                ]}>
-                  {selectedRole === 'lawyer' && <View style={styles.radioInner} />}
-                </View>
-              </View>
-              
-              <Text style={styles.cardTitle}>ايجاد عمل</Text>
-              <Text style={styles.cardDescription}>
-                أنا محامي معتمد وأبحث عن حالات قانونية .
-              </Text>
-              
-              {selectedRole === 'lawyer' && (
-                <View style={styles.verificationNote}>
-                  <Text style={styles.verificationNoteText}>
-                      * Requires Bar Association ID verification
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[
-              styles.primaryButton,
-              (!selectedRole || isSaving) && styles.primaryButtonDisabled
-            ]}
-            onPress={handleContinue}
-            disabled={!selectedRole || isSaving}
-            activeOpacity={0.8}
-          >
-            {isSaving ? (
-              <ActivityIndicator color={tokens.colors.white} />
-            ) : (
-              <Text style={styles.primaryButtonText}>
-                Continue
-              </Text>
-            )}
-          </TouchableOpacity>
+          ))}
         </View>
-      </KeyboardAvoidingView>
+
+        <TouchableOpacity 
+          style={[styles.continueBtn, (!selected || loading) && styles.continueBtnDisabled]}
+          onPress={handleContinue}
+          disabled={!selected || loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={tokens.colors.white} />
+          ) : (
+            <Text style={styles.continueText}>تأكيد</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -159,128 +89,72 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.paper,
   },
-  keyboardView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
     padding: tokens.spacing.xl,
-    paddingTop: tokens.spacing['2xl'],
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: tokens.spacing['2xl'],
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginBottom: tokens.spacing.xl,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: tokens.typography.sizes.xl,
-    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.xxl,
+    fontFamily: tokens.typography.fonts.display,
+    fontWeight: tokens.typography.weights.bold,
     color: tokens.colors.ink,
-    marginBottom: tokens.spacing.xs,
-    textAlign: 'center',
+    marginBottom: tokens.spacing.sm,
   },
   subtitle: {
     fontSize: tokens.typography.sizes.base,
     fontFamily: tokens.typography.fonts.body,
     color: tokens.colors.muted,
-    textAlign: 'center',
+    marginBottom: tokens.spacing.xxl,
   },
-  cardsContainer: {
-    gap: tokens.spacing.lg,
+  optionsContainer: {
+    gap: tokens.spacing.md,
+    marginBottom: tokens.spacing.xxl,
   },
-  card: {
-    backgroundColor: tokens.colors.white,
+  optionCard: {
+    padding: tokens.spacing.lg,
     borderRadius: 16,
-    padding: tokens.spacing.xl,
     borderWidth: 2,
     borderColor: tokens.colors.line,
+    backgroundColor: tokens.colors.white,
   },
-  cardSelected: {
+  optionCardSelected: {
     borderColor: tokens.colors.signal,
-    backgroundColor: 'rgba(47, 111, 94, 0.02)',
+    backgroundColor: 'rgba(47, 111, 94, 0.04)',
   },
-  cardHeader: {
+  optionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: tokens.spacing.lg,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(47, 111, 94, 0.1)',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainerSelected: {
-    backgroundColor: tokens.colors.signal,
-  },
-  radio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: tokens.colors.muted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: tokens.colors.signal,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: tokens.colors.signal,
-  },
-  cardTitle: {
-    fontSize: tokens.typography.sizes.lg,
-    fontFamily: tokens.typography.fonts.displayBold,
-    color: tokens.colors.ink,
     marginBottom: tokens.spacing.sm,
   },
-  cardDescription: {
+  optionLabel: {
+    fontSize: tokens.typography.sizes.lg,
+    fontFamily: tokens.typography.fonts.display,
+    fontWeight: tokens.typography.weights.bold,
+    color: tokens.colors.ink,
+    marginStart: tokens.spacing.md,
+  },
+  optionLabelSelected: {
+    color: tokens.colors.signal,
+  },
+  optionDesc: {
     fontSize: tokens.typography.sizes.sm,
     fontFamily: tokens.typography.fonts.body,
     color: tokens.colors.muted,
     lineHeight: 20,
   },
-  verificationNote: {
-    marginTop: tokens.spacing.md,
-    paddingTop: tokens.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: tokens.colors.line,
-  },
-  verificationNoteText: {
-    fontSize: tokens.typography.sizes.xs,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    color: tokens.colors.signal,
-  },
-  footer: {
-    padding: tokens.spacing.xl,
-    paddingBottom: Platform.OS === 'ios' ? tokens.spacing.xl : tokens.spacing['2xl'],
-    backgroundColor: tokens.colors.paper,
-    borderTopWidth: 1,
-    borderTopColor: tokens.colors.line,
-  },
-  primaryButton: {
+  continueBtn: {
     backgroundColor: tokens.colors.signal,
-    height: 56,
+    paddingVertical: tokens.spacing.lg,
     borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  primaryButtonDisabled: {
-    backgroundColor: tokens.colors.muted,
+  continueBtnDisabled: {
     opacity: 0.5,
   },
-  primaryButtonText: {
+  continueText: {
     color: tokens.colors.white,
-    fontSize: tokens.typography.sizes.base,
-    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.lg,
+    fontWeight: tokens.typography.weights.bold,
   },
 });
