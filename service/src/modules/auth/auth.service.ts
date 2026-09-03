@@ -65,8 +65,7 @@ export class AuthService {
         fullName: data.fullName,
         barNumber: data.barNumber,
         role: data.role || 'LAWYER',
-        preferredLocale: data.preferredLocale || 'EN',
-        accountMode: data.accountMode || 'BOTH',
+        preferredLocale: data.preferredLocale || 'AR',
         isActive: true,
         governorateId: data.governorateId,
         courts: {

@@ -50,7 +50,6 @@ export const RegisterScreen = () => {
         barNumber: data.barNumber,
         governorateId: data.governorateId,
         preferredLocale: 'AR',
-        accountMode: onboarding.accountMode ?? 'BOTH',
       });
 
       const { accessToken, refreshToken, user } = registerRes.data;
