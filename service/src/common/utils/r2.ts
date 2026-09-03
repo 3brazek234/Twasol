@@ -54,6 +54,10 @@ export async function generateDownloadUrl(key: string, expiresIn = 300): Promise
 }
 
 export async function headObjectR2(key: string) {
+  if (env.R2_ACCOUNT_ID === 'your_account_id') {
+    logger.warn({ key }, 'Mocking headObjectR2 because dummy credentials were detected.');
+    return { ContentLength: 500000, ContentType: 'image/jpeg' };
+  }
   const command = new HeadObjectCommand({
     Bucket: env.R2_BUCKET_NAME,
     Key: key,
