@@ -40,7 +40,7 @@ export class AdminsController {
       });
 
       const { passwordHash: _, ...adminWithoutPassword } = result;
-      res.status(201).json(adminWithoutPassword);
+      res.status(201).json({ success: true, data: adminWithoutPassword });
     } catch (error) {
       next(error);
     }

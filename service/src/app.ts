@@ -1,4 +1,5 @@
 import express from 'express';
+import { AppError } from './common/errors/AppError';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { generalLimiter } from './common/middleware/rateLimiter';
@@ -52,13 +53,13 @@ import queueRoutes, { checkQueueHealth } from './modules/admin/queues.routes';
 import adminRoutes from './modules/admin/admin.routes';
 
 // Health checks
-app.get('/health', (_req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
-app.get('/health/db', async (_req, res) => {
+app.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok', uptime: process.uptime() } }));
+app.get('/health/db', async (_req, res, next) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: 'ok', db: 'connected' });
+    res.json({ success: true, data: { status: 'ok', db: 'connected' } });
   } catch (err) {
-    res.status(503).json({ status: 'error', db: 'disconnected' });
+    next(AppError.internal('Database disconnected'));
   }
 });
 app.get('/health/queue', checkQueueHealth);

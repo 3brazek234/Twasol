@@ -51,7 +51,7 @@ export class AdminReportsController {
         where: { id: req.params.id },
         data: { status, resolutionNotes },
       });
-      res.json(report);
+      res.json({ success: true, data: report });
     } catch (error) {
       if ((error as any).code === 'P2025') {
         next(AppError.notFound('Report'));

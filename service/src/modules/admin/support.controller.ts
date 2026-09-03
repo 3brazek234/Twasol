@@ -68,7 +68,7 @@ export class AdminSupportController {
         include: { sender: { select: { id: true, fullName: true, role: true } } },
       });
 
-      res.json(messages);
+      res.json({ success: true, data: messages });
     } catch (error) {
       next(error);
     }
@@ -137,7 +137,7 @@ export class AdminSupportController {
         });
       }
 
-      res.json(message);
+      res.json({ success: true, data: message });
     } catch (error) {
       next(error);
     }
@@ -169,7 +169,7 @@ export class AdminSupportController {
 
       io.to(`conversation:${conversationId}`).emit('message:receive', message);
 
-      res.json(conversation);
+      res.json({ success: true, data: conversation });
     } catch (error) {
       if ((error as any).code === 'P2025') {
         next(AppError.notFound('Support conversation'));

@@ -41,7 +41,7 @@ export class AnalyticsController {
       // Reports are mocked since the Report model doesn't exist yet
       const openReports = 0;
 
-      res.json({
+      res.json({ success: true, data: {
         users: {
           total: totalUsers,
           activeLast30d,
@@ -56,7 +56,7 @@ export class AnalyticsController {
         reports: {
           open: openReports,
         }
-      });
+      }});
     } catch (error) {
       next(error);
     }
@@ -79,12 +79,12 @@ export class AnalyticsController {
         }),
       ]);
 
-      res.json({
+      res.json({ success: true, data: {
         verification:   pendingVerifications,
         reports:        openReports,
         support:        unresolvedSupport,
         subscriptions:  pendingSubscriptions,  // طلبات اشتراك تنتظر المراجعة
-      });
+      }});
     } catch (error) {
       next(error);
     }

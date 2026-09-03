@@ -14,7 +14,7 @@ export class AdminUsersController {
   static async deactivate(req: Request, res: Response, next: NextFunction) {
     try {
       const user = await AdminUsersService.deactivate(req.params.id, req.user!.userId, req.body.reason);
-      res.json(user);
+      res.json({ success: true, data: user });
     } catch (error) {
       next(error);
     }
@@ -23,7 +23,7 @@ export class AdminUsersController {
   static async activate(req: Request, res: Response, next: NextFunction) {
     try {
       const user = await AdminUsersService.activate(req.params.id, req.user!.userId, req.body.reason);
-      res.json(user);
+      res.json({ success: true, data: user });
     } catch (error) {
       next(error);
     }
@@ -33,7 +33,7 @@ export class AdminUsersController {
     try {
       const { status, justification } = req.body;
       const user = await AdminUsersService.overrideVerification(req.params.id, req.user!.userId, status, justification);
-      res.json(user);
+      res.json({ success: true, data: user });
     } catch (error) {
       next(error);
     }

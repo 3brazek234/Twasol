@@ -11,7 +11,7 @@ export class VerificationController {
       
       const data = await VerificationService.getUploadUrl(userId, documentType, contentType);
       
-      res.status(200).json({ data });
+      res.json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -24,7 +24,7 @@ export class VerificationController {
 
       const document = await VerificationService.confirmUpload(documentId, userId);
       
-      res.status(200).json({ data: document });
+      res.json({ success: true, data: document });
     } catch (error) {
       next(error);
     }
@@ -34,7 +34,7 @@ export class VerificationController {
     try {
       const userId = req.user!.userId;
       const statusData = await VerificationService.getStatus(userId);
-      res.json({ data: statusData });
+      res.json({ success: true, data: statusData });
     } catch (error) {
       next(error);
     }
@@ -59,7 +59,7 @@ export class VerificationController {
       const { status, notes } = req.body;
       
       const document = await VerificationService.review(docId, adminUserId, { status, notes });
-      res.json({ data: document });
+      res.json({ success: true, data: document });
     } catch (error) {
       next(error);
     }
@@ -71,7 +71,7 @@ export class VerificationController {
       const adminUserId = req.user!.userId;
       
       const url = await VerificationService.getViewUrl(documentId, adminUserId);
-      res.json({ data: { viewUrl: url } });
+      res.json({ success: true, data: { viewUrl: url } });
     } catch (error) {
       next(error);
     }

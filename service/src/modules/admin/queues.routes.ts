@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { AppError } from '../../common/errors/AppError';
 import { ExpressAdapter } from '@bull-board/express';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
@@ -31,20 +32,20 @@ if (env.NODE_ENV === 'production') {
 
 export default router;
 
-export const checkQueueHealth = async (req: any, res: any) => {
+export const checkQueueHealth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const isReady = redisConnection.status === 'ready';
-    if (!isReady) throw new Error('Redis not ready');
+    if (!isReady) throw new AppError('SERVICE_UNAVAILABLE', 503, 'Redis not ready');
     
     const count = await notificationFanoutQueue.getWaitingCount();
     const workers = await notificationFanoutQueue.getWorkers();
     
     if (workers.length === 0) {
-      throw new Error('No workers attached to notificationFanoutQueue');
+      throw new AppError('SERVICE_UNAVAILABLE', 503, 'No workers attached to notificationFanoutQueue');
     }
 
-    res.json({ status: 'ok', waitingJobs: count, activeWorkers: workers.length });
+    res.json({ success: true, data: { status: 'ok', waitingJobs: count, activeWorkers: workers.length } });
   } catch (err: any) {
-    res.status(503).json({ status: 'error', message: err.message });
+    next(err);
   }
 };

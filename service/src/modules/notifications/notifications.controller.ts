@@ -25,7 +25,7 @@ export class NotificationsController {
   static async getUnreadCount(req: Request, res: Response, next: NextFunction) {
     try {
       const count = await NotificationsService.getUnreadCount(req.user!.userId);
-      res.json({ count });
+      res.json({ success: true, data: { count } });
     } catch (error) {
       next(error);
     }
