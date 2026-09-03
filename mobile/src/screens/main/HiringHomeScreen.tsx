@@ -9,25 +9,25 @@ export const HiringHomeScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>My Posted Jobs</Text>
+          <Text style={styles.title}>طلباتي المنشورة</Text>
           <TouchableOpacity 
             style={styles.findBtn}
             onPress={() => navigation.navigate('FindLawyers')}
           >
             <Search size={16} color={tokens.colors.signal} style={{ marginEnd: 6 }} />
-            <Text style={styles.findBtnText}>Find Lawyers</Text>
+            <Text style={styles.findBtnText}>البحث عن محامين</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No active jobs</Text>
-          <Text style={styles.emptyDesc}>Post a job or find lawyers directly to cover an appearance.</Text>
+          <Text style={styles.emptyTitle}>لا توجد طلبات نشطة</Text>
+          <Text style={styles.emptyDesc}>انشر طلباً أو ابحث عن محامين مباشرةً لتغطية جلسة قضائية.</Text>
           <TouchableOpacity 
             style={styles.postBtn}
             onPress={() => navigation.navigate('PostJob')}
           >
             <Plus size={20} color={tokens.colors.white} style={{ marginEnd: 8 }} />
-            <Text style={styles.postBtnText}>Post a Job</Text>
+            <Text style={styles.postBtnText}>نشر طلب جديد</Text>
           </TouchableOpacity>
         </View>
       </View>

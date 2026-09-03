@@ -31,9 +31,9 @@ const defaultScreenOptions = {
 
 const SettingsNavigator = () => (
   <SettingsStack.Navigator screenOptions={defaultScreenOptions}>
-    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-    <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
-    <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+    <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'الإعدادات' }} />
+    <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'تعديل الملف الشخصي' }} />
+    <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'تغيير كلمة المرور' }} />
   </SettingsStack.Navigator>
 );
 

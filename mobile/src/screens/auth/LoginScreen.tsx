@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at lexast 6 characters'),
+  password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -57,7 +57,7 @@ export const LoginScreen = ({ navigation }: any) => {
               transition={{ delay: 300 }}
               className="text-4xl font-displayBold text-ink tracking-tight"
             >
-               تواصل
+            وكيل
             </MotiText>
             <MotiText
               from={{ opacity: 0 }}
@@ -65,7 +65,7 @@ export const LoginScreen = ({ navigation }: any) => {
               transition={{ delay: 500 }}
               className="text-sm font-body text-ink uppercase tracking-widest mt-1"
             >
-شبكة تفويض المحاكم
+              شبكة المحامين المهنية
             </MotiText>
           </MotiView>
 
@@ -127,6 +127,7 @@ export const LoginScreen = ({ navigation }: any) => {
                       className="flex-1 text-ink font-body text-base h-full"
                       placeholder="كلمة المرور"
                       placeholderTextColor="#718096"
+                      secureTextEntry
                       onChangeText={onChange}
                       value={value}
                     />

@@ -76,8 +76,8 @@ export const RegisterScreen = () => {
             <View className="w-16 h-16 rounded-full bg-white justify-center items-center mb-2 shadow-md">
               <ShieldCheck size={40} color="#2A8F85" />
             </View>
-            <Text className="text-3xl font-displayBold text-ink tracking-tight">تواصل</Text>
-            <Text className="text-[10px] font-body text-ink uppercase tracking-[1.5px]">شبكة تفويض المحاكم</Text>
+            <Text className="text-3xl font-displayBold text-ink tracking-tight">وكيل</Text>
+            <Text className="text-[10px] font-body text-ink uppercase tracking-[1.5px]">شبكة المحامين المهنية</Text>
           </MotiView>
 
           <MotiView from={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 100 }} className="p-6 rounded-2xl bg-white shadow-xl">
@@ -174,7 +174,8 @@ export const RegisterScreen = () => {
                     <TextInput
                       className="flex-1 text-ink font-body text-sm h-full"
                       placeholder="كلمة المرور"
-                      placeholderTextColor="#718096"                    
+                      placeholderTextColor="#718096"
+                      secureTextEntry
                       onChangeText={onChange}
                       value={value}
                     />

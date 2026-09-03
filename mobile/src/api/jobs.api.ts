@@ -1,18 +1,30 @@
 import { apiClient } from './client';
 import { Job } from '../schemas/job.schema';
 
+// ─── Mapper ─────────────────────────────────────────────────────────────────
+// The backend includes the `court` relation directly on each job object.
+// We flatten it here so components just read `job.courtNameAr` etc.
 const mapJobBackendToFrontend = (job: any): Job => ({
   id: job.id,
   title: job.title,
   description: job.description,
   status: job.status,
   posterId: job.postedByUserId,
-  assignedExecutorId: job.assignedLawyerId,
+  assignedExecutorId: job.assignedLawyerId ?? null,
   offerAmount: job.offerAmount ? parseFloat(job.offerAmount) : undefined,
-  courtId: job.courts?.[0]?.courtId || '',
+  salaryMin: job.salaryMin ? parseFloat(job.salaryMin) : undefined,
+  salaryMax: job.salaryMax ? parseFloat(job.salaryMax) : undefined,
+  // court relation is included by the backend (include: { court: true })
+  courtId: job.courtId,
+  courtNameAr: job.court?.nameAr ?? undefined,
+  courtNameEn: job.court?.nameEn ?? undefined,
+  posterName: job.poster?.fullName ?? undefined,
+  expiresAt: job.expiresAt ?? null,
   createdAt: job.createdAt,
   updatedAt: job.updatedAt,
 });
+
+// ─── API Functions ───────────────────────────────────────────────────────────
 
 export const fetchJobs = async (
   courtId?: string,
@@ -27,21 +39,24 @@ export const fetchJobs = async (
   if (searchQuery) params.append('q', searchQuery);
   params.append('page', page.toString());
   params.append('limit', limit.toString());
-  
+
   const queryString = params.toString();
   const endpoint = `/jobs${queryString ? `?${queryString}` : ''}`;
-  
+
+  // The apiClient interceptor unwraps { success, data, meta } into { data, meta }
   const response = await apiClient.get<any>(endpoint);
+  const payload = response.data;
+
   return {
-    data: response.data.data.map(mapJobBackendToFrontend),
-    meta: response.data.meta,
+    data: (payload.data ?? payload).map(mapJobBackendToFrontend),
+    meta: payload.meta ?? { total: 0, page, limit, pages: 0 },
   };
 };
 
-export const createJob = async (jobData: { 
-  title: string; 
-  description: string; 
-  courtId: string; 
+export const createJob = async (jobData: {
+  title: string;
+  description: string;
+  courtId: string;
   invitedLawyerId?: string;
   offerAmount?: number;
   salaryMin?: string;
@@ -78,5 +93,6 @@ export const fetchJobById = async (jobId: string): Promise<Job> => {
 
 export const translateJob = async (jobId: string, targetLocale: 'EN' | 'AR'): Promise<{ title: string; description: string }> => {
   const response = await apiClient.post<any>(`/jobs/${jobId}/translate`, { targetLocale });
-  return response.data.data;
+  // The interceptor has already unwrapped { success, data } → response.data is the inner data object
+  return response.data;
 };

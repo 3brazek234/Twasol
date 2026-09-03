@@ -11,7 +11,8 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const { jobId } = route.params || {};
 
   const { data: job, isLoading, error } = useJob(jobId);
-  const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId || '');
+  // Only fetch active lawyers once we have a real courtId — avoids firing with empty string
+  const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId ?? null);
   const { mutate: apply, isPending: isApplying } = useApplyToJob();
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
   const { user } = useAuthStore();
@@ -80,12 +81,18 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   if (error || !job) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Brief not found. Check identifier link.</Text>
+        <Text style={styles.errorText}>لم يتم العثور على هذا الطلب.</Text>
       </View>
     );
   }
 
-  const formattedAmount = job.offerAmount ? `$${job.offerAmount}` : 'Negotiable';
+  const formattedAmount = job.salaryMin
+    ? new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 }).format(job.salaryMin)
+    : job.offerAmount
+    ? new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 }).format(job.offerAmount)
+    : 'قابل للتفاوض';
+
+  const courtDisplay = job.courtNameAr ?? job.courtNameEn ?? 'المحكمة';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -94,7 +101,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         <View style={styles.headerInfo}>
           <View style={styles.courtHeader}>
             <Landmark size={20} color={tokens.colors.ink} style={{ marginEnd: 8 }} />
-            <Text style={styles.courtName}>Court {job.courtId.substring(0, 8).toUpperCase()}</Text>
+            <Text style={styles.courtName}>{courtDisplay}</Text>
           </View>
           <Text style={styles.salaryMono}>{formattedAmount}</Text>
         </View>
@@ -128,7 +135,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
               <ActivityIndicator size="small" color={tokens.colors.signal} />
             ) : (
               <Text style={styles.translateBtnText}>
-                {isTranslated ? 'Show Original' : 'ترجمة الوصف'}
+                {isTranslated ? 'عرض الأصلي' : 'ترجمة الوصف'}
               </Text>
             )}
           </TouchableOpacity>
@@ -136,7 +143,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         
         <View style={styles.metaRow}>
           <Calendar size={14} color={tokens.colors.muted} />
-          <Text style={styles.metaText}>Posted on {new Date(job.createdAt).toLocaleDateString()}</Text>
+          <Text style={styles.metaText}>نُشر في {new Date(job.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
           {isTranslated && (
             <Text style={styles.machineTranslatedLabel}>• {'ترجمة آلية'}</Text>
           )}
@@ -154,7 +161,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           )}
           {isOwnJob ? (
             <View style={[styles.applyButton, { backgroundColor: tokens.colors.paper, borderWidth: 1, borderColor: tokens.colors.line }]}>
-              <Text style={[styles.applyButtonText, { color: tokens.colors.ink }]}>This is your brief</Text>
+              <Text style={[styles.applyButtonText, { color: tokens.colors.ink }]}>هذا طلبك</Text>
             </View>
           ) : (
             <TouchableOpacity 

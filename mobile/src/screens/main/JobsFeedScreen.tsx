@@ -57,7 +57,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   }, [socket, queryClient, registerJobEvent]);
 
   useEffect(() => {
-    setActiveCount(Math.floor(Math.random() * 15) + 3);
+    // Remove fake active count — this was placeholder data
   }, []);
 
   const jobs = useMemo(() => {
@@ -122,7 +122,16 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         </ScrollView>
       ) : error ? (
         <View className="flex-1 justify-center items-center p-8">
-          <Text className="text-docket text-base font-bodyMedium">{'خطأ'}</Text>
+          <Text className="text-ink text-lg font-displayBold mb-2">حدث خطأ</Text>
+          <Text className="text-muted text-base font-body text-center mb-6">
+            {(error as any)?.message || 'تعذّر تحميل الطلبات. تحقّق من اتصالك بالإنترنت.'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => refetch()}
+            className="bg-signal px-6 py-3 rounded-xl"
+          >
+            <Text className="text-white font-bodySemibold">إعادة المحاولة</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <Animated.FlatList

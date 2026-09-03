@@ -216,7 +216,7 @@ export const ChatScreen = ({ route, navigation }: any) => {
               exit={{ height: 0, opacity: 0 }}
               style={styles.offerInputContainer}
             >
-              <Text style={styles.offerInputLabel}>Contract rate ($):</Text>
+              <Text style={styles.offerInputLabel}>قيمة العرض (جنيه):</Text>
               <View style={styles.offerInputBox}>
                 <DollarSign size={16} color={colors.signal} style={{ marginEnd: 2 }} />
                 <TextInput
