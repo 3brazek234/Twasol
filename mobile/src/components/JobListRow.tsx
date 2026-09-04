@@ -37,8 +37,8 @@ const timeAgo = (isoString: string): string => {
 };
 
 export const JobListRow = ({ item, lastSeenAt, onPress }: JobListRowProps) => {
-  // Show court name in Arabic, fallback to English, fallback to short UUID
-  const courtDisplay = item.courtNameAr ?? item.courtNameEn ?? item.courtId.substring(0, 8).toUpperCase();
+  // Show court name in Arabic, fallback to English, fallback to short UUID or default text
+  const courtDisplay = item.courtNameAr ?? item.courtNameEn ?? item.courtId?.substring(0, 8).toUpperCase() ?? 'محكمة غير محددة';
 
   // Show salary range if available, fallback to single offer amount
   const salaryDisplay = item.salaryMin

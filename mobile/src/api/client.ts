@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 // Use environment variable for physical device testing on Wi-Fi, fallback to localhost/10.0.2.2 for simulators
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'android' ? 'http://10.0.2.2:3001/api' : 'http://localhost:3001/api');
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'android' ? 'http://10.0.2.2:4001/api' : 'http://localhost:4001/api');
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

@@ -148,9 +148,11 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         <View style={styles.headerInfo}>
           <View style={styles.courtHeader}>
             <Landmark size={20} color={tokens.colors.ink} style={{ marginEnd: 8 }} />
-            <Text style={styles.courtName}>{courtDisplay}</Text>
+            <Text style={styles.courtName} numberOfLines={2}>{courtDisplay}</Text>
           </View>
-          <Text style={styles.salaryMono}>{formattedAmount}</Text>
+          <View style={{ marginTop: 12 }}>
+            <Text style={styles.salaryMono}>{formattedAmount}</Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -269,9 +271,8 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.lg,
   },
   headerInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
   },
   courtHeader: {
     flexDirection: 'row',

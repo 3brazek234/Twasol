@@ -1,19 +1,16 @@
 import React from 'react';
-import { View, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { View, TouchableOpacity, Text, Platform, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MotiView } from 'moti';
-import { GlassContainer } from './GlassContainer';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-
-const { width } = Dimensions.get('window');
+import { tokens } from '../theme/tokens';
+import { MotiView } from 'moti';
 
 export const FloatingTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
 
   // Hide tab bar if any screen in the current stack has explicitly requested it
   const focusedRoute = state.routes[state.index];
-  
   const currentRouteName = getFocusedRouteNameFromRoute(focusedRoute) ?? focusedRoute.name;
 
   const hiddenRoutes = ['LawyerProfile', 'Chat', 'JobDetail', 'PostJob'];
@@ -23,60 +20,81 @@ export const FloatingTabBar = ({ state, descriptors, navigation }: BottomTabBarP
 
   return (
     <View
-      className="absolute left-0 right-0 items-center z-[100]"
-      style={{ bottom: insets.bottom + 16 }}
+      style={[
+        styles.container,
+        { paddingBottom: Platform.OS === 'ios' ? insets.bottom : 16 }
+      ]}
     >
-      <GlassContainer
-        className="flex-row rounded-full items-center justify-around px-4 shadow-lg"
-        intensity={90}
-        style={{ width: width - 64, height: 64, flexDirection: 'row' }}
-      >
-        {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
 
-          const Icon = options.tabBarIcon;
+        const Icon = options.tabBarIcon;
+        const color = isFocused ? tokens.colors.signal : tokens.colors.muted;
 
-          return (
-            <TouchableOpacity
-              key={index}
-              onPress={onPress}
-              className="items-center justify-center h-full flex-1"
-              activeOpacity={0.7}
+        return (
+          <TouchableOpacity
+            key={index}
+            onPress={onPress}
+            style={styles.tabItem}
+            activeOpacity={0.7}
+          >
+            <MotiView
+              animate={{ translateY: isFocused ? -2 : 0 }}
+              transition={{ type: 'timing', duration: 150 }}
             >
-              <MotiView
-                animate={{
-                  scale: isFocused ? 1.1 : 1,
-                  opacity: isFocused ? 1 : 0.5,
-                }}
-                transition={{ type: 'timing', duration: 200 }}
-              >
-                {Icon && Icon({ focused: isFocused, color: isFocused ? "#2A8F85" : "#718096", size: 24 })}
-              </MotiView>
-              {isFocused && (
-                <MotiView
-                  layout={Platform.OS === 'ios' ? undefined : undefined}
-                  from={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="w-1 h-1 rounded-full bg-signal mt-1 absolute bottom-2"
-                />
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </GlassContainer>
+              {Icon && Icon({ focused: isFocused, color, size: 24 })}
+            </MotiView>
+            <Text 
+              style={[
+                styles.tabLabel, 
+                { 
+                  color, 
+                  fontFamily: isFocused ? tokens.typography.fonts.bodySemibold : tokens.typography.fonts.body 
+                }
+              ]}
+            >
+              {options.title}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingTop: 12,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 4,
+  }
+});

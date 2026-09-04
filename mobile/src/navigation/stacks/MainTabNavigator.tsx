@@ -50,7 +50,7 @@ const JobsNavigator = () => {
         name="JobsFeed" 
         component={JobsFeedScreen} 
         options={({ navigation }) => {
-          const { user } = require('../../stores/authStore').useAuthStore();
+          const { user } = require('../../stores/authStore').useAuthStore.getState();
           const canHire = user?.accountMode === 'HIRING' || user?.accountMode === 'BOTH';
           
           return {

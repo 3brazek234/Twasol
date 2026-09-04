@@ -44,7 +44,13 @@ export class JobsQueryService {
       prisma.job.count({ where }),
     ]);
 
-    return paginate(items, total, page, limit);
+    const mappedItems = items.map(item => ({
+      ...item,
+      courtNameAr: item.court?.nameAr,
+      courtNameEn: item.court?.nameEn
+    }));
+
+    return paginate(mappedItems, total, page, limit);
   }
 
   static async getById(id: string) {
