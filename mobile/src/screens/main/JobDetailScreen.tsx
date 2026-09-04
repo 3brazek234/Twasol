@@ -143,64 +143,79 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Court & Price Highlights (The two crucial decision facts UP TOP) */}
+      {/* 1. Job Title & Meta Date */}
+      <View style={styles.headerSection}>
+        <Text style={styles.jobTitle}>
+          {isTranslated && translatedTitle ? translatedTitle : job.title}
+        </Text>
+        <View style={styles.metaRow}>
+          <Calendar size={14} color={tokens.colors.muted} />
+          <Text style={styles.metaText}>
+            نُشر في {new Date(job.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </Text>
+          {isTranslated && (
+            <Text style={styles.machineTranslatedLabel}>• {'ترجمة آلية'}</Text>
+          )}
+        </View>
+      </View>
+
+      {/* 2. Key Metrics Card (Salary & Court) */}
       <View style={styles.highlightCard}>
-        <View style={styles.headerInfo}>
+        <View style={styles.metricBlock}>
+          <Text style={styles.metricLabel}>المقابل المعروض</Text>
+          <Text style={styles.salaryMono}>{formattedAmount}</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.metricBlock}>
+          <Text style={styles.metricLabel}>المحكمة المختصة</Text>
           <View style={styles.courtHeader}>
-            <Landmark size={20} color={tokens.colors.ink} style={{ marginEnd: 8 }} />
+            <Landmark size={18} color={tokens.colors.navy} style={{ marginEnd: 8 }} />
             <Text style={styles.courtName} numberOfLines={2}>{courtDisplay}</Text>
-          </View>
-          <View style={{ marginTop: 12 }}>
-            <Text style={styles.salaryMono}>{formattedAmount}</Text>
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        {/* Active lawyers indicator (Core trust signal) */}
+        {/* Trust Indicator */}
         <View style={styles.trustIndicator}>
           <Users size={16} color={tokens.colors.signal} style={{ marginEnd: 8 }} />
           <Text style={styles.trustText}>
             {isLoadingLawyers ? (
-              'جاري فحص وجود المحامين...'
+              'جاري فحص النشاط...'
             ) : (
-              `المحامون النشطون في هذه المحكمة: ${activeLawyers?.length || 0}`
+              `يتوفر ${activeLawyers?.length || 0} محامٍ نشط في هذه المحكمة`
             )}
           </Text>
         </View>
       </View>
 
-      {/* Case Details below the fold */}
-      <Text style={styles.sectionHeader}>{'الوصف'.toUpperCase()}</Text>
-      <View style={styles.detailsCard}>
-        <View style={styles.titleRow}>
-          <Text style={styles.jobTitle}>{isTranslated && translatedTitle ? translatedTitle : job.title}</Text>
-          <TouchableOpacity 
-            onPress={handleTranslate} 
-            style={styles.translateBtn}
-            disabled={isTranslating}
-          >
-            {isTranslating ? (
-              <ActivityIndicator size="small" color={tokens.colors.signal} />
-            ) : (
-              <Text style={styles.translateBtnText}>
-                {isTranslated ? 'عرض الأصلي' : 'ترجمة الوصف'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.metaRow}>
-          <Calendar size={14} color={tokens.colors.muted} />
-          <Text style={styles.metaText}>نُشر في {new Date(job.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
-          {isTranslated && (
-            <Text style={styles.machineTranslatedLabel}>• {'ترجمة آلية'}</Text>
+      {/* 3. Description Section */}
+      <View style={styles.detailsHeaderRow}>
+        <Text style={styles.sectionHeader}>{'التفاصيل الكاملة'}</Text>
+        <TouchableOpacity 
+          onPress={handleTranslate} 
+          style={styles.translateBtn}
+          disabled={isTranslating}
+        >
+          {isTranslating ? (
+            <ActivityIndicator size="small" color={tokens.colors.signal} />
+          ) : (
+            <Text style={styles.translateBtnText}>
+              {isTranslated ? 'عرض الأصلي' : 'ترجمة الوصف'}
+            </Text>
           )}
-        </View>
-        
-        <Text style={styles.description}>{isTranslated && translatedDescription ? translatedDescription : job.description}</Text>
+        </TouchableOpacity>
       </View>
 
+      <View style={styles.detailsCard}>
+        <Text style={styles.description}>
+          {isTranslated && translatedDescription ? translatedDescription : job.description}
+        </Text>
+      </View>
+
+      {/* 4. Actions */}
       {job.status === 'OPEN' && (
         <View style={styles.applyContainer}>
           {!isVerified && !isOwnJob && (
@@ -257,36 +272,78 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.colors.paper },
-  content: { padding: tokens.spacing.md },
+  content: { padding: tokens.spacing.lg },
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tokens.colors.paper },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tokens.colors.paper, padding: tokens.spacing.lg },
   errorText: { color: tokens.colors.docket, fontSize: tokens.typography.sizes.base, fontFamily: tokens.typography.fonts.body },
   
+  headerSection: {
+    marginBottom: tokens.spacing.lg,
+  },
+  jobTitle: {
+    fontSize: 22,
+    fontFamily: tokens.typography.fonts.display,
+    fontWeight: tokens.typography.weights.bold,
+    color: tokens.colors.ink,
+    lineHeight: 30,
+    marginBottom: 8,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaText: {
+    fontSize: tokens.typography.sizes.sm,
+    fontFamily: tokens.typography.fonts.body,
+    color: tokens.colors.muted,
+    marginStart: 6,
+  },
+  machineTranslatedLabel: {
+    fontSize: tokens.typography.sizes.xs,
+    fontFamily: tokens.typography.fonts.body,
+    color: tokens.colors.muted,
+    marginStart: 6,
+    fontStyle: 'italic',
+  },
+
   highlightCard: {
     backgroundColor: tokens.colors.white,
     borderWidth: 1,
-    borderColor: tokens.colors.line,
+    borderColor: 'rgba(0,0,0,0.05)',
     borderRadius: 16,
     padding: tokens.spacing.lg,
-    marginBottom: tokens.spacing.lg,
+    marginBottom: tokens.spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  headerInfo: {
+  metricBlock: {
     flexDirection: 'column',
     alignItems: 'flex-start',
+  },
+  metricLabel: {
+    fontSize: tokens.typography.sizes.xs,
+    fontFamily: tokens.typography.fonts.body,
+    fontWeight: tokens.typography.weights.bold,
+    color: tokens.colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
   courtHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
   courtName: {
-    fontSize: tokens.typography.sizes.xl,
+    fontSize: tokens.typography.sizes.lg,
     fontFamily: tokens.typography.fonts.display,
     fontWeight: tokens.typography.weights.bold,
-    color: tokens.colors.ink,
+    color: tokens.colors.navy,
   },
   salaryMono: {
-    fontSize: tokens.typography.sizes.xxl,
+    fontSize: 24,
     fontFamily: tokens.typography.fonts.mono,
     fontWeight: tokens.typography.weights.bold,
     color: tokens.colors.ink,
@@ -299,6 +356,9 @@ const styles = StyleSheet.create({
   trustIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(42, 143, 133, 0.08)',
+    padding: 10,
+    borderRadius: 8,
   },
   trustText: {
     fontSize: tokens.typography.sizes.sm,
@@ -307,98 +367,77 @@ const styles = StyleSheet.create({
     fontWeight: tokens.typography.weights.semibold,
   },
   
+  detailsHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.sm,
+  },
   sectionHeader: {
-    fontSize: tokens.typography.sizes.xs - 1,
-    fontFamily: tokens.typography.fonts.body,
-    fontWeight: tokens.typography.weights.bold,
-    color: tokens.colors.muted,
-    letterSpacing: 1,
-    marginBottom: tokens.spacing.xs,
-    marginStart: 4,
-  },
-  detailsCard: {
-    backgroundColor: tokens.colors.white,
-    borderWidth: 1,
-    borderColor: tokens.colors.line,
-    borderRadius: 16,
-    padding: tokens.spacing.lg,
-    marginBottom: tokens.spacing.xl,
-  },
-  jobTitle: {
     fontSize: tokens.typography.sizes.lg,
     fontFamily: tokens.typography.fonts.display,
     fontWeight: tokens.typography.weights.bold,
     color: tokens.colors.ink,
-    marginBottom: tokens.spacing.xs,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.md,
+  translateBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    backgroundColor: tokens.colors.white,
   },
-  metaText: {
-    fontSize: tokens.typography.sizes.xs,
+  translateBtnText: {
+    fontSize: tokens.typography.sizes.sm,
     fontFamily: tokens.typography.fonts.body,
-    color: tokens.colors.muted,
-    marginStart: 6,
+    fontWeight: tokens.typography.weights.semibold,
+    color: tokens.colors.signal,
+  },
+  
+  detailsCard: {
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 16,
+    padding: tokens.spacing.lg,
+    marginBottom: tokens.spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   description: {
-    fontSize: tokens.typography.sizes.base,
+    fontSize: 16,
     fontFamily: tokens.typography.fonts.body,
     color: tokens.colors.ink,
-    lineHeight: 22,
+    lineHeight: 26,
   },
   applyContainer: {
     paddingBottom: tokens.spacing.xl,
   },
   applyButton: {
     flexDirection: 'row',
-    height: 54,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 14,
     backgroundColor: tokens.colors.signal,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: tokens.colors.ink,
+    shadowColor: tokens.colors.signal,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
   applyButtonDisabled: {
     backgroundColor: tokens.colors.muted,
-    opacity: 0.7,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   applyButtonText: {
     color: tokens.colors.white,
-    fontSize: tokens.typography.sizes.base,
+    fontSize: 17,
     fontWeight: tokens.typography.weights.bold,
     fontFamily: tokens.typography.fonts.body,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.xs,
-  },
-  translateBtn: {
-    paddingHorizontal: tokens.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: tokens.colors.line,
-    backgroundColor: tokens.colors.paper,
-  },
-  translateBtnText: {
-    fontSize: tokens.typography.sizes.xs - 1,
-    fontFamily: tokens.typography.fonts.body,
-    fontWeight: tokens.typography.weights.semibold,
-    color: tokens.colors.signal,
-  },
-  machineTranslatedLabel: {
-    fontSize: tokens.typography.sizes.xs,
-    fontFamily: tokens.typography.fonts.body,
-    color: tokens.colors.muted,
-    marginStart: 6,
-    fontStyle: 'italic',
-  },
+  }
 });
