@@ -52,15 +52,8 @@ export class JobsLifecycleService {
         },
       });
 
-      if (job.status === "OPEN") {
-        const updateResult = await tx.job.updateMany({
-          where: { id: jobId, status: "OPEN" },
-          data: { status: "NEGOTIATING", version: { increment: 1 } },
-        });
-        if (updateResult.count === 0) {
-          throw AppError.conflict("Job state changed, refresh and retry");
-        }
-      }
+      // We no longer automatically transition to NEGOTIATING here.
+      // The poster must manually select an applicant to move it to NEGOTIATING.
 
       const existingConversation = await tx.conversation.findFirst({
         where: {

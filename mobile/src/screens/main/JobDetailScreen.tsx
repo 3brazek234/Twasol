@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useJob, useApplyToJob, useTranslateJob } from '../../hooks/useJobs';
+import { useJob, useApplyToJob, useTranslateJob, useUpdateJobStatus } from '../../hooks/useJobs';
 import { useActiveLawyers } from '../../hooks/useCourts';
 import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
@@ -16,6 +16,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId ?? null);
   const { mutate: apply, isPending: isApplying } = useApplyToJob();
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateJobStatus();
   const { user } = useAuthStore();
   
   // Backend uses uppercase APPROVED
@@ -69,6 +70,29 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         Alert.alert('System Alert', err.message || 'Application could not be submitted.');
       },
     });
+  };
+
+  const handleNegotiate = () => {
+    Alert.alert(
+      "بدء التفاوض",
+      "هل تريد تغيير حالة الطلب إلى قيد التفاوض؟ سيؤدي ذلك لإيقاف استقبال طلبات جديدة.",
+      [
+        { text: "إلغاء", style: "cancel" },
+        { 
+          text: "تأكيد", 
+          onPress: () => {
+            updateStatus({ jobId, status: 'NEGOTIATING' }, {
+              onSuccess: () => {
+                Alert.alert('نجاح', 'تم تحديث حالة الطلب إلى قيد التفاوض');
+              },
+              onError: (err: any) => {
+                Alert.alert('خطأ', err.message || 'لم نتمكن من تحديث الحالة');
+              }
+            });
+          } 
+        }
+      ]
+    );
   };
 
   const handleComplete = async () => {
@@ -183,9 +207,17 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
             </View>
           )}
           {isOwnJob ? (
-            <View style={[styles.applyButton, { backgroundColor: tokens.colors.paper, borderWidth: 1, borderColor: tokens.colors.line }]}>
-              <Text style={[styles.applyButtonText, { color: tokens.colors.ink }]}>هذا طلبك</Text>
-            </View>
+            <TouchableOpacity 
+              style={[styles.applyButton, { backgroundColor: tokens.colors.navy }]} 
+              onPress={handleNegotiate}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.applyButtonText}>إيقاف الطلبات (بدء التفاوض)</Text>
+              )}
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity 
               activeOpacity={0.8}

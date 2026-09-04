@@ -38,6 +38,7 @@ export const useApplyToJob = () => {
     mutationFn: (jobId: string) => applyToJob(jobId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
 };

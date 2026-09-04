@@ -61,23 +61,7 @@ export class ChatConversationsService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    // Group by other user to prevent duplicates if there are already multiple conversations in DB
-    const uniqueUserConversations = new Map();
-
-    conversations.forEach((conv) => {
-      const otherParticipant = conv.participants.find((p) => p.userId !== userId);
-      if (!otherParticipant) return;
-      
-      const otherPartyId = otherParticipant.user.id;
-      const existing = uniqueUserConversations.get(otherPartyId);
-      
-      // Keep the one with the most recent updated time
-      if (!existing || conv.updatedAt > existing.updatedAt) {
-        uniqueUserConversations.set(otherPartyId, conv);
-      }
-    });
-
-    return Array.from(uniqueUserConversations.values()).map((conv) => {
+    return conversations.map((conv) => {
       const otherParticipant = conv.participants.find((p) => p.userId !== userId);
       const lastMessage = conv.messages[0];
       return {

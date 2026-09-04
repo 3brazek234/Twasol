@@ -85,33 +85,41 @@ export class JobsQueryService {
     const jobs = await prisma.job.findMany({
       where: {
         status: { in: ['AGREED', 'IN_PROGRESS'] },
-        applications: {
-          some: {
-            lawyerId: userId,
-            status: 'ACCEPTED'
+        OR: [
+          { postedByUserId: userId },
+          {
+            applications: {
+              some: { lawyerId: userId, status: 'ACCEPTED' }
+            }
           }
-        }
+        ]
       },
       include: {
         postedBy: { select: { fullName: true } },
-        court: { select: { name: true, governorate: true } }
+        court: { select: { nameAr: true, governorate: true } },
+        conversations: { select: { id: true } },
+        assignedLawyer: { select: { fullName: true } }
       },
-      orderBy: { deadline: 'asc' }
+      orderBy: { expiresAt: 'asc' }
     });
     
     // Map to required response shape
-    return jobs.map(j => ({
-      id: j.id,
-      title: j.title,
-      description: j.description,
-      task_type: "UNKNOWN", // Fallback if task_type missing in DB
-      fee: j.agreedSalary || j.salaryMax || 0,
-      deadline: j.expiresAt,
-      status: j.status,
-      created_at: j.createdAt,
-      poster_name: j.postedBy?.fullName || 'Unknown',
-      court_name: j.court?.name || 'Unknown',
-      court_governorate: j.court?.governorate || 'Unknown'
-    }));
+    return jobs.map(j => {
+      const isPoster = j.postedByUserId === userId;
+      return {
+        id: j.id,
+        title: j.title,
+        description: j.description,
+        task_type: "UNKNOWN",
+        fee: j.agreedSalary || j.salaryMax || 0,
+        deadline: j.expiresAt,
+        status: j.status,
+        created_at: j.createdAt,
+        poster_name: isPoster ? (j.assignedLawyer?.fullName || 'المحامي') : (j.postedBy?.fullName || 'Unknown'),
+        court_name: j.court?.nameAr || 'Unknown',
+        court_governorate: j.court?.governorate?.nameAr || 'Unknown',
+        conversationId: j.conversations[0]?.id || null,
+      };
+    });
   }
 }

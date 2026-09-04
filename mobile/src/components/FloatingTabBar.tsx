@@ -4,6 +4,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { GlassContainer } from './GlassContainer';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -12,11 +13,8 @@ export const FloatingTabBar = ({ state, descriptors, navigation }: BottomTabBarP
 
   // Hide tab bar if any screen in the current stack has explicitly requested it
   const focusedRoute = state.routes[state.index];
-
-  const currentStackState = focusedRoute.state;
-  const currentRouteName = currentStackState
-    ? currentStackState.routes[currentStackState.index ?? 0].name
-    : focusedRoute.name;
+  
+  const currentRouteName = getFocusedRouteNameFromRoute(focusedRoute) ?? focusedRoute.name;
 
   const hiddenRoutes = ['LawyerProfile', 'Chat', 'JobDetail', 'PostJob'];
   if (hiddenRoutes.includes(currentRouteName)) {
