@@ -21,10 +21,8 @@ export function buildMatchingQuery(
 
 export const notificationFanoutWorker = new Worker('notification-fanout', async (job: Job) => {
   const { jobId } = job.data;
-  
   const jobEntity = await prisma.job.findUnique({
-    where: { id: jobId },
-    include: { courts: true }
+    where: { id: jobId }
   });
 
   if (!jobEntity) return;
@@ -48,7 +46,7 @@ export const notificationFanoutWorker = new Worker('notification-fanout', async 
     return;
   }
 
-  const courtIds = jobEntity.courts.map(c => c.courtId);
+  const courtIds = jobEntity.courtId ? [jobEntity.courtId] : [];
   if (courtIds.length === 0) return;
 
   const whereClause = buildMatchingQuery(courtIds, jobEntity.postedByUserId);
