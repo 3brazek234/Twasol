@@ -65,6 +65,24 @@ export class JobsController {
     }
   }
 
+  static async getMyActiveJobs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jobs = await JobsService.getMyActiveJobs(req.user!.userId);
+      res.json({ success: true, data: jobs });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async complete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await JobsService.complete(req.params.id, req.user!.userId);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async translate(req: Request, res: Response, next: NextFunction) {
     try {
       const { targetLocale } = req.body;

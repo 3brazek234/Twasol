@@ -134,6 +134,62 @@ export class JobsLifecycleService {
     return result;
   }
 
+  static async complete(jobId: string, userId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw AppError.notFound("Job");
+    if (job.postedByUserId !== userId) {
+      throw AppError.forbidden("Only poster can complete job");
+    }
+    
+    if (job.status !== "IN_PROGRESS" && job.status !== "AGREED") {
+      throw AppError.badRequest("Job is not in progress");
+    }
+
+    const application = await prisma.jobApplication.findFirst({
+      where: { jobId, status: "ACCEPTED" },
+      include: { lawyer: { select: { id: true, fullName: true, pushTokens: true } } }
+    });
+
+    if (!application) {
+      throw AppError.badRequest("Job has no accepted lawyer");
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.job.updateMany({
+        where: { id: jobId, version: job.version },
+        data: { status: "COMPLETED", version: { increment: 1 } },
+      });
+
+      if (updateResult.count === 0) {
+        throw AppError.conflict("Job state changed, refresh and retry");
+      }
+
+      await auditLog(
+        tx as any,
+        userId,
+        "job.completed",
+        "Job",
+        jobId,
+        { status: job.status },
+        { status: "COMPLETED" },
+      );
+
+      // We use PushNotificationService to send push notification
+      return tx.job.findUnique({ where: { id: jobId } });
+    });
+
+    // Notify the lawyer
+    const { PushNotificationService } = await import('../notifications/push.service');
+    await PushNotificationService.sendPushToUser(
+      application.lawyer.id,
+      'تم إتمام المهمة ✓',
+      `أكد الموكل إتمام مهمة: ${job.title}. هل استلمت المبلغ المتفق عليه؟`,
+      { type: 'JOB_COMPLETED', jobId: job.id }
+    );
+
+    return { job: result, assignedLawyer: application.lawyer };
+  }
+
   static async delete(jobId: string, userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.isActive) {

@@ -8,10 +8,12 @@ import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase } from 'lu
 import { HiringHomeScreen } from '../../screens/main/HiringHomeScreen';
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
 import { JobDetailScreen } from '../../screens/main/JobDetailScreen';
+import { JobCompletionScreen } from '../../screens/main/JobCompletionScreen';
 import { PostJobScreen } from '../../screens/main/PostJob/PostJobScreen';
 import { ConversationsListScreen } from '../../screens/main/ConversationsListScreen';
 import { ChatScreen } from '../../screens/main/ChatScreen';
 import { NotificationsScreen } from '../../screens/main/NotificationsScreen';
+import { ActiveJobsScreen } from '../../screens/main/ActiveJobsScreen';
 import { SettingsScreen } from '../../screens/main/SettingsScreen';
 import { MyCourtsScreen } from '../../screens/main/MyCourtsScreen';
 import { FindLawyersScreen } from '../../screens/main/FindLawyersScreen';
@@ -21,6 +23,7 @@ import { FloatingTabBar } from '../../components/FloatingTabBar';
 const MainTabs = createBottomTabNavigator();
 const JobsStack = createNativeStackNavigator();
 const ChatsStack = createNativeStackNavigator();
+const ActiveJobsStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 
 const defaultScreenOptions = {
@@ -86,8 +89,9 @@ const JobsNavigator = () => {
           };
         }} 
       />
-      <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Case Details' }} />
-      <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'Delegate Task' }} />
+      <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل القضية' }} />
+      <JobsStack.Screen name="JobCompletion" component={JobCompletionScreen} options={{ title: 'إتمام المهمة' }} />
+      <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'إضافة طلب' }} />
       <JobsStack.Screen name="FindLawyers" component={FindLawyersScreen} options={{ title: 'Find Lawyers' }} />
       <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'Lawyer Profile' }} />
     </JobsStack.Navigator>
@@ -107,6 +111,12 @@ const ProfileNavigator = () => (
   </ProfileStack.Navigator>
 );
 
+const ActiveJobsNavigator = () => (
+  <ActiveJobsStack.Navigator screenOptions={defaultScreenOptions}>
+    <ActiveJobsStack.Screen name="ActiveJobs" component={ActiveJobsScreen} options={{ title: 'مهامي' }} />
+  </ActiveJobsStack.Navigator>
+);
+
 export const MainNavigator = () => (
   <MainTabs.Navigator 
     tabBar={(props) => <FloatingTabBar {...props} />}
@@ -117,15 +127,17 @@ export const MainNavigator = () => (
       tabBarIcon: ({ color }) => {
         const iconSize = 24;
         if (route.name === 'JobsTab') return <Gavel color={color} size={iconSize} />;
+        if (route.name === 'ActiveJobsTab') return <Briefcase color={color} size={iconSize} />;
         if (route.name === 'ChatsTab') return <Scale color={color} size={iconSize} />;
         if (route.name === 'NotificationsTab') return <Bell color={color} size={iconSize} />;
         if (route.name === 'ProfileTab') return <Award color={color} size={iconSize} />;
       },
     })}
   >
-    <MainTabs.Screen name="JobsTab" component={JobsNavigator} options={{ title: 'Docket' }} />
-    <MainTabs.Screen name="ChatsTab" component={ChatsNavigator} options={{ title: 'Chambers' }} />
-    <MainTabs.Screen name="NotificationsTab" component={NotificationsScreen} options={{ title: 'Notices' }} />
-    <MainTabs.Screen name="ProfileTab" component={ProfileNavigator} options={{ title: 'Counselor' }} />
+    <MainTabs.Screen name="JobsTab" component={JobsNavigator} options={{ title: 'الرئيسية' }} />
+    <MainTabs.Screen name="ActiveJobsTab" component={ActiveJobsNavigator} options={{ title: 'مهامي' }} />
+    <MainTabs.Screen name="ChatsTab" component={ChatsNavigator} options={{ title: 'المحادثات' }} />
+    <MainTabs.Screen name="NotificationsTab" component={NotificationsScreen} options={{ title: 'الإشعارات' }} />
+    <MainTabs.Screen name="ProfileTab" component={ProfileNavigator} options={{ title: 'حسابي' }} />
   </MainTabs.Navigator>
 );

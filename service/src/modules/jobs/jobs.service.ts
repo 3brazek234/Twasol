@@ -8,10 +8,12 @@ export class JobsService {
   static list = JobsQueryService.list;
   static getById = JobsQueryService.getById;
   static getMyJobs = JobsQueryService.getMyJobs;
+  static getMyActiveJobs = JobsQueryService.getMyActiveJobs;
   static getJobsByLawyerId = JobsQueryService.getJobsByLawyerId;
   
   static apply = JobsLifecycleService.apply;
   static updateStatus = JobsLifecycleService.updateStatus;
+  static complete = JobsLifecycleService.complete;
   static delete = JobsLifecycleService.delete;
   static translate = JobsLifecycleService.translate;
 }

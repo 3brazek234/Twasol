@@ -123,20 +123,42 @@ export const ChatScreen = ({ route, navigation }: any) => {
     respondToOffer(conversationId, msgId, action);
   };
 
-  const renderItem = ({ item }: { item: Message }) => {
+  const shouldShowDateSeparator = (msgs: Message[], index: number) => {
+    if (index === 0) return true;
+    const curr = new Date(msgs[index].timestamp).toDateString();
+    const prev = new Date(msgs[index - 1].timestamp).toDateString();
+    return curr !== prev;
+  };
+
+  const formatDateSeparator = (isoString: string) => {
+    const date = new Date(isoString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) return 'اليوم';
+    if (date.toDateString() === yesterday.toDateString()) return 'أمس';
+    return new Intl.DateTimeFormat('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+  };
+
+  const renderItem = ({ item, index }: { item: Message; index: number }) => {
     const isMe = item.senderId === user?.id;
 
-    if (item.type.startsWith('offer')) {
-      return (
-        <OfferCard 
-          item={item} 
-          isMe={isMe} 
-          onResponse={handleOfferResponse} 
-        />
-      );
-    }
+    const showDate = shouldShowDateSeparator(conversationMessages, index);
 
-    return <MessageBubble item={item} isMe={isMe} />;
+    return (
+      <View>
+        {showDate && (
+          <View style={styles.dateSeparator}>
+            <Text style={styles.dateSeparatorText}>{formatDateSeparator(item.timestamp)}</Text>
+          </View>
+        )}
+        {item.type.startsWith('offer') ? (
+          <OfferCard item={item} isMe={isMe} onResponse={handleOfferResponse} />
+        ) : (
+          <MessageBubble item={item} isMe={isMe} />
+        )}
+      </View>
+    );
   };
 
   const hasAcceptedOffer = conversationMessages.some((m: Message) => m.type === 'offer_accepted');
@@ -163,7 +185,13 @@ export const ChatScreen = ({ route, navigation }: any) => {
         keyExtractor={(item, index) => item?.id || `msg_${index}`}
         renderItem={renderItem}
         contentContainerStyle={styles.messageList}
-        refreshControl={<RefreshControl refreshing={isLoadingMore} onRefresh={loadMoreMessages} />}
+        ListHeaderComponent={
+          nextCursor ? (
+            <TouchableOpacity style={styles.loadMoreBtn} onPress={loadMoreMessages} disabled={isLoadingMore}>
+              {isLoadingMore ? <ActivityIndicator size="small" color={colors.signal} /> : <Text style={styles.loadMoreText}>تحميل المزيد من الرسائل</Text>}
+            </TouchableOpacity>
+          ) : null
+        }
         onContentSizeChange={() => {
           // Only scroll to end on initial load
           if (!nextCursor) {
@@ -270,8 +298,12 @@ export const ChatScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.paper },
+  container: { flex: 1, backgroundColor: '#E5DDD5' },
   messageList: { padding: spacing.md, paddingBottom: 40 },
+  dateSeparator: { alignItems: 'center', marginVertical: 12 },
+  dateSeparatorText: { backgroundColor: 'rgba(255,255,255,0.7)', color: '#555', fontSize: 11, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, fontFamily: fonts.body },
+  loadMoreBtn: { alignSelf: 'center', backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 },
+  loadMoreText: { color: colors.signal, fontSize: 13, fontFamily: fonts.bodySemibold },
 
   headerInfo: {
     alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',

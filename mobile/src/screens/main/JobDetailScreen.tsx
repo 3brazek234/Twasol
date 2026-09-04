@@ -5,7 +5,8 @@ import { useActiveLawyers } from '../../hooks/useCourts';
 import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { tokens } from '../../theme/tokens';
-import { Landmark, Users, Calendar, Gavel } from 'lucide-react-native';
+import { Landmark, Users, Calendar, Gavel, CheckCircle } from 'lucide-react-native';
+import { completeJob } from '../../api/jobs.api';
 
 export const JobDetailScreen = ({ route, navigation }: any) => {
   const { jobId } = route.params || {};
@@ -68,6 +69,28 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         Alert.alert('System Alert', err.message || 'Application could not be submitted.');
       },
     });
+  };
+
+  const handleComplete = async () => {
+    Alert.alert(
+      "تأكيد إتمام المهمة",
+      "هل تأكد من إتمام المحامي للمهمة المطلوبة؟\nسيتم إرسال إشعار للمحامي لتأكيد استلام المبلغ المتفق عليه.",
+      [
+        { text: "إلغاء", style: "cancel" },
+        { 
+          text: "نعم، تم الإتمام", 
+          onPress: async () => {
+            try {
+              await completeJob(jobId);
+              Alert.alert('نجاح', 'تم تأكيد إتمام المهمة وإرسال إشعار للمحامي');
+              navigation.goBack();
+            } catch (err) {
+              Alert.alert('خطأ', 'حدث خطأ أثناء إتمام المهمة');
+            }
+          } 
+        }
+      ]
+    );
   };
 
   if (isLoading) {
@@ -180,6 +203,18 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
               )}
             </TouchableOpacity>
           )}
+        </View>
+      )}
+
+      {(job.status === 'IN_PROGRESS' || job.status === 'AGREED') && isOwnJob && (
+        <View style={styles.applyContainer}>
+          <TouchableOpacity 
+            style={[styles.applyButton, { backgroundColor: '#28a745' }]} 
+            onPress={handleComplete}
+          >
+            <CheckCircle size={18} color="#fff" style={{ marginEnd: 8 }} />
+            <Text style={styles.applyButtonText}>تأكيد إتمام المهمة</Text>
+          </TouchableOpacity>
         </View>
       )}
     </ScrollView>

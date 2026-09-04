@@ -16,23 +16,34 @@ export const MessageBubble = ({ item, isMe }: MessageBubbleProps) => {
       animate={{ opacity: 1, scale: 1, translateY: 0 }}
       className={`mb-1 max-w-[85%] ${isMe ? 'self-start' : 'self-end'}`}
     >
-      <View className={`px-4 py-2 rounded-2xl shadow-sm ${
-        isMe ? 'bg-signal rounded-br-[2px]' : 'bg-white rounded-bl-[2px] border border-line'
-      }`}>
-        <Text className={`text-[15px] font-body leading-5 ${
-          isMe ? 'text-white' : 'text-ink'
-        }`}>
+      <View style={{
+        backgroundColor: isMe ? '#DCF8C6' : '#FFFFFF',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        borderBottomRightRadius: isMe ? 4 : 12,
+        borderBottomLeftRadius: isMe ? 12 : 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 1
+      }}>
+        <Text style={{
+          fontSize: 15,
+          fontFamily: 'Inter-Regular', // Use default font or keep as was
+          color: '#303030',
+          textAlign: isMe ? 'right' : 'right'
+        }}>
           {item.content}
         </Text>
 
-        <View className="flex-row items-center justify-end mt-1">
-          <Text className={`text-[10px] font-body ${
-            isMe ? 'text-white/70' : 'text-muted'
-          }`}>
-            12:45 PM
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 4 }}>
+          <Text style={{ fontSize: 10, color: isMe ? '#7B9E87' : '#999999' }}>
+            {new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.timestamp))}
           </Text>
           {isMe && (
-            <CheckCheck size={12} color="#FFFFFF" className="ml-1 opacity-80" />
+            <CheckCheck size={12} color="#7B9E87" style={{ marginStart: 4 }} />
           )}
         </View>
       </View>

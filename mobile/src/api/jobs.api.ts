@@ -96,3 +96,13 @@ export const translateJob = async (jobId: string, targetLocale: 'EN' | 'AR'): Pr
   // The interceptor has already unwrapped { success, data } → response.data is the inner data object
   return response.data;
 };
+
+export const fetchMyActiveJobs = async (): Promise<any[]> => {
+  const response = await apiClient.get<any>('/jobs/my-active');
+  return response.data;
+};
+
+export const completeJob = async (jobId: string): Promise<any> => {
+  const response = await apiClient.patch<any>(`/jobs/${jobId}/complete`);
+  return response.data;
+};
