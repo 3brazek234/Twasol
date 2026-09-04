@@ -71,7 +71,7 @@ export const SubscriptionScreen = () => {
       // 2. Upload to R2
       await uploadFileToR2({
         localUri: file.uri,
-        presignedUrl: urlData.data.uploadUrl,
+        presignedUrl: urlData.uploadUrl,
         contentType: file.mimeType || 'image/jpeg',
         onProgress: (progress) => setUploadProgress(progress),
       });
@@ -80,7 +80,7 @@ export const SubscriptionScreen = () => {
       await apiClient.post('/subscription/submit', {
         planId: selectedPlanId,
         paymentMethod,
-        receiptFileKey: urlData.data.fileKey,
+        receiptFileKey: urlData.fileKey,
       });
 
       Toast.show({

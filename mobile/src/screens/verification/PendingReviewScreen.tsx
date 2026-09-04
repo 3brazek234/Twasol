@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { View, Text, SafeAreaView } from 'react-native';
 import { Clock, CheckCircle2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import { TouchableOpacity } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { verificationApi } from '../../api/verification.api';
 
 export const PendingReviewScreen = () => {
-  const { submitVerification } = useAuthStore();
+  const { submitVerification, logout } = useAuthStore();
 
   useEffect(() => {
     const pollStatus = async () => {
@@ -60,6 +61,13 @@ export const PendingReviewScreen = () => {
             <Text className="text-sm font-bodyMedium text-ink text-right">بانتظار فحص نقابة المحامين</Text>
           </View>
         </View>
+
+        <TouchableOpacity 
+          className="mt-8 px-6 py-3 rounded-full bg-line/50" 
+          onPress={() => logout()}
+        >
+          <Text className="text-ink font-bodyMedium">تسجيل الخروج</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

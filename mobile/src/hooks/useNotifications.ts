@@ -6,7 +6,7 @@ export const useNotifications = () => {
     queryKey: ['notifications'],
     queryFn: ({ pageParam = 1 }) => getNotifications(pageParam),
     getNextPageParam: (lastPage, allPages) => {
-      const nextPage = allPages.length + 1;
+      const nextPage = (allPages?.length || 0) + 1;
       return nextPage <= lastPage.totalPages ? nextPage : undefined;
     },
     initialPageParam: 1,

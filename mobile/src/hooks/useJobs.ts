@@ -6,7 +6,7 @@ export const useJobs = (courtId?: string, status?: string, searchQuery?: string)
     queryKey: ['jobs', { courtId, status, searchQuery }],
     queryFn: ({ pageParam = 1 }) => fetchJobs(courtId, status, searchQuery, pageParam, 10),
     getNextPageParam: (lastPage: any, allPages: any) => {
-      const nextPage = allPages.length + 1;
+      const nextPage = (allPages?.length || 0) + 1;
       return nextPage <= lastPage.meta?.pages ? nextPage : undefined;
     },
     initialPageParam: 1,

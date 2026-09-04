@@ -44,13 +44,13 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
       // 2. Upload directly to Cloudflare R2
       await uploadFileToR2({
         localUri: file.uri,
-        presignedUrl: urlData.data.uploadUrl,
+        presignedUrl: urlData.uploadUrl,
         contentType: file.mimeType || 'image/jpeg',
         onProgress: (progress) => setUploadProgress(progress),
       });
 
       // 3. Confirm upload with the backend
-      await apiClient.post(`/verification/${urlData.data.documentId}/confirm`, {
+      await apiClient.post(`/verification/${urlData.documentId}/confirm`, {
         barId: '0000', // Placeholder or add input field for Bar ID
       });
 

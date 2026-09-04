@@ -6,7 +6,7 @@ import { AlertCircle } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 
 export const ResubmitScreen = ({ navigation }: any) => {
-  const { submitVerification } = useAuthStore();
+  const { submitVerification, logout } = useAuthStore();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -38,10 +38,10 @@ export const ResubmitScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate('MainAppFallback')}
+            onPress={() => logout()}
             activeOpacity={0.8}
           >
-            <Text style={styles.secondaryButtonText}>Browse Jobs Meanwhile</Text>
+            <Text style={styles.secondaryButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
       </View>

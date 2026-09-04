@@ -81,7 +81,7 @@ apiClient.interceptors.response.use(
         } else if (data.message) {
           errorMessage = data.message;
         } else if (data.error) {
-          errorMessage = data.error;
+          errorMessage = typeof data.error === 'string' ? data.error : (data.error.message || 'حدث خطأ');
         } else if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
            // Handle Zod validation arrays
            errorMessage = data.errors.map((e: any) => e.message || e).join('\n');
