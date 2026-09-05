@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, TextInput } from 'react-native';
 import { MotiView } from 'moti';
 import { tokens } from '../../../theme/tokens';
 import { Landmark, Check } from 'lucide-react-native';
@@ -29,10 +29,17 @@ export const PostJobStepCourts: React.FC<Props> = ({
   const [selectedLevel, setSelectedLevel] = useState<CourtType | null>(
     selectedCourt?.type ?? null
   );
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: courts = [], isFetching: isLoading } = useAllCourts({
     type: selectedLevel || undefined,
   });
+
+  // Filter courts by search query
+  const filteredCourts = courts.filter(court => 
+    court.nameAr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (court.governorate?.nameAr || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Auto-select when Cassation chosen (only 1 court exists)
   useEffect(() => {
@@ -49,6 +56,7 @@ export const PostJobStepCourts: React.FC<Props> = ({
   const handleLevelPress = (level: CourtType) => {
     if (selectedLevel === level) return;
     setSelectedLevel(level);
+    setSearchQuery('');
   };
 
   const handleCourtPress = (court: any) => {
@@ -100,6 +108,19 @@ export const PostJobStepCourts: React.FC<Props> = ({
         <>
           <Text style={styles.sectionLabel}>الخطوة ٢: اختر المحكمة المختصة</Text>
 
+          {/* Search Bar for long lists (Partial/Primary/Appeal) */}
+          {selectedLevel !== 'CASSATION' && (
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="ابحث عن اسم المحكمة أو المحافظة..."
+                placeholderTextColor={tokens.colors.muted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+          )}
+
           {/* Cassation: auto-selected banner */}
           {selectedLevel === 'CASSATION' && courts.length === 1 && (
             <View style={styles.autoSelectedBanner}>
@@ -124,11 +145,11 @@ export const PostJobStepCourts: React.FC<Props> = ({
                   color={tokens.colors.signal}
                   style={{ marginTop: tokens.spacing.xl }}
                 />
-              ) : courts.length === 0 ? (
-                <Text style={styles.emptyText}>لا توجد محاكم لهذه الدرجة</Text>
+              ) : filteredCourts.length === 0 ? (
+                <Text style={styles.emptyText}>لا توجد محاكم مطابقة للبحث</Text>
               ) : (
                 <FlatList
-                  data={courts}
+                  data={filteredCourts}
                   keyExtractor={item => item.id}
                   contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
                   showsVerticalScrollIndicator={false}
@@ -330,6 +351,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
     marginTop: 2,
+  },
+  searchContainer: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.paper,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: spacing.md,
+  },
+  searchInput: {
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    height: 44,
+    textAlign: 'right',
   },
   errorText: {
     fontFamily: tokens.typography.fonts.body,

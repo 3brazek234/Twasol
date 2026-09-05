@@ -67,7 +67,13 @@ export class JobsQueryService {
 
   static async getMyJobs(userId: string) {
     const [posted, assigned] = await Promise.all([
-      prisma.job.findMany({ where: { postedByUserId: userId } }),
+      prisma.job.findMany({ 
+        where: { postedByUserId: userId },
+        include: {
+          _count: { select: { applications: true } },
+          applications: { select: { id: true, status: true } }
+        }
+      }),
       prisma.job.findMany({
         where: {
           applications: {

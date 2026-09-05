@@ -55,6 +55,7 @@ const linking = {
           JobsTab: {
             screens: {
               JobDetail: 'job/:id',
+              JobCompletion: 'job-completion/:jobId',
             },
           },
         },
@@ -73,6 +74,9 @@ const linking = {
       const data = response?.notification.request.content.data;
 
       if (data?.url) return data.url;
+      if (data?.type === 'JOB_COMPLETED' && data?.jobId) {
+        return `${prefix}job-completion/${data.jobId}?fee=${data.fee || 0}&posterId=${data.posterId || ''}&jobTitle=${encodeURIComponent(data.jobTitle || '')}`;
+      }
       if (data?.conversationId) return `${prefix}chat/${data.conversationId}`;
       if (data?.jobId) return `${prefix}job/${data.jobId}`;
     }
@@ -90,6 +94,8 @@ const linking = {
         const data = response.notification.request.content.data;
         if (data?.url) {
           listener(data.url);
+        } else if (data?.type === 'JOB_COMPLETED' && data?.jobId) {
+          listener(`${prefix}job-completion/${data.jobId}?fee=${data.fee || 0}&posterId=${data.posterId || ''}&jobTitle=${encodeURIComponent(data.jobTitle || '')}`);
         } else if (data?.conversationId) {
           listener(`${prefix}chat/${data.conversationId}`);
         } else if (data?.jobId) {

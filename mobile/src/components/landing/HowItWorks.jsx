@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FileText, UserPlus, CheckCircle, MessageCircle, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';

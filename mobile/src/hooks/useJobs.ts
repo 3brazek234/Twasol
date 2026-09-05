@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { fetchJobs, createJob, applyToJob, updateJobStatus, fetchJobById, translateJob } from '../api/jobs.api';
+import { fetchJobs, createJob, applyToJob, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
 
 export const useJobs = (courtId?: string, status?: string, searchQuery?: string) => {
   return useInfiniteQuery({
@@ -56,5 +56,36 @@ export const useUpdateJobStatus = () => {
 export const useTranslateJob = () => {
   return useMutation({
     mutationFn: ({ jobId, targetLocale }: { jobId: string, targetLocale: 'EN' | 'AR' }) => translateJob(jobId, targetLocale),
+  });
+};
+
+export const useMyPostedJobs = (statusFilter?: string) => {
+  return useInfiniteQuery({
+    queryKey: ['jobs', 'my-posted', statusFilter],
+    queryFn: ({ pageParam = 1 }) => fetchMyPostedJobs(statusFilter, pageParam, 10),
+    getNextPageParam: (lastPage: any, allPages: any) => {
+      const nextPage = (allPages?.length || 0) + 1;
+      return nextPage <= lastPage.meta?.pages ? nextPage : undefined;
+    },
+    initialPageParam: 1,
+  });
+};
+
+export const useMyActiveJobs = () => {
+  return useQuery({
+    queryKey: ['jobs', 'my-active'],
+    queryFn: fetchMyActiveJobs,
+  });
+};
+
+export const useCompleteJob = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: completeJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs', 'my-posted'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs', 'my-active'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    },
   });
 };

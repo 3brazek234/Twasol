@@ -106,3 +106,25 @@ export const completeJob = async (jobId: string): Promise<any> => {
   const response = await apiClient.patch<any>(`/jobs/${jobId}/complete`);
   return response.data;
 };
+
+export const fetchMyPostedJobs = async (
+  status?: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<{ data: Job[]; meta: { total: number; page: number; limit: number; pages: number } }> => {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  params.append('page', page.toString());
+  params.append('limit', limit.toString());
+
+  const queryString = params.toString();
+  const endpoint = `/jobs/mine${queryString ? `?${queryString}` : ''}`;
+
+  const response = await apiClient.get<any>(endpoint);
+  const payload = response.data;
+
+  return {
+    data: (payload.data ?? payload).map(mapJobBackendToFrontend),
+    meta: payload.meta ?? { total: 0, page, limit, pages: 0 },
+  };
+};

@@ -47,7 +47,7 @@ export const getAllCourts = async (filters?: {
   type?: CourtType;
   governorateId?: string;
 }): Promise<Court[]> => {
-  const params: Record<string, string> = { limit: '100' };
+  const params: Record<string, string> = { limit: '1000' };
   if (filters?.type)          params.type = filters.type;
   if (filters?.governorateId) params.governorateId = filters.governorateId;
 

@@ -86,6 +86,10 @@ export class JobsLifecycleService {
     userId: string,
     newStatus: JobStatus,
   ) {
+    if (newStatus === "COMPLETED") {
+      throw AppError.badRequest("استخدم endpoint الإتمام المخصص");
+    }
+
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job) throw AppError.notFound("Job");
     if (job.postedByUserId !== userId)
@@ -166,6 +170,19 @@ export class JobsLifecycleService {
         { status: job.status },
         { status: "COMPLETED" },
       );
+
+      await tx.notification.create({
+        data: {
+          userId: application.lawyer.id,
+          type: "JOB_COMPLETED",
+          payload: {
+            jobId: job.id,
+            jobTitle: job.title,
+            fee: job.agreedSalary || job.salaryMin,
+            posterId: job.postedByUserId,
+          },
+        },
+      });
 
       // We use PushNotificationService to send push notification
       return tx.job.findUnique({ where: { id: jobId } });

@@ -67,6 +67,7 @@ enum NotificationType {
   SUBSCRIPTION_PAYMENT_PENDING  // الإيصال قيد المراجعة
   SUBSCRIPTION_ACTIVATED        // تم تفعيل الاشتراك
   SUBSCRIPTION_REJECTED         // تم رفض الإيصال
+  JOB_COMPLETED
 }
 
 enum ReportStatus {
