@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FileText, UserPlus, CheckCircle, MessageCircle, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
@@ -9,35 +9,35 @@ const steps = [
     id: 1,
     title: "نشر المهمة",
     description: "يقوم المحامي الموكِّل بنشر تفاصيل المهمة، يحدد المحكمة المطلوبة، الموعد النهائي، والأجر المقترح.",
-    icon: "document-text-outline",
+    Icon: FileText,
     color: "#1B4F72"
   },
   {
     id: 2,
     title: "التقديم على المهمة",
     description: "يتصفح المحامون المسجلون في تلك المحكمة المهام المتاحة ويتقدمون بطلباتهم مع ملاحظة تغطية.",
-    icon: "person-add-outline",
+    Icon: UserPlus,
     color: "#2E86C1"
   },
   {
     id: 3,
     title: "قبول التوكيل",
     description: "يختار الموكِّل المحامي المناسب ويقبل طلبه. يتم إخطار المحامي فوراً وتبدأ قناة التواصل المباشر بينهما.",
-    icon: "checkmark-circle-outline",
+    Icon: CheckCircle,
     color: "#198754"
   },
   {
     id: 4,
     title: "التنسيق والتنفيذ",
     description: "يتواصل الطرفان عبر المحادثة المباشرة لتبادل المستندات والتعليمات. يُحدِّث المحامي المُوكَّل حالة المهمة إلى جاري التنفيذ.",
-    icon: "chatbubbles-outline",
+    Icon: MessageCircle,
     color: "#C0973B"
   },
   {
     id: 5,
     title: "الإتمام والتقييم",
     description: "يؤكد الموكِّل اكتمال المهمة. يُقرّ المحامي المُوكَّل باستلام الأجر المتفق عليه. يقيّم كلا الطرفين تجربته لبناء سمعة موثوقة.",
-    icon: "star-outline",
+    Icon: Star,
     color: "#C0973B"
   }
 ];
@@ -77,7 +77,7 @@ export const HowItWorks = ({ isVisible }) => {
                     style={[styles.card, { borderLeftColor: step.color }]}
                   >
                     <View style={[styles.iconCircle, { backgroundColor: `${step.color}1A` }]}>
-                      <Ionicons name={step.icon} size={20} color={step.color} />
+                      <step.Icon size={20} color={step.color} />
                     </View>
                     <View style={styles.cardText}>
                       <Text style={styles.cardTitle}>{step.title}</Text>

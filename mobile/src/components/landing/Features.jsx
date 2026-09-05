@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ShieldCheck, MapPin, MessageCircle, Bell, Star, Clock } from 'lucide-react-native';
 import Animated, { FadeIn, useAnimatedStyle, withTiming, useSharedValue, useEffect } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
@@ -11,42 +11,42 @@ const features = [
     id: 1,
     title: "توثيق هوية المحامين",
     body: "كل محامٍ مُتحقق منه برقم نقابته قبل القبول في المنصة",
-    icon: "shield-checkmark-outline",
+    Icon: ShieldCheck,
     color: "#1B4F72"
   },
   {
     id: 2,
     title: "تطابق جغرافي دقيق",
     body: "نظام مطابقة يعرض فقط المحامين المسجلين في المحكمة المطلوبة",
-    icon: "location-outline",
+    Icon: MapPin,
     color: "#2E86C1"
   },
   {
     id: 3,
     title: "تواصل مباشر وآمن",
     body: "محادثة مشفرة بين الطرفين لكل مهمة على حدة",
-    icon: "chatbubble-ellipses-outline",
+    Icon: MessageCircle,
     color: "#C0973B"
   },
   {
     id: 4,
     title: "إشعارات فورية",
     body: "تنبيهات لحظية عند كل تحديث على مهمتك أو طلبك",
-    icon: "notifications-outline",
+    Icon: Bell,
     color: "#198754"
   },
   {
     id: 5,
     title: "نظام تقييم شفاف",
     body: "تقييمات حقيقية بعد كل مهمة تبني سمعة موثوقة للجميع",
-    icon: "star-outline",
+    Icon: Star,
     color: "#C0973B"
   },
   {
     id: 6,
     title: "إدارة المواعيد النهائية",
     body: "تنبيهات ذكية للمواعيد الحرجة حتى لا تفوتك مهمة",
-    icon: "time-outline",
+    Icon: Clock,
     color: "#DC3545"
   }
 ];
@@ -72,7 +72,7 @@ const FeatureCard = ({ item, index, isVisible }) => {
   return (
     <Animated.View style={[styles.card, animatedStyle]}>
       <View style={[styles.iconContainer, { backgroundColor: `${item.color}1A` }]}>
-        <Ionicons name={item.icon} size={28} color={item.color} />
+        <item.Icon size={28} color={item.color} />
       </View>
       <Text style={styles.cardTitle}>{item.title}</Text>
       <Text style={styles.cardBody}>{item.body}</Text>
