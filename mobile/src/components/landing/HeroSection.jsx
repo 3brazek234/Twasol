@@ -95,7 +95,7 @@ export const HeroSection = ({ navigation }) => {
 
           {/* Scroll Indicator */}
           <Animated.View style={[styles.scrollIndicator, bounceStyle]}>
-            <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.5)" />
+            <ChevronDown size={20} color="rgba(255,255,255,0.5)" />
             <Text style={styles.scrollText}>اكتشف المزيد</Text>
           </Animated.View>
 
