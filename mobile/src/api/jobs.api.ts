@@ -4,24 +4,16 @@ import { Job } from '../schemas/job.schema';
 // ─── Mapper ─────────────────────────────────────────────────────────────────
 // The backend includes the `court` relation directly on each job object.
 // We flatten it here so components just read `job.courtNameAr` etc.
-const mapJobBackendToFrontend = (job: any): Job => ({
-  id: job.id,
-  title: job.title,
-  description: job.description,
-  status: job.status,
+const mapJobBackendToFrontend = (job: any): any => ({
+  ...job,
   posterId: job.postedByUserId,
   assignedExecutorId: job.assignedLawyerId ?? null,
   offerAmount: job.offerAmount ? parseFloat(job.offerAmount) : undefined,
   salaryMin: job.salaryMin ? parseFloat(job.salaryMin) : undefined,
   salaryMax: job.salaryMax ? parseFloat(job.salaryMax) : undefined,
-  // court relation is included by the backend (include: { court: true })
-  courtId: job.courtId,
   courtNameAr: job.court?.nameAr ?? undefined,
   courtNameEn: job.court?.nameEn ?? undefined,
-  posterName: job.poster?.fullName ?? undefined,
-  expiresAt: job.expiresAt ?? null,
-  createdAt: job.createdAt,
-  updatedAt: job.updatedAt,
+  posterName: job.postedBy?.fullName ?? job.poster?.fullName ?? undefined,
 });
 
 // ─── API Functions ───────────────────────────────────────────────────────────
@@ -99,7 +91,8 @@ export const translateJob = async (jobId: string, targetLocale: 'EN' | 'AR'): Pr
 
 export const fetchMyActiveJobs = async (): Promise<any[]> => {
   const response = await apiClient.get<any>('/jobs/my-active');
-  return response.data;
+  const jobs = response.data.data ?? response.data;
+  return Array.isArray(jobs) ? jobs.map(mapJobBackendToFrontend) : [];
 };
 
 export const completeJob = async (jobId: string): Promise<any> => {
@@ -123,8 +116,15 @@ export const fetchMyPostedJobs = async (
   const response = await apiClient.get<any>(endpoint);
   const payload = response.data;
 
+  // Since the Axios interceptor unwraps { success, data }, payload IS the data object
+  // For /jobs/mine, it is { posted: [], assigned: [] }
+  let postedJobs = payload.posted || [];
+  if (status && status !== 'undefined') {
+    postedJobs = postedJobs.filter((job: any) => job.status === status);
+  }
+
   return {
-    data: (payload.data ?? payload).map(mapJobBackendToFrontend),
-    meta: payload.meta ?? { total: 0, page, limit, pages: 0 },
+    data: postedJobs.map(mapJobBackendToFrontend),
+    meta: { total: postedJobs.length, page: 1, limit: postedJobs.length, pages: 1 },
   };
 };

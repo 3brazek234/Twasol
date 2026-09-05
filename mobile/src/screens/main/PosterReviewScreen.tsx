@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.xs,
   },
   headerTitle: {
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 16,
     color: tokens.colors.ink,
   },
@@ -161,19 +161,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    fontFamily: tokens.fonts.displayBold,
+    fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 32,
     color: tokens.colors.white,
   },
   lawyerName: {
-    fontFamily: tokens.fonts.displayBold,
+    fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 20,
     color: tokens.colors.ink,
     marginTop: 12,
     textAlign: 'center',
   },
   lawyerLabel: {
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 13,
     color: tokens.colors.muted,
     marginTop: 4,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   questionText: {
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 16,
     color: tokens.colors.ink,
     textAlign: 'center',
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   ratingLabel: {
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 16,
     color: tokens.colors.navy,
     marginTop: 16,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   inputLabel: {
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 13,
     color: tokens.colors.muted,
     marginBottom: 8,
@@ -221,14 +221,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.colors.line,
     padding: 14,
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 14,
     color: tokens.colors.ink,
     minHeight: 100,
     textAlignVertical: 'top',
   },
   charCounter: {
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 11,
     color: tokens.colors.muted,
     textAlign: 'left',
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.muted,
   },
   submitButtonText: {
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 16,
     color: tokens.colors.white,
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   skipButtonText: {
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 13,
     color: tokens.colors.muted,
     textAlign: 'center',

@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   courtGov: {
     color: tokens.colors.muted,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 12,
     flex: 1,
     marginLeft: 8,
@@ -215,14 +215,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: tokens.colors.ink,
-    fontFamily: tokens.fonts.displayBold,
+    fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 16,
     marginBottom: 4,
     textAlign: 'left',
   },
   fee: {
     color: tokens.colors.gold,
-    fontFamily: tokens.fonts.mono,
+    fontFamily: tokens.typography.fonts.mono,
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'left',
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     color: tokens.colors.muted,
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 12,
   },
   pulsingDot: {
@@ -284,17 +284,17 @@ const styles = StyleSheet.create({
   },
   buttonTextWhite: {
     color: tokens.colors.white,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
   buttonTextCrimson: {
     color: tokens.colors.crimson,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
   buttonTextNavy: {
     color: tokens.colors.navy,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
 });

@@ -175,19 +175,19 @@ const styles = StyleSheet.create({
   },
   courtName: {
     color: tokens.colors.muted,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 12,
   },
   title: {
     color: tokens.colors.ink,
-    fontFamily: tokens.fonts.displayBold,
+    fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 16,
     marginBottom: 4,
     textAlign: 'left',
   },
   posterName: {
     color: tokens.colors.muted,
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 13,
     marginBottom: 12,
     textAlign: 'left',
@@ -200,11 +200,11 @@ const styles = StyleSheet.create({
   },
   fee: {
     color: tokens.colors.gold,
-    fontFamily: tokens.fonts.mono,
+    fontFamily: tokens.typography.fonts.mono,
     fontSize: 14,
   },
   deadline: {
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 13,
   },
   progressBarContainer: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: tokens.colors.white,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
   secondaryButton: {
@@ -250,12 +250,12 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: tokens.colors.navy,
-    fontFamily: tokens.fonts.bodySemibold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
   infoText: {
     color: tokens.colors.muted,
-    fontFamily: tokens.fonts.body,
+    fontFamily: tokens.typography.fonts.body,
     fontSize: 12,
     fontStyle: 'italic',
     flex: 1,

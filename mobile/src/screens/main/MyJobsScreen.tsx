@@ -187,13 +187,13 @@ export const MyJobsScreen = () => {
               />
             }
             ListEmptyComponent={
-              !postedJobsQuery.isFetching ? (
+              !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
                 <EmptyState
                   icon={<Briefcase size={48} color={tokens.colors.muted} />}
-                  title="لا توجد طلبات منشورة"
-                  description="ابدأ بنشر طلبك الأول للبحث عن محامين."
-                  actionLabel="نشر طلب جديد"
-                  onAction={() => navigation.navigate('PostJob')}
+                  headline="لا توجد طلبات منشورة"
+                  body="قم بإضافة طلب جديد للبدء في تلقي العروض."
+                  ctaText="نشر طلب جديد +"
+                  onCtaPress={() => navigation.navigate('PostJob')}
                 />
               ) : null
             }
@@ -218,10 +218,10 @@ export const MyJobsScreen = () => {
               !activeJobsQuery.isFetching ? (
                 <EmptyState
                   icon={<Activity size={48} color={tokens.colors.muted} />}
-                  title="لا توجد مهام نشطة حالياً"
-                  description="تصفح الطلبات المتاحة للتقديم عليها."
-                  actionLabel="استعرض الطلبات"
-                  onAction={() => navigation.navigate('JobsFeed')}
+                  headline="لا توجد مهام نشطة حالياً"
+                  body="استعرض الطلبات المتاحة للبدء في تلقي العروض."
+                  ctaText="استعرض الطلبات"
+                  onCtaPress={() => navigation.navigate('JobsTab')}
                 />
               ) : null
             }
