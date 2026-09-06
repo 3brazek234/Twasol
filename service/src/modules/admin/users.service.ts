@@ -1,3 +1,5 @@
+import { buildNotification } from "../notifications/notification-payload";
+
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { auditLog } from '../../common/utils/audit';
@@ -124,25 +126,21 @@ export class AdminUsersService {
       
       if (status === 'APPROVED') {
         await tx.notification.create({
-          data: {
+          data: buildNotification({
             userId,
             type: 'VERIFICATION_APPROVED',
-            payload: {
-              titleAr: 'تم توثيق حسابك بنجاح ✅',
-              messageAr: 'مبروك! تم التحقق من هويتك.',
-            },
-          },
+            titleAr: 'تم توثيق حسابك بنجاح ✅',
+            messageAr: 'مبروك! تم التحقق من هويتك.',
+          }),
         });
       } else if (status === 'REJECTED') {
         await tx.notification.create({
-          data: {
+          data: buildNotification({
             userId,
             type: 'VERIFICATION_REJECTED',
-            payload: {
-              titleAr: 'عذراً، لم يتم توثيق حسابك ❌',
-              messageAr: 'يرجى مراجعة ملاحظات الإدارة وإعادة المحاولة.',
-            },
-          },
+            titleAr: 'عذراً، لم يتم توثيق حسابك ❌',
+            messageAr: 'يرجى مراجعة ملاحظات الإدارة وإعادة المحاولة.',
+          }),
         });
       }
 

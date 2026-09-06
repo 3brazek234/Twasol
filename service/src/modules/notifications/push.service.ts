@@ -6,22 +6,14 @@ const expo = new Expo();
 
 export class PushNotificationService {
   /**
-   * Send a push notification to a specific user.
-   * This is meant to be called whenever a new in-app notification is created.
+   * Send a push notification to multiple tokens.
    */
-  static async sendPushToUser(userId: string, title: string, body: string, data?: any) {
+  static async sendPushToTokens(pushTokens: string[], title: string, body: string, data?: any) {
+    if (!pushTokens || pushTokens.length === 0) return;
+
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { pushTokens: true }
-      });
-
-      if (!user || !user.pushTokens || user.pushTokens.length === 0) {
-        return; // User has no registered devices
-      }
-
       const messages: ExpoPushMessage[] = [];
-      for (const pushToken of user.pushTokens) {
+      for (const pushToken of pushTokens) {
         if (!Expo.isExpoPushToken(pushToken)) {
           logger.warn({ pushToken }, 'Push token is not a valid Expo push token');
           continue;
@@ -48,10 +40,27 @@ export class PushNotificationService {
           logger.error({ err }, 'Error sending push notification chunk');
         }
       }
+    } catch (err) {
+      logger.error({ err }, 'Failed to send push notifications to tokens');
+    }
+  }
 
-      // In a production environment, you would also want to process the receipts
-      // to remove invalid/unregistered tokens, but this is sufficient for MVP.
+  /**
+   * Send a push notification to a specific user.
+   * This is meant to be called whenever a new in-app notification is created.
+   */
+  static async sendPushToUser(userId: string, title: string, body: string, data?: any) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { pushTokens: true }
+      });
 
+      if (!user || !user.pushTokens || user.pushTokens.length === 0) {
+        return; // User has no registered devices
+      }
+
+      await this.sendPushToTokens(user.pushTokens, title, body, data);
     } catch (err) {
       logger.error({ err, userId }, 'Failed to send push notification to user');
     }

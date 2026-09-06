@@ -1,3 +1,6 @@
+import { buildNotification } from "../notifications/notification-payload";
+import { NotificationsService } from "../notifications/notifications.service";
+
 import { Server, Socket } from 'socket.io';
 import { withValidation } from '../../socket/withValidation';
 import { joinConversationSchema, sendMessageSchema, acceptOfferSchema, rejectOfferSchema } from './chat.schema';
@@ -43,8 +46,26 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
     if (conversation) {
       const receiver = conversation.participants.find(p => p.userId !== userId);
       if (receiver) {
+        const job = conversation.jobId ? await prisma.job.findUnique({ where: { id: conversation.jobId }, select: { title: true } }) : null;
+        const sender = await prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } });
+        const truncatedBody = message.content && message.content.length > 80 ? message.content.slice(0, 80) + '…' : (message.content || 'رسالة جديدة');
+        
+        const type = data.type === 'OFFER' ? NotificationType.OFFER_RECEIVED : NotificationType.NEW_MESSAGE;
+        const titleAr = data.type === 'OFFER' ? 'عرض جديد 💰' : sender?.fullName || 'رسالة جديدة';
+        const messageAr = data.type === 'OFFER' ? 'لقد تلقيت عرضاً مالياً جديداً للمهمة' : truncatedBody;
+
+        await prisma.notification.create({
+          data: buildNotification({
+            userId: receiver.userId,
+            type,
+            titleAr,
+            messageAr,
+            data: { jobId: conversation.jobId, messageId: message.id, jobTitle: job?.title },
+          })
+        });
+
         io.to(`user:${receiver.userId}`).emit('notification:new', {
-          type: data.type === 'OFFER' ? NotificationType.OFFER_RECEIVED : NotificationType.NEW_MESSAGE,
+          type,
           messageId: message.id
         });
       }
@@ -57,16 +78,15 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
 
         const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } });
         if (admins.length > 0) {
-          await prisma.notification.createMany({
-            data: admins.map(admin => ({
-              userId: admin.id,
+          await NotificationsService.notifyManyUsers(
+            admins.map(a => a.id),
+            {
               type: 'NEW_MESSAGE',
-              title: 'New Support Message',
-              body: `New message from lawyer.`,
-              referenceId: conversation.id,
-              payload: {}
-            }))
-          });
+              titleAr: 'رسالة دعم فني جديدة 💬',
+              messageAr: 'يوجد رسالة جديدة في قسم الدعم الفني تحتاج لردك',
+              data: { conversationId: conversation.id }
+            }
+          );
         }
       }
     }
@@ -75,15 +95,9 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
   }));
 
   socket.on('offer:accept', withValidation(acceptOfferSchema, async (data) => {
-    // Check for standard proxy headers first, fallback to socket address
     let ipAddress = socket.handshake.headers['x-forwarded-for'] as string;
-    if (!ipAddress) {
-      ipAddress = socket.handshake.address;
-    }
-    // If it's a comma-separated list, take the first one
-    if (ipAddress && ipAddress.includes(',')) {
-      ipAddress = ipAddress.split(',')[0].trim();
-    }
+    if (!ipAddress) ipAddress = socket.handshake.address;
+    if (ipAddress && ipAddress.includes(',')) ipAddress = ipAddress.split(',')[0].trim();
 
     const message = await ChatService.acceptOffer(data.messageId, userId, ipAddress);
     if (!message) return;
@@ -96,7 +110,19 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
     });
     
     if (conversation) {
+      const job = conversation.jobId ? await prisma.job.findUnique({ where: { id: conversation.jobId }, select: { title: true } }) : null;
       for (const p of conversation.participants) {
+        if (p.userId !== userId) {
+          await prisma.notification.create({
+            data: buildNotification({
+              userId: p.userId,
+              type: NotificationType.OFFER_ACCEPTED,
+              titleAr: 'تم قبول العرض ✅',
+              messageAr: `تم قبول عرضك المالي لمهمة: ${job?.title || 'غير معروف'}`,
+              data: { jobId: conversation.jobId }
+            })
+          });
+        }
         io.to(`user:${p.userId}`).emit('notification:new', {
           type: NotificationType.OFFER_ACCEPTED,
           jobId: conversation.jobId

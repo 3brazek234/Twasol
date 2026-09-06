@@ -148,16 +148,13 @@ export class SubscriptionService {
 
     // إشعار للمحامي بأن طلبه قيد المراجعة
     await prisma.notification.create({
-      data: {
+      data: buildNotification({
         userId,
         type: 'SUBSCRIPTION_PAYMENT_PENDING',
-        payload: {
-          titleAr: 'تم استلام طلب الاشتراك ⏳',
-          messageAr:
-            'تم استلام طلب الاشتراك الخاص بك وهو قيد المراجعة من فريق الإدارة. سيتم إشعارك فور الانتهاء من المراجعة.',
-          paymentId: payment.id,
-        },
-      },
+        titleAr: 'تم استلام طلب الاشتراك ⏳',
+        messageAr: 'تم استلام طلب الاشتراك الخاص بك وهو قيد المراجعة من فريق الإدارة. سيتم إشعارك فور الانتهاء من المراجعة.',
+        data: { paymentId: payment.id },
+      })
     });
 
     // إشعار للأدمن عبر الـ socket
@@ -236,15 +233,13 @@ export class SubscriptionService {
       });
 
       await tx.notification.create({
-        data: {
+        data: buildNotification({
           userId: payment.userId,
           type: 'SUBSCRIPTION_ACTIVATED',
-          payload: {
-            titleAr: 'تم تفعيل حسابك 🎉',
-            messageAr: `مرحباً بك في وكيل! تم تفعيل اشتراكك بنجاح. حسابك نشط الآن ويمكنك الاستفادة من جميع الخدمات. ينتهي اشتراكك في ${expiresAt.toLocaleDateString('ar-EG')}.`,
-            expiresAt: expiresAt.toISOString(),
-          },
-        },
+          titleAr: 'تم تفعيل حسابك 🎉',
+          messageAr: `مرحباً بك في وكيل! تم تفعيل اشتراكك بنجاح. حسابك نشط الآن ويمكنك الاستفادة من جميع الخدمات. ينتهي اشتراكك في ${expiresAt.toLocaleDateString('ar-EG')}.`,
+          data: { paymentId: payment.id, expiresAt: expiresAt.toISOString() },
+        })
       });
     });
 
@@ -281,15 +276,13 @@ export class SubscriptionService {
       });
 
       await tx.notification.create({
-        data: {
+        data: buildNotification({
           userId: payment.userId,
           type: 'SUBSCRIPTION_REJECTED',
-          payload: {
-            titleAr: 'تم رفض إيصال الدفع ❌',
-            messageAr: `للأسف تم رفض إيصال الدفع الخاص بك. السبب: ${notes}. يرجى التواصل مع الدعم أو إعادة تقديم الطلب مع إيصال صحيح.`,
-            reason: notes,
-          },
-        },
+          titleAr: 'تم رفض إيصال الدفع ❌',
+          messageAr: `تم رفض إيصال الدفع بسبب: ${notes}. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.`,
+          data: { paymentId: payment.id },
+        })
       });
     });
 

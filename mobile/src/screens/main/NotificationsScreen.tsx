@@ -43,6 +43,7 @@ export const NotificationsScreen = ({ navigation }: any) => {
       case 'new_job': 
         return { icon: <Briefcase color={tokens.colors.signal} size={16} />, bg: 'rgba(47, 111, 94, 0.08)' };
       case 'chat_message': 
+      case 'new_message':
         return { icon: <MessageSquare color={tokens.colors.ink} size={16} />, bg: 'rgba(20, 33, 61, 0.08)' };
       case 'offer_received':
       case 'offer_accepted':

@@ -1,6 +1,8 @@
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { NotificationType } from '@prisma/client';
+import { NotificationPayload, buildNotification } from './notification-payload';
+import { PushNotificationService } from './push.service';
 
 export class NotificationsService {
   static async create(userId: string, type: NotificationType, payload: any) {
@@ -13,15 +15,32 @@ export class NotificationsService {
     });
   }
 
-  static async createMany(userIds: string[], type: NotificationType, payload: any) {
-    const data = userIds.map(userId => ({
-      userId,
-      type,
-      payload
-    }));
-    return prisma.notification.createMany({
-      data
+  static async notifyManyUsers(userIds: string[], payload: Omit<NotificationPayload, 'userId'>) {
+    if (userIds.length === 0) return;
+
+    // Bulk insert for DB history — fast, single query
+    await prisma.notification.createMany({
+      data: userIds.map(userId => buildNotification({ ...payload, userId })),
     });
+
+    // Explicitly trigger push for each recipient
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, pushTokens: true },
+    });
+
+    const tokens = users
+      .flatMap(u => u.pushTokens || [])
+      .filter((t): t is string => Boolean(t));
+
+    if (tokens.length > 0) {
+      await PushNotificationService.sendPushToTokens(
+        tokens,
+        payload.titleAr,
+        payload.messageAr,
+        payload.data ?? {}
+      );
+    }
   }
 
   static async list(userId: string, options: { page: number; limit: number }) {

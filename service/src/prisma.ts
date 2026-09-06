@@ -71,13 +71,20 @@ export const prisma = basePrisma.$extends({
       async create({ args, query }) {
         const notification = await query(args);
         
-        // Asynchronously send push notification without blocking the DB query
         try {
           const { PushNotificationService } = require('./modules/notifications/push.service');
           const payload = notification.payload as any;
-          const title = payload?.titleAr || 'إشعار جديد';
-          const body = payload?.messageAr || payload?.message || 'لديك إشعار جديد في وكيل';
-          PushNotificationService.sendPushToUser(notification.userId, title, body, payload).catch((err: any) => console.error(err));
+          const title = payload?.titleAr;
+          const body = payload?.messageAr;
+
+          if (!title || !body) {
+            logger.warn({ notificationType: notification.type }, 'Notification created without titleAr/messageAr — check the caller');
+          }
+
+          const finalTitle = title || 'إشعار جديد';
+          const finalBody  = body  || 'لديك إشعار جديد في وكيل';
+
+          PushNotificationService.sendPushToUser(notification.userId, finalTitle, finalBody, payload).catch((err: any) => console.error(err));
         } catch (err) {
           logger.error({ err }, 'Failed to trigger PushNotificationService');
         }

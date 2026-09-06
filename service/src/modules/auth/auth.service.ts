@@ -1,3 +1,5 @@
+import { NotificationsService } from "../notifications/notifications.service";
+
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { hashPassword, comparePassword } from '../../common/utils/password';
@@ -87,13 +89,15 @@ export class AuthService {
     if (admins.length > 0) {
       const notificationPayload = { newUserId: user.id, fullName: user.fullName, email: user.email, role: user.role };
       
-      await prisma.notification.createMany({
-        data: admins.map(admin => ({
-          userId: admin.id,
-          type: NotificationType.NEW_USER_SIGNUP,
-          payload: notificationPayload,
-        }))
-      });
+      await NotificationsService.notifyManyUsers(
+        admins.map(a => a.id),
+        {
+          type: 'NEW_USER_SIGNUP',
+          titleAr: 'تسجيل مستخدم جديد',
+          messageAr: `قام مستخدم جديد بالتسجيل: ${user.fullName}`,
+          data: notificationPayload,
+        }
+      );
 
       try {
         const { io } = await import('../../server');

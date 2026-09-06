@@ -7,8 +7,8 @@ export const getNotifications = async (page: number = 1): Promise<{ data: AppNot
   const mappedData = rawItems.map((n: any) => ({
     id: n.id,
     userId: n.userId,
-    title: n.payload?.title || 'Notification',
-    body: n.payload?.body || 'You have a new notification.',
+    title: n.payload?.titleAr || n.payload?.title || 'إشعار جديد',
+    body: n.payload?.messageAr || n.payload?.body || 'لديك إشعار جديد.',
     type: n.type?.toLowerCase() || 'unknown',
     referenceId: n.payload?.jobId || n.payload?.conversationId,
     metadata: n.payload,

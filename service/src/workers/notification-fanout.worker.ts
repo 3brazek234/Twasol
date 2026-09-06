@@ -1,3 +1,6 @@
+import { buildNotification } from "../modules/notifications/notification-payload";
+import { NotificationsService } from "../modules/notifications/notifications.service";
+
 import { Worker, Job } from 'bullmq';
 import { prisma } from '../prisma';
 import { redisConnection, pushNotificationQueue } from '../common/utils/queue';
@@ -30,16 +33,13 @@ export const notificationFanoutWorker = new Worker('notification-fanout', async 
   // If this is a direct invite, only notify the invited lawyer and skip fanout
   if (jobEntity.invitedLawyerId) {
     await prisma.notification.create({
-      data: {
+      data: buildNotification({
         userId: jobEntity.invitedLawyerId,
         type: NotificationType.JOB_INVITE,
-        payload: { jobId: jobEntity.id, title: jobEntity.title },
-      }
-    });
-
-    await pushNotificationQueue.add('push-batch', {
-      userIds: [jobEntity.invitedLawyerId],
-      payload: { jobId: jobEntity.id, title: jobEntity.title }
+        titleAr: 'دعوة جديدة 📨',
+        messageAr: `تمت دعوتك للتقديم على مهمة: ${jobEntity.title}`,
+        data: { jobId: jobEntity.id },
+      })
     });
 
     logger.info({ jobId, invitedLawyerId: jobEntity.invitedLawyerId }, 'Direct invite notification sent');
@@ -58,32 +58,15 @@ export const notificationFanoutWorker = new Worker('notification-fanout', async 
   if (lawyers.length > 0) {
     const uniqueLawyerIds = Array.from(new Set(lawyers.map(l => l.userId)));
     
-    // Batch insert notifications
-    const notifications = uniqueLawyerIds.map(uid => ({
-      userId: uid,
-      type: NotificationType.NEW_JOB,
-      payload: { jobId: jobEntity.id, title: jobEntity.title },
-    }));
-
-    await prisma.notification.createMany({
-      data: notifications,
-    });
-
-    // Chunk into 100 for push notifications
-    const CHUNK_SIZE = 100;
-    const chunks = [];
-    for (let i = 0; i < uniqueLawyerIds.length; i += CHUNK_SIZE) {
-      chunks.push(uniqueLawyerIds.slice(i, i + CHUNK_SIZE));
-    }
-
-    const pushJobs = chunks.map(chunk => ({
-      name: 'push-batch',
-      data: { userIds: chunk, payload: { jobId: jobEntity.id, title: jobEntity.title } }
-    }));
-
-    if (pushJobs.length > 0) {
-      await pushNotificationQueue.addBulk(pushJobs);
-    }
+    await NotificationsService.notifyManyUsers(
+      uniqueLawyerIds,
+      {
+        type: NotificationType.NEW_JOB,
+        titleAr: 'مهمة جديدة متاحة 💼',
+        messageAr: `تم نشر مهمة جديدة في المحكمة: ${jobEntity.title}`,
+        data: { jobId: jobEntity.id },
+      }
+    );
   }
 
   logger.info({ jobId, matches: lawyers.length }, 'Notification fanout completed');

@@ -1,3 +1,5 @@
+import { buildNotification } from "../notifications/notification-payload";
+
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
@@ -181,11 +183,13 @@ export class JobsLifecycleService {
 
       if (job.assignedLawyerId) {
         await tx.notification.create({
-          data: {
+          data: buildNotification({
             userId: job.assignedLawyerId,
             type: "JOB_COMPLETED",
-            payload: { jobId: job.id, jobTitle: job.title, fee: job.agreedSalary || job.salaryMax, posterId: job.postedByUserId },
-          }
+            titleAr: 'تم إتمام المهمة ✓',
+            messageAr: `أكد الموكِّل إتمام مهمة: ${job.title}. هل استلمت المبلغ المتفق عليه؟`,
+            data: { jobId: job.id, jobTitle: job.title, fee: job.agreedSalary || job.salaryMax, posterId: job.postedByUserId },
+          })
         });
       }
 
@@ -212,11 +216,13 @@ export class JobsLifecycleService {
 
       if (job.assignedLawyerId) {
         await tx.notification.create({
-          data: {
+          data: buildNotification({
             userId: job.assignedLawyerId,
             type: "JOB_EXPIRED_WITHDRAWN", // re-using this or making a new one
-            payload: { jobId: job.id, jobTitle: job.title, message: "تم إلغاء الطلب من قبل الموكل" },
-          }
+            titleAr: 'تم إلغاء المهمة',
+            messageAr: `قام الموكِّل بإلغاء طلب: ${job.title}`,
+            data: { jobId: job.id, jobTitle: job.title },
+          })
         });
       }
 
