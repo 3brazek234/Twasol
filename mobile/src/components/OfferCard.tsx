@@ -17,10 +17,7 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
   const isWithdrawn = item.type === 'offer_withdrawn';
 
   return (
-    <MotiView
-      from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-      animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{ type: 'spring', damping: 15 }}
+    <View
       className={`bg-white rounded-2xl w-[94%] self-center my-4 shadow-md overflow-hidden border border-line`}
     >
       <View className="h-1 bg-signal w-full" />
@@ -41,7 +38,7 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
         <Text className="text-[11px] font-bodySemibold text-muted mb-2 tracking-widest uppercase">المبلغ المقترح</Text>
         <View className="flex-row items-center mb-2">
           <DollarSign size={24} color="#2A8F85" className="mr-0.5" />
-          <Text className="text-3xl font-mono text-ink font-bold">{item.offerAmount?.toLocaleString()}</Text>
+          <Text className="text-3xl font-mono text-ink font-bold">{item.offerAmount ? item.offerAmount.toLocaleString() : '0'}</Text>
         </View>
         {item.content ? (
           <Text className="text-sm font-body text-muted text-center mt-1 italic">
@@ -78,6 +75,6 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
           </Text>
         </View>
       )}
-    </MotiView>
+    </View>
   );
 };

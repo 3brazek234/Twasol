@@ -73,7 +73,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversationId,
       senderId,
       content,
-      type: offerAmount ? 'offer' : 'text',
+      type: (offerAmount !== undefined && offerAmount !== null) ? 'offer' : 'text',
       offerAmount,
       status: 'pending',
       timestamp: new Date().toISOString()
@@ -85,9 +85,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (socket?.connected) {
       socket.emit('message:send', { 
         conversationId, 
-        content: content || (offerAmount ? 'Offer sent' : ' '), 
+        content: content || ((offerAmount !== undefined && offerAmount !== null) ? 'Offer sent' : ' '), 
         type: newMessage.type === 'offer' ? 'OFFER' : 'TEXT', 
-        offerAmount: offerAmount ? String(offerAmount) : undefined 
+        offerAmount: (offerAmount !== undefined && offerAmount !== null) ? String(offerAmount) : undefined 
       }, (ack: any) => {
         // Callback ack from server to replace temp id and mark sent
         if (ack?.error) {
@@ -152,12 +152,22 @@ useSocketStore.subscribe((state) => {
         conversationId: payload.conversationId,
         senderId: payload.senderId,
         content: payload.content,
-        type: payload.type === 'OFFER' ? 'offer' : (payload.type === 'OFFER_ACCEPTED' ? 'offer_accepted' : (payload.type === 'OFFER_REJECTED' ? 'offer_rejected' : 'text')),
+        type: payload.type === 'OFFER' ? (payload.offerStatus === 'ACCEPTED' ? 'offer_accepted' : payload.offerStatus === 'REJECTED' ? 'offer_rejected' : payload.offerStatus === 'WITHDRAWN' ? 'offer_withdrawn' : 'offer') : 'text',
         offerAmount: payload.offerAmount ? Number(payload.offerAmount) : undefined,
         status: 'sent',
         timestamp: payload.createdAt || payload.timestamp || new Date().toISOString(),
       };
       useChatStore.getState().addMessage(formattedMessage);
+    });
+
+    state.socket.off('offer:accepted');
+    state.socket.on('offer:accepted', (payload: any) => {
+      useChatStore.getState().updateMessageStatus(payload.id, 'sent', 'offer_accepted');
+    });
+
+    state.socket.off('offer:rejected');
+    state.socket.on('offer:rejected', (payload: any) => {
+      useChatStore.getState().updateMessageStatus(payload.id, 'sent', 'offer_rejected');
     });
   }
 });

@@ -70,6 +70,8 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
         }
       }
     }
+
+    return message;
   }));
 
   socket.on('offer:accept', withValidation(acceptOfferSchema, async (data) => {
@@ -101,12 +103,15 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
         });
       }
     }
+    
+    return message;
   }));
 
   socket.on('offer:reject', withValidation(rejectOfferSchema, async (data) => {
     const message = await ChatService.rejectOffer(data.messageId, userId);
     if (message) {
       io.to(`conversation:${message.conversationId}`).emit('offer:rejected', message);
+      return message;
     }
   }));
 }

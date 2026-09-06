@@ -10,24 +10,37 @@ import { logger } from '../common/utils/logger';
  */
 export function withValidation<T>(
   schema: ZodSchema<T>,
-  handler: (data: T) => Promise<void>
+  handler: (data: T, ack?: Function) => Promise<any>
 ) {
-  return async function(this: Socket, rawData: unknown) {
+  return async function(this: Socket, rawData: unknown, ack?: Function) {
     const socket = this;
     const result = schema.safeParse(rawData);
     if (!result.success) {
       logger.warn({ issues: result.error.issues }, 'Socket validation failed');
-      socket.emit('error', {
+      const errPayload = {
         code: 'VALIDATION_ERROR',
         issues: result.error.flatten().fieldErrors,
-      });
+      };
+      if (typeof ack === 'function') {
+        ack({ error: errPayload });
+      } else {
+        socket.emit('error', errPayload);
+      }
       return;
     }
     try {
-      await handler(result.data);
+      const response = await handler(result.data, ack);
+      if (typeof ack === 'function' && response !== undefined) {
+        ack(response);
+      }
     } catch (err: any) {
       logger.error({ err }, 'Socket handler error');
-      socket.emit('error', { code: err.code || 'INTERNAL_ERROR', message: err.message });
+      const errPayload = { code: err.code || 'INTERNAL_ERROR', message: err.message };
+      if (typeof ack === 'function') {
+        ack({ error: errPayload });
+      } else {
+        socket.emit('error', errPayload);
+      }
     }
   };
 }

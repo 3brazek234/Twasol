@@ -9,14 +9,17 @@ import { MessageBubble } from '../../components/MessageBubble';
 import { OfferCard } from '../../components/OfferCard';
 import { MotiView, AnimatePresence } from 'moti';
 import { fetchMessages } from '../../api/conversations.api';
+import { useSocketStore } from '../../stores/socketStore';
 
 const { width } = Dimensions.get('window');
 
 export const ChatScreen = ({ route, navigation }: any) => {
-  const { conversationId, conversationType, otherPartyName, jobTitle, supportStatus, jobStatus } = route.params || {};
+  const { conversationId, conversationType, otherPartyName, jobTitle, supportStatus, jobStatus: initialJobStatus } = route.params || {};
   const { user } = useAuthStore();
+  const socket = useSocketStore((state) => state.socket);
   const { messages, setActiveConversation, sendMessage, respondToOffer, setMessages } = useChatStore();
   
+  const [jobStatus, setJobStatus] = useState(initialJobStatus);
   const [isConverted, setIsConverted] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isOfferMode, setIsOfferMode] = useState(false);
@@ -26,6 +29,22 @@ export const ChatScreen = ({ route, navigation }: any) => {
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleOfferAccepted = () => {
+      setJobStatus('AGREED');
+      // If we are in offer mode, exit it
+      setIsOfferMode(false);
+      setOfferAmount('');
+    };
+
+    socket.on('offer:accepted', handleOfferAccepted);
+    return () => {
+      socket.off('offer:accepted', handleOfferAccepted);
+    };
+  }, [socket]);
 
   useEffect(() => {
     setActiveConversation(conversationId);
@@ -41,7 +60,7 @@ export const ChatScreen = ({ route, navigation }: any) => {
           conversationId: m.conversationId,
           senderId: m.senderId,
           content: m.content,
-          type: m.type === 'OFFER' ? 'offer' : (m.type === 'OFFER_ACCEPTED' ? 'offer_accepted' : (m.type === 'OFFER_REJECTED' ? 'offer_rejected' : 'text')),
+          type: m.type === 'OFFER' ? (m.offerStatus === 'ACCEPTED' ? 'offer_accepted' : m.offerStatus === 'REJECTED' ? 'offer_rejected' : m.offerStatus === 'WITHDRAWN' ? 'offer_withdrawn' : 'offer') : 'text',
           offerAmount: m.offerAmount ? Number(m.offerAmount) : undefined,
           status: 'sent',
           timestamp: m.createdAt,
@@ -144,9 +163,12 @@ export const ChatScreen = ({ route, navigation }: any) => {
   };
 
   const renderItem = ({ item, index }: { item: Message; index: number }) => {
+    if (!item) return null;
     const isMe = item.senderId === user?.id;
 
     const showDate = shouldShowDateSeparator(conversationMessages, index);
+
+    const isOffer = item.type && typeof item.type === 'string' && item.type.startsWith('offer');
 
     return (
       <View>
@@ -155,7 +177,7 @@ export const ChatScreen = ({ route, navigation }: any) => {
             <Text style={styles.dateSeparatorText}>{formatDateSeparator(item.timestamp)}</Text>
           </View>
         )}
-        {item.type.startsWith('offer') ? (
+        {isOffer ? (
           <OfferCard item={item} isMe={isMe} onResponse={handleOfferResponse} />
         ) : (
           <MessageBubble item={item} isMe={isMe} />
@@ -285,7 +307,7 @@ export const ChatScreen = ({ route, navigation }: any) => {
             />
           </View>
 
-          {!isSupport && jobStatus === 'NEGOTIATING' && (
+          {!isSupport && (isDirect || jobStatus === 'NEGOTIATING' || jobStatus === 'OPEN') && (
             <TouchableOpacity
               activeOpacity={0.8}
               style={[styles.toggleOfferBtn, isOfferMode && styles.toggleOfferBtnActive]}

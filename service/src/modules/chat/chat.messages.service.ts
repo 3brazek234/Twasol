@@ -33,8 +33,8 @@ export class ChatMessagesService {
 
       if (conversation.jobId) {
         const job = await prisma.job.findUnique({ where: { id: conversation.jobId } });
-        if (job?.status !== 'NEGOTIATING') {
-          throw AppError.badRequest('Offers can only be sent when the job is in NEGOTIATING status');
+        if (job?.status !== 'NEGOTIATING' && job?.status !== 'OPEN') {
+          throw AppError.badRequest('Offers can only be sent when the job is OPEN or NEGOTIATING');
         }
       }
     }
@@ -89,8 +89,11 @@ export class ChatMessagesService {
         throw AppError.conflict('Offer is no longer pending or does not exist');
       }
 
-      await tx.job.updateMany({
-        where: { id: message.conversation.jobId!, status: JobStatus.NEGOTIATING },
+      const { count: jobUpdateCount } = await tx.job.updateMany({
+        where: { 
+          id: message.conversation.jobId!, 
+          status: { in: [JobStatus.NEGOTIATING, JobStatus.OPEN] } 
+        },
         data: {
           agreedSalary: message.offerAmount!,
           assignedLawyerId: message.senderId,
@@ -98,6 +101,10 @@ export class ChatMessagesService {
           agreedAt: new Date()
         }
       });
+
+      if (jobUpdateCount === 0) {
+        throw AppError.conflict('Job is not in a valid state to accept offers');
+      }
 
       // Withdraw all other pending offers in this conversation
       await tx.message.updateMany({

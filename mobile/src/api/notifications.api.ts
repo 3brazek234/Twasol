@@ -4,7 +4,6 @@ import { AppNotification } from '../schemas/notification.schema';
 export const getNotifications = async (page: number = 1): Promise<{ data: AppNotification[], totalPages: number }> => {
   const response = await apiClient.get<any>(`/notifications?page=${page}`);
   const rawItems = response.data.items || response.data.data || [];
-  
   const mappedData = rawItems.map((n: any) => ({
     id: n.id,
     userId: n.userId,

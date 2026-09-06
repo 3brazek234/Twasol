@@ -88,7 +88,14 @@ export class JobsQueryService {
   }
 
   static async getJobsByLawyerId(lawyerId: string) {
-    const jobs = await prisma.job.findMany({ where: { applications: { some: { lawyerId } } } });
+    const jobs = await prisma.job.findMany({ 
+      where: { 
+        OR: [
+          { applications: { some: { lawyerId } } },
+          { assignedLawyerId: lawyerId }
+        ]
+      } 
+    });
     return jobs;
   }
 
@@ -98,6 +105,7 @@ export class JobsQueryService {
         status: { in: ['AGREED', 'IN_PROGRESS'] },
         OR: [
           { postedByUserId: userId },
+          { assignedLawyerId: userId },
           {
             applications: {
               some: { lawyerId: userId, status: 'ACCEPTED' }
