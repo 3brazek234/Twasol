@@ -116,6 +116,9 @@ const ProfileNavigator = () => (
 const MyJobsNavigator = () => (
   <ActiveJobsStack.Navigator screenOptions={defaultScreenOptions}>
     <ActiveJobsStack.Screen name="MyJobs" component={MyJobsScreen} options={{ headerShown: false }} />
+    <ActiveJobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل المهمة' }} />
+    <ActiveJobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'نشر مهمة جديدة' }} />
+    <ActiveJobsStack.Screen name="PosterReview" component={PosterReviewScreen} options={{ title: 'تقييم المحامي' }} />
   </ActiveJobsStack.Navigator>
 );
 

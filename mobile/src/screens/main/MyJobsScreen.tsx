@@ -52,7 +52,9 @@ export const MyJobsScreen = () => {
 
   // Tab B - Active Jobs
   const activeJobsQuery = useMyActiveJobs();
-
+console.log('activeJobsQuery', activeJobsQuery);
+console.log('postedJobsQuery', postedJobsQuery);
+console.log('statusFilter', statusFilter);
   const handleCancelJob = (jobId: string) => {
     Alert.alert(
       'إلغاء الطلب',
@@ -191,7 +193,7 @@ export const MyJobsScreen = () => {
                 <EmptyState
                   icon={<Briefcase size={48} color={tokens.colors.muted} />}
                   headline="لا توجد طلبات منشورة"
-                  body="قم بإضافة طلب جديد للبدء في تلقي العروض."
+                  body={postedJobsQuery.isError ? `Error: ${postedJobsQuery.error?.message}` : `Debug: isError=${postedJobsQuery.isError}, fetchStatus=${postedJobsQuery.fetchStatus}, status=${postedJobsQuery.status}, data=${JSON.stringify(postedJobsQuery.data)}`}
                   ctaText="نشر طلب جديد +"
                   onCtaPress={() => navigation.navigate('PostJob')}
                 />

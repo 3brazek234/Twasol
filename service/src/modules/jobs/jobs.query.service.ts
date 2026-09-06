@@ -28,7 +28,6 @@ export class JobsQueryService {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -70,8 +69,8 @@ export class JobsQueryService {
       prisma.job.findMany({ 
         where: { postedByUserId: userId },
         include: {
-          _count: { select: { applications: true } },
-          applications: { select: { id: true, status: true } }
+          applications: { select: { id: true, status: true } },
+          court: true
         }
       }),
       prisma.job.findMany({

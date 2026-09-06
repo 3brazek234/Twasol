@@ -116,9 +116,17 @@ export const fetchMyPostedJobs = async (
   const response = await apiClient.get<any>(endpoint);
   const payload = response.data;
 
-  // Since the Axios interceptor unwraps { success, data }, payload IS the data object
-  // For /jobs/mine, it is { posted: [], assigned: [] }
-  let postedJobs = payload.posted || [];
+  let postedJobs: any[] = [];
+  if (Array.isArray(payload)) {
+    postedJobs = payload;
+  } else if (payload && Array.isArray(payload.posted)) {
+    postedJobs = payload.posted;
+  } else if (payload && payload.data && Array.isArray(payload.data.posted)) {
+    postedJobs = payload.data.posted;
+  } else if (payload && Array.isArray(payload.data)) {
+    postedJobs = payload.data;
+  }
+
   if (status && status !== 'undefined') {
     postedJobs = postedJobs.filter((job: any) => job.status === status);
   }
