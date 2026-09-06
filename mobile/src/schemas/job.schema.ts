@@ -8,7 +8,7 @@ export const JobSchema = z.object({
   posterName: z.string().optional(),
   title: z.string(),
   description: z.string(),
-  status: z.enum(['OPEN', 'NEGOTIATING', 'ASSIGNED', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['OPEN', 'NEGOTIATING', 'AGREED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED']),
   posterId: z.string().uuid(),
   assignedExecutorId: z.string().uuid().nullable().optional(),
   offerAmount: z.number().optional(),

@@ -29,6 +29,7 @@ const FILTER_OPTIONS = [
   { label: 'جاري التنفيذ', value: 'IN_PROGRESS' },
   { label: 'مكتمل', value: 'COMPLETED' },
   { label: 'ملغي', value: 'CANCELLED' },
+  { label: 'منتهي الصلاحية', value: 'EXPIRED' },
 ];
 
 export const MyJobsScreen = () => {
@@ -100,7 +101,7 @@ console.log('statusFilter', statusFilter);
       onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
       onOpenChat={(job) => {
         if (job.conversationId) {
-          navigation.navigate('Chat', { conversationId: job.conversationId });
+          navigation.navigate('Chat', { conversationId: job.conversationId, jobStatus: job.status });
         }
       }}
       onStartJob={handleStartActiveJob}

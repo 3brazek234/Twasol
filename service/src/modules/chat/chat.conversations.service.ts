@@ -56,7 +56,7 @@ export class ChatConversationsService {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
-        job: { select: { id: true, title: true } },
+        job: { select: { id: true, title: true, status: true } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -69,6 +69,7 @@ export class ChatConversationsService {
         type: conv.type,
         jobId: conv.jobId,
         jobTitle: conv.job?.title ?? null,
+        jobStatus: conv.job?.status ?? null,
         otherPartyId: otherParticipant?.user.id ?? null,
         otherPartyName: otherParticipant ? otherParticipant.user.fullName : 'Unknown',
         lastMessage: lastMessage?.content ?? null,

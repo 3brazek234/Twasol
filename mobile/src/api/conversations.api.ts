@@ -6,6 +6,7 @@ export interface ConversationSummary {
   type: string;
   jobId: string | null;
   jobTitle: string | null;
+  jobStatus: string | null;
   otherPartyName: string;
   lastMessage: string | null;
   lastMessageAt: string;

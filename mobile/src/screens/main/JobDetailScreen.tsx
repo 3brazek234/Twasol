@@ -14,7 +14,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
   const { data: job, isLoading, error } = useJob(jobId);
   // Only fetch active lawyers once we have a real courtId — avoids firing with empty string
-  const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId ?? null);
+  const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId ?? '');
   const { mutate: apply, isPending: isApplying } = useApplyToJob();
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateJobStatus();
@@ -253,6 +253,34 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
               )}
             </TouchableOpacity>
           )}
+        </View>
+      )}
+
+      {job.status === 'NEGOTIATING' && isOwnJob && (
+        <View style={styles.applyContainer}>
+          <TouchableOpacity 
+            style={[styles.applyButton, { backgroundColor: tokens.colors.amber }]} 
+            onPress={() => {
+              Alert.alert(
+                "إعادة فتح الطلب",
+                "هل تريد التراجع عن التفاوض وإعادة فتح الطلب لاستقبال عروض جديدة؟",
+                [
+                  { text: "إلغاء", style: "cancel" },
+                  { 
+                    text: "تأكيد", 
+                    onPress: () => updateStatus({ jobId, status: 'OPEN' })
+                  }
+                ]
+              );
+            }}
+            disabled={isUpdatingStatus}
+          >
+            {isUpdatingStatus ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.applyButtonText}>إعادة فتح الطلب للعامة</Text>
+            )}
+          </TouchableOpacity>
         </View>
       )}
 

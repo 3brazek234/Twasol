@@ -79,7 +79,7 @@ export const prisma = basePrisma.$extends({
           const body = payload?.messageAr || payload?.message || 'لديك إشعار جديد في وكيل';
           PushNotificationService.sendPushToUser(notification.userId, title, body, payload).catch((err: any) => console.error(err));
         } catch (err) {
-          logger.error('Failed to trigger PushNotificationService', err);
+          logger.error({ err }, 'Failed to trigger PushNotificationService');
         }
         
         return notification;

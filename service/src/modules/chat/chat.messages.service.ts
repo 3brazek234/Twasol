@@ -94,8 +94,20 @@ export class ChatMessagesService {
         data: {
           agreedSalary: message.offerAmount!,
           assignedLawyerId: message.senderId,
-          status: JobStatus.AGREED
+          status: JobStatus.AGREED,
+          agreedAt: new Date()
         }
+      });
+
+      // Withdraw all other pending offers in this conversation
+      await tx.message.updateMany({
+        where: { 
+          conversationId: message.conversationId, 
+          type: 'OFFER', 
+          offerStatus: OfferStatus.PENDING,
+          id: { not: messageId }
+        },
+        data: { offerStatus: OfferStatus.WITHDRAWN }
       });
 
       await tx.conflictDeclaration.upsert({

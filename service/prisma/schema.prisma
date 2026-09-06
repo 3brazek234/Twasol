@@ -44,6 +44,7 @@ enum OfferStatus {
   PENDING
   ACCEPTED
   REJECTED
+  WITHDRAWN
 }
 
 enum VerificationStatus {
@@ -68,6 +69,8 @@ enum NotificationType {
   SUBSCRIPTION_ACTIVATED        // تم تفعيل الاشتراك
   SUBSCRIPTION_REJECTED         // تم رفض الإيصال
   JOB_COMPLETED
+  JOB_CANCELLED
+  JOB_EXPIRED_WITHDRAWN
 }
 
 enum ReportStatus {
@@ -231,6 +234,11 @@ model Job {
   invitedLawyerId  String?   @map("invited_lawyer_id")
   courtId          String?   @map("court_id")
   version          Int       @default(0)
+  negotiatingSince DateTime? @map("negotiating_since")
+  agreedAt         DateTime? @map("agreed_at")
+  completedAt      DateTime? @map("completed_at")
+  cancelledAt      DateTime? @map("cancelled_at")
+  expiredAt        DateTime? @map("expired_at")
   expiresAt        DateTime? @map("expires_at")
   searchVector     Unsupported("tsvector")? @map("search_vector")
   createdAt        DateTime  @default(now()) @map("created_at")

@@ -7,11 +7,13 @@ interface StatusPillProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string; textClassName: string }> = {
-  OPEN: { label: 'OPEN', className: 'bg-signal/10', textClassName: 'text-signal' },
-  NEGOTIATING: { label: 'NEGOTIATING', className: 'bg-docket/10', textClassName: 'text-docket' },
-  ACTIVE: { label: 'ACTIVE', className: 'bg-info/10', textClassName: 'text-info' },
-  COMPLETED: { label: 'COMPLETED', className: 'bg-success/10', textClassName: 'text-success' },
-  CANCELLED: { label: 'CANCELLED', className: 'bg-muted/10', textClassName: 'text-muted' },
+  OPEN: { label: 'متاح', className: 'bg-signal/10', textClassName: 'text-signal' },
+  NEGOTIATING: { label: 'قيد التفاوض', className: 'bg-docket/10', textClassName: 'text-docket' },
+  AGREED: { label: 'تم الاتفاق', className: 'bg-info/10', textClassName: 'text-info' },
+  IN_PROGRESS: { label: 'جاري التنفيذ', className: 'bg-success/10', textClassName: 'text-success' },
+  COMPLETED: { label: 'مكتمل', className: 'bg-docket/20', textClassName: 'text-navy' },
+  CANCELLED: { label: 'ملغي', className: 'bg-muted/10', textClassName: 'text-muted' },
+  EXPIRED: { label: 'منتهي', className: 'bg-destructive/10', textClassName: 'text-destructive' },
 };
 
 export const StatusPill = ({ status }: StatusPillProps) => {

@@ -32,16 +32,19 @@ export const CompleteJobModal: React.FC<CompleteJobModalProps> = ({
   onSuccess,
 }) => {
   const completeJobMutation = useCompleteJob();
-  const loading = completeJobMutation.isPending ?? completeJobMutation.isLoading;
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (!job) return;
+    setIsLoading(true);
     try {
       await completeJobMutation.mutateAsync(job.id);
       onSuccess(job);
       onClose();
     } catch (error: any) {
       Alert.alert('خطأ', error?.message || 'حدث خطأ أثناء إتمام المهمة');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,7 +83,7 @@ export const CompleteJobModal: React.FC<CompleteJobModalProps> = ({
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
                   onPress={onClose}
-                  disabled={loading}
+                  disabled={isLoading}
                 >
                   <Text style={styles.cancelButtonText}>إلغاء</Text>
                 </TouchableOpacity>
@@ -88,9 +91,9 @@ export const CompleteJobModal: React.FC<CompleteJobModalProps> = ({
                 <TouchableOpacity
                   style={[styles.button, styles.confirmButton]}
                   onPress={handleConfirm}
-                  disabled={loading}
+                  disabled={isLoading}
                 >
-                  {loading ? (
+                  {isLoading ? (
                     <ActivityIndicator color={tokens.colors.white} />
                   ) : (
                     <Text style={styles.confirmButtonText}>نعم، تم الإتمام</Text>

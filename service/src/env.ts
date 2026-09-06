@@ -24,9 +24,6 @@ const envSchema = z.object({
   // Sentry (optional)
   DEBUG_SOCKET_AUTH: z.string().optional().transform(v => v === 'true'),
   SENTRY_DSN: z.string().optional(),
-
-  // Debug flags (optional)
-  DEBUG_SOCKET_AUTH: z.string().optional(),
 });
 
 // Fail fast if env is missing/malformed

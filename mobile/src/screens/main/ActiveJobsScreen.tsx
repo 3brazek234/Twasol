@@ -66,7 +66,7 @@ export const ActiveJobsScreen = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const isAssigned = item.status === 'ASSIGNED' || item.status === 'AGREED';
+    const isAssigned = item.status === 'AGREED';
     const isInProgress = item.status === 'IN_PROGRESS';
 
     return (
@@ -176,5 +176,6 @@ const styles = StyleSheet.create({
   },
   chatBtn: { backgroundColor: tokens.colors.signal },
   updateBtn: { backgroundColor: '#28a745' },
-  btnText: { color: '#fff', fontSize: 13, fontFamily: tokens.typography.fonts.displayBold, marginStart: 6 }
+  btnText: { color: '#fff', fontSize: 13, fontFamily: tokens.typography.fonts.displayBold, marginStart: 6 },
+  empty: { flex: 1, textAlign: 'center', marginTop: 40, color: tokens.colors.muted, fontFamily: tokens.typography.fonts.body }
 });

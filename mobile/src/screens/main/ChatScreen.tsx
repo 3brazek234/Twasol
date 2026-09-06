@@ -13,7 +13,7 @@ import { fetchMessages } from '../../api/conversations.api';
 const { width } = Dimensions.get('window');
 
 export const ChatScreen = ({ route, navigation }: any) => {
-  const { conversationId, conversationType, otherPartyName, jobTitle, supportStatus } = route.params || {};
+  const { conversationId, conversationType, otherPartyName, jobTitle, supportStatus, jobStatus } = route.params || {};
   const { user } = useAuthStore();
   const { messages, setActiveConversation, sendMessage, respondToOffer, setMessages } = useChatStore();
   
@@ -125,8 +125,8 @@ export const ChatScreen = ({ route, navigation }: any) => {
 
   const shouldShowDateSeparator = (msgs: Message[], index: number) => {
     if (index === 0) return true;
-    const currDate = msgs[index]?.timestamp ? new Date(msgs[index].timestamp).toDateString() : null;
-    const prevDate = msgs[index - 1]?.timestamp ? new Date(msgs[index - 1].timestamp).toDateString() : null;
+    const currDate = msgs[index]?.timestamp ? new Date(msgs[index].timestamp as string | number).toDateString() : null;
+    const prevDate = msgs[index - 1]?.timestamp ? new Date(msgs[index - 1].timestamp as string | number).toDateString() : null;
     if (!currDate || !prevDate) return false;
     return currDate !== prevDate;
   };
@@ -285,7 +285,7 @@ export const ChatScreen = ({ route, navigation }: any) => {
             />
           </View>
 
-          {!isSupport && (
+          {!isSupport && jobStatus === 'NEGOTIATING' && (
             <TouchableOpacity
               activeOpacity={0.8}
               style={[styles.toggleOfferBtn, isOfferMode && styles.toggleOfferBtnActive]}

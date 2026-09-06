@@ -50,6 +50,7 @@ export const ConversationsListScreen = ({ navigation }: any) => {
             conversationType: item.type,
             otherPartyName: item.otherPartyName,
             jobTitle: item.jobTitle,
+            jobStatus: item.jobStatus,
           })
         }
       >

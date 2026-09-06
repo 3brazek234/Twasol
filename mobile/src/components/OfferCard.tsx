@@ -14,6 +14,7 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
   const isPending = item.type === 'offer';
   const isAccepted = item.type === 'offer_accepted';
   const isRejected = item.type === 'offer_rejected';
+  const isWithdrawn = item.type === 'offer_withdrawn';
 
   return (
     <MotiView
@@ -26,12 +27,12 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
       
       <View className="p-4 items-end">
         <View className={`px-2.5 py-1 rounded-full ${
-          isAccepted ? 'bg-success/10' : isRejected ? 'bg-destructive/10' : 'bg-docket/10'
+          isAccepted ? 'bg-success/10' : isRejected || isWithdrawn ? 'bg-destructive/10' : 'bg-docket/10'
         }`}>
           <Text className={`text-[10px] font-bodySemibold tracking-widest ${
-            isAccepted ? 'text-success' : isRejected ? 'text-destructive' : 'text-docket'
+            isAccepted ? 'text-success' : isRejected || isWithdrawn ? 'text-destructive' : 'text-docket'
           }`}>
-            {isPending ? 'قيد الانتظار' : isAccepted ? 'مقبول' : 'مرفوض'}
+            {isPending ? 'قيد الانتظار' : isAccepted ? 'مقبول' : isRejected ? 'مرفوض' : 'مسحوب'}
           </Text>
         </View>
       </View>
@@ -70,10 +71,10 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
         </View>
       )}
 
-      {(isAccepted || isRejected) && (
+      {(isAccepted || isRejected || isWithdrawn) && (
         <View className="p-4 bg-paper items-center">
           <Text className="text-xs font-body text-muted">
-            {isAccepted ? 'تم قبول العرض.' : 'تم رفض العرض.'}
+            {isAccepted ? 'تم قبول العرض.' : isRejected ? 'تم رفض العرض.' : 'تم سحب العرض.'}
           </Text>
         </View>
       )}

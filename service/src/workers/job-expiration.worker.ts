@@ -22,16 +22,15 @@ export const jobExpirationWorker = new Worker(
       }
 
       // Check if job is in an incomplete state
-      if (!['OPEN', 'NEGOTIATING', 'IN_PROGRESS'].includes(dbJob.status)) {
+      if (!['OPEN', 'NEGOTIATING', 'AGREED', 'IN_PROGRESS'].includes(dbJob.status)) {
         logger.info({ jobId, status: dbJob.status }, 'Job is not in an incomplete state, skipping expiration');
         return;
       }
 
-      // Automatically cancel/withdraw current assignment
-      // Reset back to OPEN, unassign any current lawyer
       const previousAssignedLawyerId = dbJob.assignedLawyerId || dbJob.invitedLawyerId;
       
       const result = await prisma.$transaction(async (tx) => {
+        // Case A & B: Uncompleted jobs expire permanently
         const updateResult = await tx.job.updateMany({
           where: { 
             id: jobId, 
@@ -39,19 +38,15 @@ export const jobExpirationWorker = new Worker(
             version: dbJob.version 
           },
           data: { 
-            status: 'OPEN', 
-            assignedLawyerId: null,
-            invitedLawyerId: null,
-            version: { increment: 1 },
-            expiresAt: null
+            status: 'EXPIRED', 
+            expiredAt: new Date(),
+            version: { increment: 1 }
           }
         });
 
         if (updateResult.count === 0) {
           throw new Error('Concurrency conflict or state changed during expiration');
         }
-
-        // If there is an active application, we could mark it as REJECTED or CANCELLED, but unassigning is enough.
         
         return tx.job.findUnique({
           where: { id: jobId },
