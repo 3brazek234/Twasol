@@ -60,7 +60,7 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
             type,
             titleAr,
             messageAr,
-            data: { jobId: conversation.jobId, messageId: message.id, jobTitle: job?.title },
+            data: { jobId: conversation.jobId, conversationId: conversation.id, messageId: message.id, jobTitle: job?.title },
           })
         });
 
@@ -119,7 +119,7 @@ export function registerChatHandlers(io: Server, socket: Socket, userId: string)
               type: NotificationType.OFFER_ACCEPTED,
               titleAr: 'تم قبول العرض ✅',
               messageAr: `تم قبول عرضك المالي لمهمة: ${job?.title || 'غير معروف'}`,
-              data: { jobId: conversation.jobId }
+              data: { jobId: conversation.jobId, conversationId: conversation.id }
             })
           });
         }

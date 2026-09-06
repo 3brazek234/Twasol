@@ -30,10 +30,11 @@ export const NotificationsScreen = ({ navigation }: any) => {
 
     if (item.type === 'new_job' && item.referenceId) {
       navigation.navigate('JobsTab', { screen: 'JobDetail', params: { jobId: item.referenceId } });
-    } else if (item.type.includes('offer') || item.type === 'chat_message') {
-      if (item.referenceId) {
+    } else if (item.type.includes('offer') || item.type === 'chat_message' || item.type === 'new_message') {
+      const conversationId = item.metadata?.conversationId || item.referenceId;
+      if (conversationId) {
         const conversationType = item.metadata?.conversationType;
-        navigation.navigate('ChatsTab', { screen: 'Chat', params: { conversationId: item.referenceId, conversationType } });
+        navigation.navigate('ChatsTab', { screen: 'Chat', params: { conversationId, conversationType } });
       }
     }
   };

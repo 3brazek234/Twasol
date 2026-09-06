@@ -6,14 +6,15 @@ import { Job } from '../schemas/job.schema';
 // We flatten it here so components just read `job.courtNameAr` etc.
 const mapJobBackendToFrontend = (job: any): any => ({
   ...job,
-  posterId: job.postedByUserId,
-  assignedExecutorId: job.assignedLawyerId ?? null,
+  posterId: job.postedByUserId || job.posterId,
+  assignedExecutorId: job.assignedLawyerId ?? job.assignedExecutorId ?? null,
   offerAmount: job.offerAmount ? parseFloat(job.offerAmount) : undefined,
   salaryMin: job.salaryMin ? parseFloat(job.salaryMin) : undefined,
   salaryMax: job.salaryMax ? parseFloat(job.salaryMax) : undefined,
-  courtNameAr: job.court?.nameAr ?? undefined,
+  agreedSalary: job.agreedSalary ? parseFloat(job.agreedSalary) : (job.fee ? parseFloat(job.fee) : undefined),
+  courtNameAr: job.court?.nameAr ?? job.court_name ?? undefined,
   courtNameEn: job.court?.nameEn ?? undefined,
-  posterName: job.postedBy?.fullName ?? job.poster?.fullName ?? undefined,
+  posterName: job.postedBy?.fullName ?? job.poster?.fullName ?? job.poster_name ?? undefined,
 });
 
 // ─── API Functions ───────────────────────────────────────────────────────────
