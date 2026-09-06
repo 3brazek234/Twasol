@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,47 +12,24 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { MessageCircle, RefreshCw } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
-import { fetchMyActiveJobs, updateJobStatus } from '../../api/jobs.api';
+import { useMyActiveJobs, useUpdateJobStatus } from '../../hooks/useJobs';
 import { useAuthStore } from '../../stores/authStore';
 
 export const ActiveJobsScreen = () => {
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { data: jobs = [], isLoading, isRefetching, refetch } = useMyActiveJobs();
+  const updateStatus = useUpdateJobStatus();
   const navigation = useNavigation<any>();
 
-  const loadJobs = async () => {
-    try {
-      const activeJobs = await fetchMyActiveJobs();
-      setJobs(activeJobs);
-    } catch (error) {
-      console.error('Failed to fetch active jobs:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadJobs();
-  }, []);
+    refetch();
+  }, [refetch]);
 
   const handleUpdateStatus = async (jobId: string) => {
     try {
-      // Optimistic update
-      setJobs(prev => prev.map(job => 
-        job.id === jobId ? { ...job, status: 'IN_PROGRESS' } : job
-      ));
-      await updateJobStatus(jobId, 'IN_PROGRESS');
+      await updateStatus.mutateAsync({ jobId, status: 'IN_PROGRESS' });
       Alert.alert('نجاح', 'تم تحديث الحالة إلى جاري التنفيذ');
     } catch (err) {
       Alert.alert('خطأ', 'فشل تحديث الحالة');
-      loadJobs(); // revert on failure
     }
   };
 
@@ -99,11 +76,11 @@ export const ActiveJobsScreen = () => {
 
           {isAssigned && (
             <TouchableOpacity 
-              style={[styles.btn, styles.updateBtn]} 
+              style={[styles.btn, styles.progressBtn]} 
               onPress={() => handleUpdateStatus(item.id)}
             >
               <RefreshCw size={18} color="#fff" />
-              <Text style={styles.btnText}>تحديث إلى جاري التنفيذ</Text>
+              <Text style={styles.btnText}>تحديث للإنجاز</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -111,10 +88,18 @@ export const ActiveJobsScreen = () => {
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color={tokens.colors.signal} />
+      </View>
+    );
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyText}>لا توجد طلبات جارية في الوقت الحالي</Text>
       </View>
     );
   }
@@ -123,59 +108,118 @@ export const ActiveJobsScreen = () => {
     <View style={styles.container}>
       <FlatList
         data={jobs}
-        keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={<Text style={styles.empty}>لا توجد مهام نشطة حالياً</Text>}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={tokens.colors.signal} />
+        }
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: tokens.colors.paper },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tokens.colors.paper },
-  listContent: { padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: tokens.colors.paper,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.paper,
+  },
+  list: {
+    padding: tokens.spacing.md,
+    paddingBottom: tokens.spacing.xxl,
+  },
+  emptyText: {
+    fontFamily: tokens.typography.fonts.bodyMedium,
+    fontSize: tokens.typography.sizes.base,
+    color: tokens.colors.muted,
+  },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: tokens.colors.white,
+    padding: tokens.spacing.lg,
+    borderRadius: 16,
+    marginBottom: tokens.spacing.md,
     borderWidth: 1,
-    borderColor: '#eee'
+    borderColor: tokens.colors.line,
   },
-  title: { fontSize: 16, fontFamily: tokens.typography.fonts.displayBold, color: tokens.colors.ink, marginBottom: 4, textAlign: 'left' },
-  court: { fontSize: 14, color: tokens.colors.muted, marginBottom: 4, textAlign: 'left' },
-  poster: { fontSize: 14, color: tokens.colors.ink, marginBottom: 12, textAlign: 'left' },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  deadline: { fontSize: 13, fontFamily: tokens.typography.fonts.displayBold },
-  fee: { fontSize: 14, color: tokens.colors.signal, fontFamily: tokens.typography.fonts.displayBold },
+  title: {
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.lg,
+    color: tokens.colors.ink,
+    marginBottom: tokens.spacing.xs,
+  },
+  court: {
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    color: tokens.colors.docket,
+    marginBottom: tokens.spacing.xs,
+  },
+  poster: {
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    color: tokens.colors.muted,
+    marginBottom: tokens.spacing.md,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.md,
+    paddingTop: tokens.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.line,
+  },
+  deadline: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  fee: {
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.base,
+    color: tokens.colors.signal,
+  },
   badge: {
-    backgroundColor: '#e9ecef',
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 16,
+    backgroundColor: tokens.colors.paper,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.xs,
+    borderRadius: tokens.radius.pill,
+    marginBottom: tokens.spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
   },
-  badgeText: { fontSize: 12, color: '#495057' },
-  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  badgeText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+    color: tokens.colors.ink,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: tokens.spacing.sm,
+  },
   btn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    flex: 1
+    paddingVertical: tokens.spacing.md,
+    borderRadius: 12,
+    gap: tokens.spacing.sm,
   },
-  chatBtn: { backgroundColor: tokens.colors.signal },
-  updateBtn: { backgroundColor: '#28a745' },
-  btnText: { color: '#fff', fontSize: 13, fontFamily: tokens.typography.fonts.displayBold, marginStart: 6 },
-  empty: { flex: 1, textAlign: 'center', marginTop: 40, color: tokens.colors.muted, fontFamily: tokens.typography.fonts.body }
+  chatBtn: {
+    backgroundColor: tokens.colors.signal,
+  },
+  progressBtn: {
+    backgroundColor: '#FFC107',
+  },
+  btnText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    color: '#fff',
+  }
 });

@@ -46,4 +46,8 @@ export class AppError extends Error {
   static tooManyRequests(message = 'Too many requests'): AppError {
     return new AppError('TOO_MANY_REQUESTS', 429, message);
   }
+
+  static serviceUnavailable(message = 'Service temporarily unavailable'): AppError {
+    return new AppError('SERVICE_UNAVAILABLE', 503, message);
+  }
 }

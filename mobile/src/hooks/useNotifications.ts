@@ -1,3 +1,6 @@
+import { Alert } from "react-native";
+import { getErrorMessage } from "../utils/errorMessages";
+
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getNotifications, markNotificationRead } from '../api/notifications.api';
 
@@ -17,6 +20,7 @@ export const useMarkNotificationRead = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markNotificationRead,
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },

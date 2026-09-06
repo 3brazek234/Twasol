@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
-import { apiClient as api } from '../../api/client';
+import { useSupportConversation } from '../../hooks/useSupport';
 
 export const SettingsScreen = ({ navigation }: any) => {
   const { logout, user } = useAuthStore();
@@ -15,13 +15,15 @@ export const SettingsScreen = ({ navigation }: any) => {
   const [offerNotifications, setOfferNotifications] = useState(true);
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
 
+  const { mutateAsync: getOrCreateSupport } = useSupportConversation();
+
   const handleLogout = () => {
     Alert.alert(
       'تسجيل الخروج',
-      'Are you sure you want to end your session?',
+      'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+        { text: 'إلغاء', style: 'cancel' },
+        { text: 'تسجيل الخروج', style: 'destructive', onPress: () => logout() }
       ]
     );
   };
@@ -29,13 +31,13 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'This action is irreversible. Your profile will be permanently removed, and your past jobs and reviews will be anonymized. Type "DELETE" in a real app to confirm.',
+      'حذف الحساب',
+      'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف ملفك الشخصي نهائياً وإخفاء هويتك في المهام والتقييمات السابقة.',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => {
+        { text: 'إلغاء', style: 'cancel' },
+        { text: 'حذف', style: 'destructive', onPress: () => {
           // Stub DELETE /users/me
-          Alert.alert('Account Deleted', 'Your account has been deleted.');
+          Alert.alert('تم حذف الحساب', 'لقد تم حذف حسابك بنجاح.');
           logout();
         }}
       ]
@@ -50,109 +52,93 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   const handleContactSupport = async () => {
     try {
-      let convId;
-      try {
-        const res = await api.get('/support/conversations/mine');
-        convId = res.data.id;
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          const createRes = await api.post('/support/conversations');
-          convId = createRes.data.id;
-        } else {
-          throw err;
-        }
-      }
-      // Navigate to ChatsTab -> Chat with support-specific params
-      navigation.navigate('ChatsTab', {
-        screen: 'Chat',
-        params: { 
-          conversationId: convId, 
-          conversationType: 'SUPPORT' 
-        }
-      });
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert('Error', `Could not open support chat: ${error.message || JSON.stringify(error)}`);
+      const convId = await getOrCreateSupport();
+      navigation.navigate('Chat', { conversationId: convId, jobTitle: 'فريق الدعم', otherPartyName: 'الدعم الفني' });
+    } catch (err: any) {
+      Alert.alert('خطأ', 'لا يمكن فتح محادثة الدعم: ' + err.message);
     }
   };
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const translateTheme = (t: string) => t === 'system' ? 'النظام' : t === 'light' ? 'فاتح' : 'داكن';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <Text style={styles.sectionTitle}>الحساب</Text>
         <View style={styles.card}>
           <SettingsRow 
-            label="Edit Profile" 
-            value={user?.name || 'Counselor'} 
+            label="تعديل الملف الشخصي" 
             onPress={() => navigation.navigate('EditProfile')} 
           />
+          {(user as any)?.role === 'LAWYER' && (
+            <SettingsRow 
+              label="إدارة الاختصاصات القضائية" 
+              onPress={() => navigation.navigate('MyCourts')} 
+            />
+          )}
           <SettingsRow 
-            label="Manage Jurisdictions" 
-            onPress={() => navigation.navigate('MyCourts')} 
-          />
-          <SettingsRow 
-            label="Change Password" 
+            label="تغيير كلمة المرور" 
             onPress={() => navigation.navigate('ChangePassword')} 
           />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+        <Text style={styles.sectionTitle}>الإشعارات</Text>
         <View style={styles.card}>
           <SettingsRow 
-            label="New Job Matches" 
+            label="تطابق الطلبات الجديدة" 
             isSwitch 
             switchValue={matchNotifications} 
             onSwitchChange={setMatchNotifications} 
           />
           <SettingsRow 
-            label="New Messages" 
+            label="الرسائل الجديدة" 
             isSwitch 
             switchValue={messageNotifications} 
             onSwitchChange={setMessageNotifications} 
           />
           <SettingsRow 
-            label="Offer Updates" 
+            label="تحديثات العروض" 
             isSwitch 
             switchValue={offerNotifications} 
             onSwitchChange={setOfferNotifications} 
           />
+          <View style={styles.divider} />
           <SettingsRow 
-            label="System Permissions"
-            subtitle="Manage OS-level push notifications" 
+            label="أذونات النظام" 
+            subtitle="إدارة إشعارات النظام" 
             onPress={() => Linking.openSettings()} 
           />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>APPEARANCE</Text>
+        <Text style={styles.sectionTitle}>المظهر</Text>
         <View style={styles.card}>
           <SettingsRow 
-            label="Theme" 
-            value={capitalize(theme)} 
+            label="السمة" 
+            value={translateTheme(theme)} 
             onPress={cycleTheme} 
           />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SUPPORT & LEGAL</Text>
+        <Text style={styles.sectionTitle}>الدعم والقانونية</Text>
         <View style={styles.card}>
           <SettingsRow 
-            label="Terms of Service" 
+            label="شروط الخدمة" 
             onPress={() => Linking.openURL('https://example.com/terms')} 
           />
           <SettingsRow 
-            label="Privacy Policy" 
+            label="سياسة الخصوصية" 
             onPress={() => Linking.openURL('https://example.com/privacy')} 
           />
           <SettingsRow 
-            label="Contact Support" 
+            label="التواصل مع الدعم" 
             onPress={handleContactSupport} 
           />
         </View>
@@ -161,12 +147,12 @@ export const SettingsScreen = ({ navigation }: any) => {
       <View style={[styles.section, styles.dangerSection]}>
         <View style={styles.card}>
           <SettingsRow 
-            label="Log Out" 
+            label="تسجيل الخروج" 
             isDestructive 
             onPress={handleLogout} 
           />
           <SettingsRow 
-            label="Delete Account" 
+            label="حذف الحساب" 
             isDestructive 
             onPress={handleDeleteAccount} 
           />
@@ -200,6 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.sm,
     marginStart: tokens.spacing.sm,
     letterSpacing: 0.5,
+    textAlign: 'left' // For RTL it will naturally align right if I18nManager is set
   },
   card: {
     backgroundColor: tokens.colors.white,

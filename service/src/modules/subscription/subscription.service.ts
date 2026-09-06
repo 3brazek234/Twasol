@@ -330,15 +330,13 @@ export class SubscriptionService {
       });
 
       await tx.notification.create({
-        data: {
+        data: buildNotification({
           userId,
           type: 'SUBSCRIPTION_ACTIVATED',
-          payload: {
-            titleAr: 'تم تفعيل حسابك 🎉',
-            messageAr: `تم تفعيل اشتراكك يدوياً من قِبل فريق الإدارة. حسابك نشط الآن حتى ${expiresAt.toLocaleDateString('ar-EG')}.`,
-            expiresAt: expiresAt.toISOString(),
-          },
-        },
+          titleAr: 'تم تفعيل حسابك 🎉',
+          messageAr: `تم تفعيل اشتراكك يدوياً من قِبل فريق الإدارة. حسابك نشط الآن حتى ${expiresAt.toLocaleDateString('ar-EG')}.`,
+          data: { expiresAt: expiresAt.toISOString() },
+        }),
       });
     });
 

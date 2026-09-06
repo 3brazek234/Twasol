@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { useConversations } from '../../hooks/useConversations';
 import { tokens } from '../../theme/tokens';
 import { MessageSquare, User, ChevronRight } from 'lucide-react-native';
 import { fetchConversations, ConversationSummary } from '../../api/conversations.api';
@@ -10,10 +11,7 @@ export const ConversationsListScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
   const socket = useSocketStore((state) => state.socket);
 
-  const { data: conversations = [], isLoading, error } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: fetchConversations,
-  });
+  const { data: conversations = [], isLoading, error } = useConversations();
 
   useEffect(() => {
     if (!socket) return;

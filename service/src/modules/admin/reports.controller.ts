@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../prisma';
-import { paginate, paginationQuerySchema } from '../../common/schemas/pagination.schema';
+import { AdminReportsService } from './admin-reports.service';
+import { paginationQuerySchema } from '../../common/schemas/pagination.schema';
 import { z } from 'zod';
-import { AppError } from '../../common/errors/AppError';
 
 const listReportsQuerySchema = paginationQuerySchema.extend({
   status: z.enum(['OPEN', 'INVESTIGATING', 'RESOLVED', 'DISMISSED']).optional(),
@@ -16,29 +15,9 @@ const updateReportStatusSchema = z.object({
 export class AdminReportsController {
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const { page, limit, status } = listReportsQuerySchema.parse(req.query);
-
-      const where: any = {};
-      if (status) {
-        where.status = status;
-      }
-
-      const [total, reports] = await Promise.all([
-        prisma.report.count({ where }),
-        prisma.report.findMany({
-          where,
-          skip: (page - 1) * limit,
-          take: limit,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            reporter: { select: { id: true, fullName: true, email: true } },
-            reportedUser: { select: { id: true, fullName: true, email: true } },
-            reportedJob: { select: { id: true, title: true } },
-          },
-        }),
-      ]);
-
-      res.json(paginate(reports, total, page, limit));
+      const query = listReportsQuerySchema.parse(req.query);
+      const result = await AdminReportsService.list(query);
+      res.json(result);
     } catch (error) {
       next(error);
     }
@@ -47,17 +26,10 @@ export class AdminReportsController {
   static async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { status, resolutionNotes } = updateReportStatusSchema.parse(req.body);
-      const report = await prisma.report.update({
-        where: { id: req.params.id },
-        data: { status, resolutionNotes },
-      });
+      const report = await AdminReportsService.updateStatus({ id: req.params.id, status, resolutionNotes });
       res.json({ success: true, data: report });
     } catch (error) {
-      if ((error as any).code === 'P2025') {
-        next(AppError.notFound('Report'));
-      } else {
-        next(error);
-      }
+      next(error);
     }
   }
 }

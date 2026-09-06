@@ -1,3 +1,5 @@
+import { buildNotification } from "../notifications/notification-payload";
+
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { paginate } from '../../common/schemas/pagination.schema';
@@ -136,15 +138,13 @@ export class VerificationService {
           });
 
           await tx.notification.create({
-            data: {
+            data: buildNotification({
               userId: doc.userId,
               type: 'VERIFICATION_APPROVED',
-              payload: {
-                titleAr: 'تم توثيق حسابك بنجاح ✅',
-                messageAr: 'مبروك! تم التحقق من هويتك. يرجى إتمام الاشتراك لتفعيل حسابك والبدء في استخدام خدمات وكيل.',
-                nextStep: 'SUBSCRIPTION_PAYMENT',
-              },
-            },
+              titleAr: 'تم توثيق حسابك بنجاح ✅',
+              messageAr: 'مبروك! تم التحقق من هويتك. يرجى إتمام الاشتراك لتفعيل حسابك والبدء في استخدام خدمات وكيل.',
+              data: { nextStep: 'SUBSCRIPTION_PAYMENT' },
+            }),
           });
         }
       } else if (status === 'REJECTED') {

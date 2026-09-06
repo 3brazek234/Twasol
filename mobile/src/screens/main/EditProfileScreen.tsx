@@ -24,9 +24,9 @@ export const EditProfileScreen = ({ navigation }: any) => {
       // If verified and they change their bar number, reset verification
       if (user?.verificationStatus === 'APPROVED' && barNumber !== user?.barNumber) {
         Alert.alert(
-          'Verification Required', 
-          'Because you changed your Bar Number, you must verify your credentials again before you can apply to jobs.',
-          [{ text: 'Understood' }]
+          'إعادة التوثيق مطلوبة', 
+          'لأنك قمت بتغيير رقم العضوية، يجب عليك توثيق حسابك مرة أخرى قبل أن تتمكن من تقديم العروض.',
+          [{ text: 'مفهوم' }]
         );
         submitVerification('UNVERIFIED');
       }
@@ -34,7 +34,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
       navigation.goBack();
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Could not save profile changes.');
+      Alert.alert('خطأ', 'تعذر حفظ التغييرات.');
     } finally {
       setIsSaving(false);
     }
@@ -48,7 +48,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.content}>
         
         <View style={styles.formGroup}>
-          <Text style={styles.label}>FULL NAME</Text>
+          <Text style={styles.label}>الاسم الكامل</Text>
           <TextInput
             style={styles.input}
             value={name}
@@ -59,7 +59,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>EMAIL ADDRESS</Text>
+          <Text style={styles.label}>البريد الإلكتروني</Text>
           <TextInput
             style={styles.input}
             value={email}
@@ -72,7 +72,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>BAR ASSOCIATION ID</Text>
+          <Text style={styles.label}>رقم العضوية</Text>
           <TextInput
             style={styles.input}
             value={barNumber}
@@ -82,7 +82,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           />
           {user?.verificationStatus === 'APPROVED' && (
             <Text style={styles.helpText}>
-              Warning: Editing your verified Bar ID will revoke your verification status until reviewed again.
+              تنبيه: تعديل رقم العضوية سيلغي توثيق حسابك حتى تتم المراجعة مرة أخرى.
             </Text>
           )}
         </View>
@@ -93,7 +93,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           disabled={isSaving}
         >
           <Text style={styles.saveButtonText}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

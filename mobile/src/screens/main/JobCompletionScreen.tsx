@@ -1,3 +1,5 @@
+import { useSubmitReview } from "../../hooks/useReviews";
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
@@ -22,6 +24,7 @@ export const JobCompletionScreen = ({ route, navigation }: any) => {
   const [skipped, setSkipped] = useState(false);
   const [showPaymentIssue, setShowPaymentIssue] = useState(false);
   const { user } = useAuthStore();
+  const submitReview = useSubmitReview();
 
   const handleConfirmPayment = () => {
     setCurrentStep(2);
@@ -30,7 +33,7 @@ export const JobCompletionScreen = ({ route, navigation }: any) => {
   const handleReviewSubmit = async () => {
     if (rating === 0) return;
     try {
-      await apiClient.post(`/reviews`, {
+      await submitReview.mutateAsync({
         jobId,
         revieweeId: posterId,
         rating,

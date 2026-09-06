@@ -43,11 +43,6 @@ const JobsNavigator = () => {
       initialRouteName="JobsFeed"
     >
       <JobsStack.Screen 
-        name="HiringHome" 
-        component={HiringHomeScreen} 
-        options={{ headerShown: false }} 
-      />
-      <JobsStack.Screen 
         name="JobsFeed" 
         component={JobsFeedScreen} 
         options={({ navigation }) => {
@@ -66,17 +61,11 @@ const JobsNavigator = () => {
                     >
                       <Plus size={22} color={tokens.colors.signal} />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('HiringHome')}
-                      style={{ marginEnd: 16 }}
-                    >
-                      <Briefcase size={22} color={tokens.colors.ink} />
-                    </TouchableOpacity>
                   </>
                 )}
                 <TouchableOpacity
                   onPress={() => navigation.setParams({ isSearchVisible: true })}
-                  style={{ marginStart: 16, marginEnd: 16 }}
+                  style={{ marginEnd: 16 }}
                 >
                   <Search size={22} color={tokens.colors.ink} />
                 </TouchableOpacity>

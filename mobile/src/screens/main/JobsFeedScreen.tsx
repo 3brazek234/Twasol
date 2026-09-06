@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, RefreshControl, TextInput, Animated, ScrollView, TouchableOpacity } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, RefreshControl, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
 import { JobListRow } from '../../components/JobListRow';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { Briefcase, Search, X } from 'lucide-react-native';
-import { useSocketStore } from '../../stores/socketStore';
-import { useCourtPulseStore } from '../../stores/courtPulseStore';
 import { MotiView, AnimatePresence } from 'moti';
 
 const SkeletonJobCard = () => {
@@ -33,29 +33,39 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   const isSearchVisible = route.params?.isSearchVisible ?? false;
   const [searchInput, setSearchInput] = useState('');
 
-  const { data, isLoading, error, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useJobs(selectedCourtId, selectedStatus, searchInput);
-  
-  const { socket } = useSocketStore();
-  const { registerJobEvent } = useCourtPulseStore();
-  
-  const queryClient = useQueryClient();
-  const flatListRef = useRef<any>(null);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useJobs(selectedCourtId, selectedStatus, searchInput);
 
+  // ── Refetch when the screen comes back into focus ──────────────────────────
+  // This handles: navigating back from JobDetail, returning from PostJob, etc.
+  // staleTime on the query (5 min) prevents a redundant network call if the
+  // data is still fresh.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  // ── Optional 60-second background poll while screen is visible ─────────────
+  // Non-redundant with staleTime=5min: the poll fires every 60s, but React
+  // Query will skip the network call if data is still within the 5-min window.
+  // This gives a lightweight freshness guarantee without sockets.
+  const isFocused = useIsFocused();
   useEffect(() => {
-    if (!socket) return;
-    
-    const handleJobNew = () => {
-      registerJobEvent();
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    };
-
-    socket.on('job:new', handleJobNew);
-    
-    return () => {
-      socket.off('job:new', handleJobNew);
-    };
-  }, [socket, queryClient, registerJobEvent]);
-
+    if (!isFocused) return;
+    const interval = setInterval(() => {
+      refetch();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [isFocused, refetch]);
 
   const jobs = useMemo(() => {
     return data?.pages.flatMap((page) => page.data).filter(Boolean) || [];
@@ -67,12 +77,10 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     { label: 'كل الطلبات', value: undefined },
   ];
 
-
-
   return (
     <View className="flex-1 bg-paper">
       <VerificationStatusBanner />
-      
+
       <AnimatePresence>
         {isSearchVisible && (
           <MotiView
@@ -110,7 +118,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             selectedValue={selectedStatus}
             onSelect={setSelectedStatus}
           />
-          </ScrollView>
+        </ScrollView>
       </View>
 
       {isLoading ? (
@@ -132,10 +140,9 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         </View>
       ) : (
         <Animated.FlatList
-          ref={flatListRef}
           data={jobs}
           keyExtractor={(item: any, index) => item?.id || String(index)}
-          renderItem={({ item, index }: any) => (
+          renderItem={({ item }: any) => (
             <JobListRow
               item={item}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
@@ -150,17 +157,17 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           }}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl 
-              refreshing={isRefetching} 
-              onRefresh={refetch} 
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
               tintColor="#1B4F72"
               colors={["#1B4F72"]}
             />
           }
-          ListFooterComponent={() => 
+          ListFooterComponent={() =>
             isFetchingNextPage ? (
-              <View className="py-4">
-                <SkeletonJobCard />
+              <View className="py-4 items-center">
+                <ActivityIndicator color="#1B4F72" />
               </View>
             ) : null
           }

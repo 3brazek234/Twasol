@@ -13,7 +13,7 @@ const MOCK_LAWYER: LawyerData & { barNumber: string; bio: string } = {
   isActive: true,
   courts: ['NY Supreme', 'SDNY'],
   barNumber: '•••1234',
-  bio: 'Experienced litigator specializing in corporate disputes. I have successfully argued in front of the NY Supreme court on numerous occasions, providing swift and decisive results.',
+  bio: 'محامي متمرس في القضايا المدنية والتجارية. I have successfully argued in front of the NY Supreme court on numerous occasions, providing swift and decisive results.',
 };
 
 export const LawyerProfileScreen = ({ route, navigation }: any) => {
@@ -63,7 +63,7 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
               <Text className="text-xl font-displayBold text-ink mr-2">{lawyer.averageRating}</Text>
               <StarRating rating={lawyer.averageRating || 0} size={20} />
             </View>
-            <Text className="text-xs text-muted font-body">Based on {lawyer.reviewCount} reviews</Text>
+            <Text className="text-xs text-muted font-body">بناءً على {lawyer.reviewCount} تقييمات</Text>
           </View>
           <ChevronRight size={24} color="#718096" />
         </TouchableOpacity>

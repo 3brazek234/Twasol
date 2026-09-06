@@ -1,3 +1,5 @@
+import { useRegister } from "../../hooks/useAuth";
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal, FlatList, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -36,23 +38,18 @@ export const RegisterScreen = () => {
   const selectedGovName = governorates?.find((g: any) => g.id === selectedGovId)?.nameAr || 'اختر مقر المكتب';
 
   const [isRegistering, setIsRegistering] = useState(false);
-  const { login: storeLogin } = useAuthStore();
+  const register = useRegister();
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsRegistering(true);
-      const registerRes = await apiClient.post('/auth/register', {
-        email: data.email,
-        password: data.password,
-        name: data.name,
-        fullName: data.name,
-        barNumber: data.barNumber,
-        governorateId: data.governorateId,
-        preferredLocale: 'AR',
-      });
-
-      const { accessToken, refreshToken, user } = registerRes.data;
-      await storeLogin(accessToken, refreshToken, user);
+      await register.mutateAsync([
+        data.email,
+        data.password,
+        data.name,
+        data.barNumber,
+        data.governorateId,
+      ]);
       onboarding.reset();
     } catch (err: any) {
       const message =

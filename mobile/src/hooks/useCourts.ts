@@ -1,3 +1,5 @@
+import { getErrorMessage } from "../utils/errorMessages";
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import {
@@ -52,15 +54,9 @@ export const useRegisterCourt = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: registerCourt,
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courts', 'my'] });
-    },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.error?.message
-        ?? error?.response?.data?.message
-        ?? error?.message
-        ?? 'Failed to add court.';
-      Alert.alert('Could not add court', msg);
     },
   });
 };
@@ -71,6 +67,7 @@ export const useRemoveCourt = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeCourt,
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courts', 'my'] });
     },
@@ -84,6 +81,7 @@ export const useToggleCourtStatus = () => {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       toggleCourtStatus(id, isActive),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courts', 'my'] });
     },

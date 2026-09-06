@@ -1,3 +1,5 @@
+import { useSubmitReview } from "../../hooks/useReviews";
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -13,6 +15,7 @@ export const PosterReviewScreen = () => {
   const { jobId, jobTitle, lawyerId, lawyerName, fee } = route.params || {};
 
   const [rating, setRating] = useState(0);
+  const submitReview = useSubmitReview();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,7 +35,7 @@ export const PosterReviewScreen = () => {
     
     setIsSubmitting(true);
     try {
-      await apiClient.post('/reviews', {
+      await submitReview.mutateAsync({
         jobId,
         revieweeId: lawyerId,
         rating,

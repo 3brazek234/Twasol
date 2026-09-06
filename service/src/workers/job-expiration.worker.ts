@@ -1,3 +1,5 @@
+import { AppError } from "../common/errors/AppError";
+
 import { Worker, Job as BullJob } from 'bullmq';
 import { redisConnection } from '../common/utils/queue';
 import { prisma } from '../prisma';
@@ -45,7 +47,7 @@ export const jobExpirationWorker = new Worker(
         });
 
         if (updateResult.count === 0) {
-          throw new Error('Concurrency conflict or state changed during expiration');
+          throw AppError.conflict('Concurrency conflict or state changed during expiration');
         }
         
         return tx.job.findUnique({

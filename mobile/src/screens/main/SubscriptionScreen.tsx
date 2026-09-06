@@ -5,15 +5,19 @@ import { CreditCard, Upload, FileCheck, X, AlertCircle } from 'lucide-react-nati
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../../stores/authStore';
-import { apiClient } from '../../api/client';
+import { useSubscriptionPlans, useGetReceiptUploadUrl, useSubmitSubscription } from '../../hooks/useSubscription';
 import { uploadFileToR2 } from '../../utils/upload';
 import { tokens } from '../../theme/tokens';
 
 export const SubscriptionScreen = () => {
   const { user, hydrate } = useAuthStore();
-  const [plans, setPlans] = useState<any[]>([]);
-  const [instructions, setInstructions] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const { data: subscriptionData, isLoading, error } = useSubscriptionPlans();
+  const getUrl = useGetReceiptUploadUrl();
+  const submit = useSubmitSubscription();
+
+  const plans = subscriptionData?.plans || [];
+  const instructions = subscriptionData?.paymentInstructions || null;
   
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'MANUAL_BANK_TRANSFER' | 'MANUAL_VODAFONE_CASH'>('MANUAL_VODAFONE_CASH');
@@ -23,23 +27,14 @@ export const SubscriptionScreen = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    fetchPlans();
-  }, []);
-
-  const fetchPlans = async () => {
-    try {
-      const res = await apiClient.get('/subscription/plans');
-      setPlans(res.data.data.plans);
-      setInstructions(res.data.data.paymentInstructions);
-      if (res.data.data.plans.length > 0) {
-        setSelectedPlanId(res.data.data.plans[0].id);
-      }
-    } catch (err) {
-      Toast.show({ type: 'error', text1: 'خطأ', text2: 'تعذر جلب خطط الاشتراك' });
-    } finally {
-      setIsLoading(false);
+    if (plans.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(plans[0].id);
     }
-  };
+  }, [plans]);
+
+  if (error) {
+    Toast.show({ type: 'error', text1: 'خطأ', text2: 'تعذر جلب خطط الاشتراك' });
+  }
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,7 +59,7 @@ export const SubscriptionScreen = () => {
 
     try {
       // 1. Get presigned URL
-      const { data: urlData } = await apiClient.post('/subscription/receipt-upload-url', {
+      const urlData = await getUrl.mutateAsync({
         contentType: file.mimeType || 'image/jpeg',
       });
 
@@ -77,10 +72,10 @@ export const SubscriptionScreen = () => {
       });
 
       // 3. Submit Subscription
-      await apiClient.post('/subscription/submit', {
-        planId: selectedPlanId,
+      await submit.mutateAsync({
+        planId: selectedPlanId!,
         paymentMethod,
-        receiptFileKey: urlData.fileKey,
+        receiptKey: urlData.fileKey,
       });
 
       Toast.show({
@@ -89,7 +84,6 @@ export const SubscriptionScreen = () => {
         text2: 'جاري مراجعة الإيصال من الإدارة',
       });
 
-      // Hydrate state (should remain un-active but perhaps we want to show a success message)
       await hydrate();
 
     } catch (err: any) {
@@ -127,7 +121,7 @@ export const SubscriptionScreen = () => {
         {/* Plans Selection */}
         <Text className="text-sm font-bodySemibold text-muted mb-3">اختر الباقة المناسبة</Text>
         <View className="flex-row flex-wrap gap-4 mb-8">
-          {plans.map(plan => (
+          {plans.map((plan: any) => (
             <TouchableOpacity
               key={plan.id}
               className={`flex-1 p-4 rounded-xl border-2 ${selectedPlanId === plan.id ? 'border-signal bg-signal/5' : 'border-line bg-white'}`}

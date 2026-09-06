@@ -1,3 +1,6 @@
+import { Alert } from "react-native";
+import { getErrorMessage } from "../utils/errorMessages";
+
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { fetchJobs, createJob, applyToJob, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
 
@@ -26,6 +29,7 @@ export const useCreateJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createJob,
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
@@ -36,6 +40,7 @@ export const useApplyToJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (jobId: string) => applyToJob(jobId),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -47,6 +52,7 @@ export const useUpdateJobStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ jobId, status }: { jobId: string, status: string }) => updateJobStatus(jobId, status),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
@@ -56,6 +62,7 @@ export const useUpdateJobStatus = () => {
 export const useTranslateJob = () => {
   return useMutation({
     mutationFn: ({ jobId, targetLocale }: { jobId: string, targetLocale: 'EN' | 'AR' }) => translateJob(jobId, targetLocale),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); }
   });
 };
 
@@ -82,6 +89,7 @@ export const useCompleteJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: completeJob,
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs', 'my-posted'] });
       queryClient.invalidateQueries({ queryKey: ['jobs', 'my-active'] });

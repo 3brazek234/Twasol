@@ -1,3 +1,5 @@
+import { AppError } from "../errors/AppError";
+
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../../env';
 import { logger } from './logger';
@@ -73,6 +75,6 @@ export async function headObjectR2(key: string) {
 
     return { ContentLength: result.bytes, ContentType: mimeType };
   } catch (err) {
-    throw new Error('NotFound');
+    throw AppError.notFound('File');
   }
 }

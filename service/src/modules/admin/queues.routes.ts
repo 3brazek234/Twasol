@@ -35,13 +35,13 @@ export default router;
 export const checkQueueHealth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const isReady = redisConnection.status === 'ready';
-    if (!isReady) throw new AppError('SERVICE_UNAVAILABLE', 503, 'Redis not ready');
+    if (!isReady) throw AppError.serviceUnavailable('Redis not ready');
     
     const count = await notificationFanoutQueue.getWaitingCount();
     const workers = await notificationFanoutQueue.getWorkers();
     
     if (workers.length === 0) {
-      throw new AppError('SERVICE_UNAVAILABLE', 503, 'No workers attached to notificationFanoutQueue');
+      throw AppError.serviceUnavailable('No workers attached to notificationFanoutQueue');
     }
 
     res.json({ success: true, data: { status: 'ok', waitingJobs: count, activeWorkers: workers.length } });

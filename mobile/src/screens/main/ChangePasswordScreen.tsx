@@ -10,17 +10,17 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
 
   const handleSave = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Please fill out all fields.');
+      Alert.alert('خطأ', 'يرجى تعبئة جميع الحقول.');
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New passwords do not match.');
+      Alert.alert('خطأ', 'كلمات المرور الجديدة غير متطابقة.');
       return;
     }
 
     if (newPassword.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters long.');
+      Alert.alert('خطأ', 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.');
       return;
     }
 
@@ -28,8 +28,8 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
     
     setTimeout(() => {
       setIsSaving(false);
-      Alert.alert('Success', 'Password has been updated.', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+      Alert.alert('نجاح', 'تم تحديث كلمة المرور.', [
+        { text: 'موافق', onPress: () => navigation.goBack() }
       ]);
     }, 1000);
   };
@@ -42,7 +42,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
       <ScrollView contentContainerStyle={styles.content}>
         
         <View style={styles.formGroup}>
-          <Text style={styles.label}>CURRENT PASSWORD</Text>
+          <Text style={styles.label}>كلمة المرور الحالية</Text>
           <TextInput
             style={styles.input}
             value={currentPassword}
@@ -54,7 +54,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>NEW PASSWORD</Text>
+          <Text style={styles.label}>كلمة المرور الجديدة</Text>
           <TextInput
             style={styles.input}
             value={newPassword}
@@ -66,7 +66,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>CONFIRM NEW PASSWORD</Text>
+          <Text style={styles.label}>تأكيد كلمة المرور الجديدة</Text>
           <TextInput
             style={styles.input}
             value={confirmPassword}
@@ -83,7 +83,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
           disabled={isSaving}
         >
           <Text style={styles.saveButtonText}>
-            {isSaving ? 'Updating...' : 'Update Password'}
+            {isSaving ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

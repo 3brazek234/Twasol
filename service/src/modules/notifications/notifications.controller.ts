@@ -6,8 +6,8 @@ export class NotificationsController {
     try {
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
-      const result = await NotificationsService.list(req.user!.userId, { page, limit });
-      res.json(result);
+      const { items, meta } = await NotificationsService.list(req.user!.userId, { page, limit });
+      res.json({ success: true, data: items, meta });
     } catch (error) {
       next(error);
     }

@@ -5,9 +5,9 @@ export const NotificationSchema = z.object({
   userId: z.string().uuid(),
   title: z.string(),
   body: z.string(),
-  type: z.enum(['new_job', 'offer_received', 'offer_accepted', 'offer_rejected', 'chat_message']),
+  type: z.string(),
   referenceId: z.string().uuid().optional(), // e.g. jobId or conversationId
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   isRead: z.boolean().default(false),
   createdAt: z.string().datetime(),
 });

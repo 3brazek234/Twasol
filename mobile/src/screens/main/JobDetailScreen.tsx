@@ -6,7 +6,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { tokens } from '../../theme/tokens';
 import { Landmark, Users, Calendar, Gavel, CheckCircle } from 'lucide-react-native';
-import { completeJob } from '../../api/jobs.api';
+import { useCompleteJob } from '../../hooks/useJobs';
 import { safeFormatDate } from '../../utils/dateUtils';
 
 export const JobDetailScreen = ({ route, navigation }: any) => {
@@ -47,7 +47,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         setIsTranslated(true);
       },
       onError: (err: any) => {
-        Alert.alert('Translation failed', err.message || 'Could not translate case description.');
+        Alert.alert('فشل الترجمة', err.message || 'تعذر ترجمة وصف القضية.');
       }
     });
   };
@@ -68,10 +68,12 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         }
       },
       onError: (err: any) => {
-        Alert.alert('System Alert', err.message || 'Application could not be submitted.');
+        Alert.alert('تنبيه النظام', err.message || 'تعذر تقديم العرض.');
       },
     });
   };
+
+  const completeJobHook = useCompleteJob();
 
   const handleNegotiate = () => {
     Alert.alert(
@@ -106,7 +108,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           text: "نعم، تم الإتمام", 
           onPress: async () => {
             try {
-              await completeJob(jobId);
+              await completeJobHook.mutateAsync(jobId);
               Alert.alert('نجاح', 'تم تأكيد إتمام المهمة وإرسال إشعار للمحامي');
               navigation.goBack();
             } catch (err) {
