@@ -7,6 +7,7 @@ import { VerificationStatusBanner } from '../../components/VerificationStatusBan
 import { tokens } from '../../theme/tokens';
 import { Landmark, Users, Calendar, Gavel, CheckCircle } from 'lucide-react-native';
 import { completeJob } from '../../api/jobs.api';
+import { safeFormatDate } from '../../utils/dateUtils';
 
 export const JobDetailScreen = ({ route, navigation }: any) => {
   const { jobId } = route.params || {};
@@ -151,7 +152,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         <View style={styles.metaRow}>
           <Calendar size={14} color={tokens.colors.muted} />
           <Text style={styles.metaText}>
-            نُشر في {new Date(job.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+            نُشر في {safeFormatDate(job.createdAt)}
           </Text>
           {isTranslated && (
             <Text style={styles.machineTranslatedLabel}>• {'ترجمة آلية'}</Text>

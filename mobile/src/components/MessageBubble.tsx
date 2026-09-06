@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { Message } from '../schemas/message.schema';
 import { CheckCheck } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import { safeFormatTime } from '../utils/dateUtils';
 
 interface MessageBubbleProps {
   item: Message;
@@ -40,7 +41,7 @@ export const MessageBubble = ({ item, isMe }: MessageBubbleProps) => {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 4 }}>
           <Text style={{ fontSize: 10, color: isMe ? '#7B9E87' : '#999999' }}>
-            {new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit' }).format(new Date(item.timestamp))}
+            {safeFormatTime(item.timestamp)}
           </Text>
           {isMe && (
             <CheckCheck size={12} color="#7B9E87" style={{ marginStart: 4 }} />

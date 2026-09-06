@@ -23,7 +23,7 @@ export class PushNotificationService {
       const messages: ExpoPushMessage[] = [];
       for (const pushToken of user.pushTokens) {
         if (!Expo.isExpoPushToken(pushToken)) {
-          logger.warn(`Push token ${pushToken} is not a valid Expo push token`);
+          logger.warn({ pushToken }, 'Push token is not a valid Expo push token');
           continue;
         }
 
@@ -44,16 +44,16 @@ export class PushNotificationService {
         try {
           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
           tickets.push(...ticketChunk);
-        } catch (error) {
-          logger.error('Error sending push notification chunk:', error);
+        } catch (err) {
+          logger.error({ err }, 'Error sending push notification chunk');
         }
       }
-      
+
       // In a production environment, you would also want to process the receipts
       // to remove invalid/unregistered tokens, but this is sufficient for MVP.
 
-    } catch (error) {
-      logger.error('Failed to send push notification to user', { userId, error });
+    } catch (err) {
+      logger.error({ err, userId }, 'Failed to send push notification to user');
     }
   }
 }

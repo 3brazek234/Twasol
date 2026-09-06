@@ -78,9 +78,7 @@ export class ChatInquiryService {
           status: 'AGREED',
           salaryMin: data.salaryMin,
           salaryMax: data.salaryMax,
-          courts: {
-            create: data.courtIds.map((courtId) => ({ courtId }))
-          }
+          courtId: data.courtIds?.[0] ?? null,
         }
       });
 

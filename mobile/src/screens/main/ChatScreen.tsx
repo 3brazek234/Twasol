@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, RefreshControl, ActivityIndicator } from 'react-native';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Message } from '../../schemas/message.schema';
@@ -125,13 +125,16 @@ export const ChatScreen = ({ route, navigation }: any) => {
 
   const shouldShowDateSeparator = (msgs: Message[], index: number) => {
     if (index === 0) return true;
-    const curr = new Date(msgs[index].timestamp).toDateString();
-    const prev = new Date(msgs[index - 1].timestamp).toDateString();
-    return curr !== prev;
+    const currDate = msgs[index]?.timestamp ? new Date(msgs[index].timestamp).toDateString() : null;
+    const prevDate = msgs[index - 1]?.timestamp ? new Date(msgs[index - 1].timestamp).toDateString() : null;
+    if (!currDate || !prevDate) return false;
+    return currDate !== prevDate;
   };
 
-  const formatDateSeparator = (isoString: string) => {
-    const date = new Date(isoString);
+  const formatDateSeparator = (value: string | Date | undefined) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '';
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);

@@ -7,6 +7,7 @@ import cookie from 'cookie';
 import { registerPresenceHandlers, handleDisconnect } from '../modules/presence/presence.gateway';
 import { registerChatHandlers } from '../modules/chat/chat.gateway';
 import { env } from '../env';
+import { logger } from '../common/utils/logger';
 
 export function initializeSocket(httpServer: HttpServer) {
   const io = new Server(httpServer, {

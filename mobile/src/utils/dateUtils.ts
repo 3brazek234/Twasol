@@ -1,5 +1,7 @@
 import { tokens } from '../theme/tokens';
 
+// ─── Existing helpers (preserved) ─────────────────────────────────────────────
+
 export function daysBetween(from: Date | string, to: Date | string): number {
   const f = new Date(from);
   const t = new Date(to);
@@ -28,10 +30,49 @@ export function getDeadlineInfo(deadline: string): { label: string; color: strin
   if (days <= 5) {
     return { label: `يتبقى ${days} أيام`, color: tokens.colors.amber, urgent: false };
   }
-  
+
   return { label: formatDate(deadline), color: tokens.colors.muted, urgent: false };
 }
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('ar-EG').format(amount) + ' ج.م';
+}
+
+// ─── Safe date helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Safely parses a date value. Returns null if input is falsy or produces an
+ * invalid date — never throws, never returns an Invalid Date object silently.
+ */
+export function safeParseDate(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/** Safely formats a date in Arabic long form; returns fallback string if invalid. */
+export function safeFormatDate(
+  value: string | Date | null | undefined,
+  fallback: string = '—'
+): string {
+  const date = safeParseDate(value);
+  if (!date) return fallback;
+  return new Intl.DateTimeFormat('ar-EG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
+/** Safely formats a time (HH:MM) for chat bubbles; returns fallback string if invalid. */
+export function safeFormatTime(
+  value: string | Date | null | undefined,
+  fallback: string = ''
+): string {
+  const date = safeParseDate(value);
+  if (!date) return fallback;
+  return new Intl.DateTimeFormat('ar-EG', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }

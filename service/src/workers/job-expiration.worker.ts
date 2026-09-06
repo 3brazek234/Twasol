@@ -55,7 +55,7 @@ export const jobExpirationWorker = new Worker(
         
         return tx.job.findUnique({
           where: { id: jobId },
-          include: { courts: true }
+          include: { court: true }
         });
       });
 
