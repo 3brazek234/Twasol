@@ -30,7 +30,6 @@
     "@bull-board/express": "^8.6.1",
     "@prisma/client": "^6.8.0",
     "@sentry/node": "^10.70.0",
-    "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^6.1.0",
     "cloudinary": "^2.11.0",
@@ -46,7 +45,6 @@
     "multer": "^2.2.0",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
-    "socket.io": "^4.8.0",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.1",
     "zod": "^3.23.8"

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ChatService } from './chat.service';
+import { ChatMessagesService } from './chat.messages.service';
 
 export class ChatController {
   static async getMyConversations(req: Request, res: Response, next: NextFunction) {
@@ -17,6 +18,24 @@ export class ChatController {
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
       const data = await ChatService.getMessages(req.params.id, req.user!.userId, cursor, limit);
       res.json({ success: true, data: data.messages, meta: { nextCursor: data.nextCursor } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async searchMessages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const q = req.query.q as string;
+      const data = await ChatMessagesService.searchMessages(req.params.id, req.user!.userId, q);
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async markMessagesAsRead(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await ChatMessagesService.markMessagesAsRead(req.params.id, req.user!.userId);      res.json({ success: true, data });
     } catch (error) {
       next(error);
     }
@@ -43,4 +62,5 @@ export class ChatController {
       next(error);
     }
   }
+
 }

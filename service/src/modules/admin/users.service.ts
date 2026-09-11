@@ -5,6 +5,7 @@ import { AppError } from '../../common/errors/AppError';
 import { auditLog } from '../../common/utils/audit';
 import { paginate } from '../../common/schemas/pagination.schema';
 import { Prisma } from '@prisma/client';
+import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 
 export class AdminUsersService {
   static async list({ page, limit, role, status, verificationStatus, search }: {
@@ -64,7 +65,8 @@ export class AdminUsersService {
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { isActive: false }
+        data: { isActive: false },
+        select: SAFE_USER_SELECT,
       });
       await auditLog(
         tx as any,
@@ -88,7 +90,8 @@ export class AdminUsersService {
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { isActive: true }
+        data: { isActive: true },
+        select: SAFE_USER_SELECT,
       });
       await auditLog(
         tx as any,
@@ -112,7 +115,8 @@ export class AdminUsersService {
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { verificationStatus: status }
+        data: { verificationStatus: status },
+        select: SAFE_USER_SELECT,
       });
       await auditLog(
         tx as any,

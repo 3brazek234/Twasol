@@ -6,6 +6,13 @@ import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
 import { useSupportConversation } from '../../hooks/useSupport';
 
+const TERMS_URL = process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://example.com/terms';
+const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://example.com/privacy';
+
+if (!__DEV__ && (TERMS_URL.includes('example.com') || PRIVACY_URL.includes('example.com'))) {
+  console.error('[CRITICAL] Placeholder legal URLs detected in production build!');
+}
+
 export const SettingsScreen = ({ navigation }: any) => {
   const { logout, user } = useAuthStore();
   
@@ -131,11 +138,11 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.card}>
           <SettingsRow 
             label="شروط الخدمة" 
-            onPress={() => Linking.openURL('https://example.com/terms')} 
+            onPress={() => Linking.openURL(TERMS_URL)} 
           />
           <SettingsRow 
             label="سياسة الخصوصية" 
-            onPress={() => Linking.openURL('https://example.com/privacy')} 
+            onPress={() => Linking.openURL(PRIVACY_URL)} 
           />
           <SettingsRow 
             label="التواصل مع الدعم" 

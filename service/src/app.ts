@@ -17,6 +17,7 @@ import { jobReviewsRouter, userReviewsRouter } from './modules/reviews/reviews.r
 import { chatRouter } from './modules/chat/chat.routes';
 import { supportRouter } from './modules/support/support.routes';
 import { subscriptionRouter } from './modules/subscription/subscription.routes';
+import { uploadsRouter } from './modules/uploads/uploads.routes';
 import { prisma } from './prisma';
 import { env } from './env';
 import * as Sentry from '@sentry/node';
@@ -79,6 +80,7 @@ app.use('/api/lawyers', lawyersRouter);
 app.use('/api/conversations', chatRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/subscription', subscriptionRouter);
+app.use('/api/uploads', uploadsRouter);
 
 // Review routes (nested)
 app.use('/api/jobs/:id/reviews', jobReviewsRouter);

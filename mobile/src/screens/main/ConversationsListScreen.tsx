@@ -5,12 +5,9 @@ import { useConversations } from '../../hooks/useConversations';
 import { tokens } from '../../theme/tokens';
 import { MessageSquare, User, ChevronRight } from 'lucide-react-native';
 import { fetchConversations, ConversationSummary } from '../../api/conversations.api';
-import { useSocketStore } from '../../stores/socketStore';
 
 export const ConversationsListScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
-  const socket = useSocketStore((state) => state.socket);
-
   const { data: conversations = [], isLoading, error } = useConversations();
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { getCached } from '../../common/utils/cache';
+import { SAFE_USER_SELECT } from './user-safe-fields';
 
 export class UsersService {
   static async getProfile(userId: string) {
@@ -51,6 +52,7 @@ export class UsersService {
     return prisma.user.update({
       where: { id: userId },
       data,
+      select: SAFE_USER_SELECT,
     });
   }
 

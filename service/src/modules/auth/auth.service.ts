@@ -98,18 +98,9 @@ export class AuthService {
           data: notificationPayload,
         }
       );
-
-      try {
-        const { io } = await import('../../server');
-        if (io) {
-          io.to('admins').emit('admin:new_signup', notificationPayload);
-        }
-      } catch (e) {
-        // Safe fail if socket isn't initialized
-      }
     }
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _, pushTokens: __, ...userWithoutPassword } = user as any;
 
     return {
       user: {
@@ -143,7 +134,7 @@ export class AuthService {
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _, pushTokens: __, ...userWithoutPassword } = user as any;
 
     return {
       user: {

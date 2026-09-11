@@ -40,6 +40,16 @@ enum MessageType {
   SYSTEM
 }
 
+enum MessageStatus {
+  SENT
+  READ
+}
+
+enum AttachmentType {
+  IMAGE
+  DOCUMENT
+}
+
 enum OfferStatus {
   PENDING
   ACCEPTED
@@ -65,9 +75,9 @@ enum NotificationType {
   VERIFICATION_APPROVED
   VERIFICATION_REJECTED
   NEW_USER_SIGNUP
-  SUBSCRIPTION_PAYMENT_PENDING  // الإيصال قيد المراجعة
-  SUBSCRIPTION_ACTIVATED        // تم تفعيل الاشتراك
-  SUBSCRIPTION_REJECTED         // تم رفض الإيصال
+  SUBSCRIPTION_PAYMENT_PENDING // الإيصال قيد المراجعة
+  SUBSCRIPTION_ACTIVATED // تم تفعيل الاشتراك
+  SUBSCRIPTION_REJECTED // تم رفض الإيصال
   JOB_COMPLETED
   JOB_CANCELLED
   JOB_EXPIRED_WITHDRAWN
@@ -106,25 +116,25 @@ enum CourtType {
 
 // حالة اشتراك المحامي في التطبيق
 enum SubscriptionStatus {
-  NOT_REQUIRED    // للمستخدمين الإداريين
+  NOT_REQUIRED // للمستخدمين الإداريين
   PENDING_PAYMENT // الحساب موثق، لكن ينتظر تأكيد الدفع
-  ACTIVE          // الاشتراك نشط وسارٍ
-  EXPIRED         // انتهت صلاحية الاشتراك
-  SUSPENDED       // تم إيقاف الاشتراك يدوياً
+  ACTIVE // الاشتراك نشط وسارٍ
+  EXPIRED // انتهت صلاحية الاشتراك
+  SUSPENDED // تم إيقاف الاشتراك يدوياً
 }
 
 // طريقة الدفع (يدوي فقط في الوقت الحالي)
 enum PaymentMethod {
   MANUAL_BANK_TRANSFER // تحويل بنكي
   MANUAL_VODAFONE_CASH // فودافون كاش
-  MANUAL_CASH          // نقدي / مقر الشركة
+  MANUAL_CASH // نقدي / مقر الشركة
 }
 
 // حالة إيصال الدفع
 enum PaymentStatus {
   PENDING // تم إرسال الإيصال وفي انتظار مراجعة الإدارة
   SUCCESS // تم تأكيد الدفع من الإدارة
-  FAILED  // الإيصال مرفوض
+  FAILED // الإيصال مرفوض
 }
 
 model Governorate {
@@ -138,78 +148,79 @@ model Governorate {
 }
 
 model Court {
-  id            String     @id @default(uuid())
-  nameAr        String     @map("name_ar")
-  nameEn        String     @map("name_en")
+  id            String    @id @default(uuid())
+  nameAr        String    @map("name_ar")
+  nameEn        String    @map("name_en")
   type          CourtType
-  governorateId String?    @map("governorate_id")
-  parentCourtId String?    @map("parent_court_id")
-  createdAt     DateTime   @default(now()) @map("created_at")
+  governorateId String?   @map("governorate_id")
+  parentCourtId String?   @map("parent_court_id")
+  replyToId     String?   @map("reply_to_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
-  governorate   Governorate?  @relation(fields: [governorateId], references: [id])
-  parentCourt   Court?        @relation("CourtHierarchy", fields: [parentCourtId], references: [id])
-  childCourts   Court[]       @relation("CourtHierarchy")
-  lawyers       LawyerCourt[]
-  jobs          Job[]
+  governorate Governorate?  @relation(fields: [governorateId], references: [id])
+  parentCourt Court?        @relation("CourtHierarchy", fields: [parentCourtId], references: [id])
+  childCourts Court[]       @relation("CourtHierarchy")
+  lawyers     LawyerCourt[]
+  jobs        Job[]
 
   @@map("courts")
 }
 
 model User {
-  id                 String             @id @default(uuid())
-  email              String             @unique
-  passwordHash       String             @map("password_hash")
-  role               Role               @default(LAWYER)
-  accountMode        AccountMode        @default(BOTH) @map("account_mode")
-  fullName           String             @map("full_name")
-  barNumber          String?            @unique @map("bar_number")
-  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
-  preferredLocale    Locale             @default(EN) @map("preferred_locale")
-  bio                String?
-  isActive           Boolean            @default(false) @map("is_active")
-  canActivate        Boolean            @default(true) @map("can_activate")
-  isOnline           Boolean            @default(false) @map("is_online")
+  id                    String             @id @default(uuid())
+  email                 String             @unique
+  passwordHash          String             @map("password_hash")
+  role                  Role               @default(LAWYER)
+  accountMode           AccountMode        @default(BOTH) @map("account_mode")
+  fullName              String             @map("full_name")
+  barNumber             String?            @unique @map("bar_number")
+  verificationStatus    VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  preferredLocale       Locale             @default(EN) @map("preferred_locale")
+  bio                   String?
+  isActive              Boolean            @default(false) @map("is_active")
+  canActivate           Boolean            @default(true) @map("can_activate")
+  isOnline              Boolean            @default(false) @map("is_online")
   deletedAt             DateTime?          @map("deleted_at")
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
   governorateId         String?            @map("governorate_id")
   // ─── حقول نقابة المحامين والاشتراك ──────────────────────────────────────────
-  barId                 String?            @map("bar_id")                   // رقم القيد بنقابة المحامين
-  subscriptionStatus    SubscriptionStatus @default(PENDING_PAYMENT)         @map("subscription_status")
-  subscriptionExpiresAt DateTime?          @map("subscription_expires_at")  // تاريخ انتهاء الاشتراك
+  barId                 String?            @map("bar_id") // رقم القيد بنقابة المحامين
+  subscriptionStatus    SubscriptionStatus @default(PENDING_PAYMENT) @map("subscription_status")
+  subscriptionExpiresAt DateTime?          @map("subscription_expires_at") // تاريخ انتهاء الاشتراك
   // ─── الإشعارات ─────────────────────────────────────────────────────────────
-  pushTokens            String[]           @default([]) @map("push_tokens")  // Expo Push Tokens
+  pushTokens            String[]           @default([]) @map("push_tokens") // Expo Push Tokens
 
-  governorate          Governorate?              @relation(fields: [governorateId], references: [id])
-  courts               LawyerCourt[]
-  postedJobs           Job[]                     @relation("PostedJobs")
-  assignedJobs         Job[]                     @relation("AssignedJobs")
-  assignedSupportConversations Conversation[]    @relation("AssignedSupportConversations")
-  applications         JobApplication[]
-  messages             Message[]
-  notifications        Notification[]
-  participants         ConversationParticipant[]
-  verificationDocs     VerificationDocument[]
-  reviewsGiven         Review[]                  @relation("ReviewsGiven")
-  reviewsReceived      Review[]                  @relation("ReviewsReceived")
-  reportsSubmitted     Report[]                  @relation("ReportsSubmitted")
-  reportsReceived      Report[]                  @relation("ReportsReceived")
-  invitedJobs          Job[]                     @relation("InvitedJobs")
-  auditLogs            AuditLog[]
-  conflictDeclarations ConflictDeclaration[]
-  subscriptionPayments SubscriptionPayment[]     // سجل مدفوعات الاشتراك
+  governorate                  Governorate?              @relation(fields: [governorateId], references: [id])
+  courts                       LawyerCourt[]
+  postedJobs                   Job[]                     @relation("PostedJobs")
+  assignedJobs                 Job[]                     @relation("AssignedJobs")
+  assignedSupportConversations Conversation[]            @relation("AssignedSupportConversations")
+  applications                 JobApplication[]
+  messages                     Message[]
+  notifications                Notification[]
+  participants                 ConversationParticipant[]
+  verificationDocs             VerificationDocument[]
+  reviewsGiven                 Review[]                  @relation("ReviewsGiven")
+  reviewsReceived              Review[]                  @relation("ReviewsReceived")
+  reportsSubmitted             Report[]                  @relation("ReportsSubmitted")
+  reportsReceived              Report[]                  @relation("ReportsReceived")
+  invitedJobs                  Job[]                     @relation("InvitedJobs")
+  auditLogs                    AuditLog[]
+  conflictDeclarations         ConflictDeclaration[]
+  subscriptionPayments         SubscriptionPayment[] // سجل مدفوعات الاشتراك
 
   @@index([isActive, isOnline])
   @@map("users")
 }
 
 model LawyerCourt {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  courtId   String   @map("court_id")
-  isActive     Boolean  @default(true) @map("is_active")
-  canActivate  Boolean  @default(true) @map("can_activate")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  courtId     String   @map("court_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  canActivate Boolean  @default(true) @map("can_activate")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
@@ -220,38 +231,38 @@ model LawyerCourt {
 }
 
 model Job {
-  id               String    @id @default(uuid())
+  id               String                   @id @default(uuid())
   title            String
   description      String
-  postedByUserId   String    @map("posted_by_user_id")
-  status           JobStatus @default(OPEN)
-  salaryMin        Decimal?  @map("salary_min") @db.Decimal(12, 2)
-  salaryMax        Decimal?  @map("salary_max") @db.Decimal(12, 2)
-  agreedSalary     Decimal?  @map("agreed_salary") @db.Decimal(12, 2)
-  currency         String    @default("EGP")
-  contentLocale    Locale?   @map("content_locale")
-  assignedLawyerId String?   @map("assigned_lawyer_id")
-  invitedLawyerId  String?   @map("invited_lawyer_id")
-  courtId          String?   @map("court_id")
-  version          Int       @default(0)
-  negotiatingSince DateTime? @map("negotiating_since")
-  agreedAt         DateTime? @map("agreed_at")
-  completedAt      DateTime? @map("completed_at")
-  cancelledAt      DateTime? @map("cancelled_at")
-  expiredAt        DateTime? @map("expired_at")
-  expiresAt        DateTime? @map("expires_at")
+  postedByUserId   String                   @map("posted_by_user_id")
+  status           JobStatus                @default(OPEN)
+  salaryMin        Decimal?                 @map("salary_min") @db.Decimal(12, 2)
+  salaryMax        Decimal?                 @map("salary_max") @db.Decimal(12, 2)
+  agreedSalary     Decimal?                 @map("agreed_salary") @db.Decimal(12, 2)
+  currency         String                   @default("EGP")
+  contentLocale    Locale?                  @map("content_locale")
+  assignedLawyerId String?                  @map("assigned_lawyer_id")
+  invitedLawyerId  String?                  @map("invited_lawyer_id")
+  courtId          String?                  @map("court_id")
+  version          Int                      @default(0)
+  negotiatingSince DateTime?                @map("negotiating_since")
+  agreedAt         DateTime?                @map("agreed_at")
+  completedAt      DateTime?                @map("completed_at")
+  cancelledAt      DateTime?                @map("cancelled_at")
+  expiredAt        DateTime?                @map("expired_at")
+  expiresAt        DateTime?                @map("expires_at")
   searchVector     Unsupported("tsvector")? @map("search_vector")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
 
-  postedBy       User             @relation("PostedJobs", fields: [postedByUserId], references: [id])
-  assignedLawyer User?            @relation("AssignedJobs", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
-  invitedLawyer  User?            @relation("InvitedJobs", fields: [invitedLawyerId], references: [id], onDelete: SetNull)
-  court          Court?           @relation(fields: [courtId], references: [id])
-  applications     JobApplication[]
-  conversations    Conversation[]
-  reviews          Review[]
-  reports          Report[]
+  postedBy             User                  @relation("PostedJobs", fields: [postedByUserId], references: [id])
+  assignedLawyer       User?                 @relation("AssignedJobs", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
+  invitedLawyer        User?                 @relation("InvitedJobs", fields: [invitedLawyerId], references: [id], onDelete: SetNull)
+  court                Court?                @relation(fields: [courtId], references: [id])
+  applications         JobApplication[]
+  conversations        Conversation[]
+  reviews              Review[]
+  reports              Report[]
   conflictDeclarations ConflictDeclaration[]
 
   @@index([status])
@@ -260,7 +271,6 @@ model Job {
   @@index([courtId])
   @@map("jobs")
 }
-
 
 model JobApplication {
   id        String            @id @default(uuid())
@@ -277,18 +287,18 @@ model JobApplication {
 }
 
 model Conversation {
-  id        String   @id @default(uuid())
-  jobId     String?  @map("job_id")
-  type      ConversationType @default(JOB) @map("type")
-  supportStatus SupportStatus? @map("support_status")
-  assignedAdminId String? @map("assigned_admin_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              String           @id @default(uuid())
+  jobId           String?          @map("job_id")
+  type            ConversationType @default(JOB) @map("type")
+  supportStatus   SupportStatus?   @map("support_status")
+  assignedAdminId String?          @map("assigned_admin_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
 
-  job          Job?                      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  assignedAdmin User?                      @relation("AssignedSupportConversations", fields: [assignedAdminId], references: [id])
-  participants ConversationParticipant[]
-  messages     Message[]
+  job           Job?                      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  assignedAdmin User?                     @relation("AssignedSupportConversations", fields: [assignedAdminId], references: [id])
+  participants  ConversationParticipant[]
+  messages      Message[]
 
   @@map("conversations")
 }
@@ -306,17 +316,25 @@ model ConversationParticipant {
 }
 
 model Message {
-  id             String       @id @default(uuid())
-  conversationId String       @map("conversation_id")
-  senderId       String       @map("sender_id")
-  type           MessageType  @default(TEXT)
+  id             String          @id @default(uuid())
+  conversationId String          @map("conversation_id")
+  senderId       String          @map("sender_id")
+  type           MessageType     @default(TEXT)
   content        String
-  offerAmount    Decimal?     @map("offer_amount") @db.Decimal(12, 2)
-  offerStatus    OfferStatus? @map("offer_status")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  status         MessageStatus   @default(SENT)
+  attachmentUrl  String?         @map("attachment_url")
+  attachmentType AttachmentType? @map("attachment_type")
+  attachmentName String?         @map("attachment_name")
+  attachmentSize Int?            @map("attachment_size")
+  offerAmount    Decimal?        @map("offer_amount") @db.Decimal(12, 2)
+  offerStatus    OfferStatus?    @map("offer_status")
+  replyToId      String?         @map("reply_to_id")
+  createdAt      DateTime        @default(now()) @map("created_at")
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id])
+  replyTo      Message?     @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies      Message[]    @relation("MessageReplies")
 
   @@index([conversationId, createdAt])
   @@map("messages")
@@ -390,9 +408,6 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-
-
-
 model ConflictDeclaration {
   id         String   @id @default(uuid())
   jobId      String   @map("job_id")
@@ -430,29 +445,29 @@ model Report {
 // ─── سجل مدفوعات الاشتراك ──────────────────────────────────────────────────────
 // يسجّل كل طلب اشتراك مع إيصال الدفع لمراجعة الأدمن وتفعيل الحساب
 model SubscriptionPayment {
-  id             String        @id @default(uuid())
-  userId         String        @map("user_id")
+  id     String @id @default(uuid())
+  userId String @map("user_id")
 
   // تفاصيل المبلغ والمدة
   amountPiasters Int           @map("amount_piasters") // المبلغ بالقروش (50000 = 500 جنيه)
   currency       String        @default("EGP")
   paymentMethod  PaymentMethod @map("payment_method")
   status         PaymentStatus @default(PENDING)
-  durationMonths Int           @default(12)            @map("duration_months") // مدة الاشتراك بالأشهر
+  durationMonths Int           @default(12) @map("duration_months") // مدة الاشتراك بالأشهر
 
   // إثبات الدفع المرفوع من المحامي
-  receiptFileKey String?       @map("receipt_file_key") // مفتاح الملف في R2 Storage
-  senderNumber   String?       @map("sender_number")    // رقم الهاتف المحوّل منه (فودافون كاش)
+  receiptFileKey String? @map("receipt_file_key") // مفتاح الملف في R2 Storage
+  senderNumber   String? @map("sender_number") // رقم الهاتف المحوّل منه (فودافون كاش)
 
   // بيانات مراجعة الأدمن
-  processedAt    DateTime?     @map("processed_at")
-  processedBy    String?       @map("processed_by")     // معرف الأدمن الذي راجع الطلب
-  notes          String?       // سبب الرفض أو ملاحظات الأدمن للمحامي
+  processedAt DateTime? @map("processed_at")
+  processedBy String?   @map("processed_by") // معرف الأدمن الذي راجع الطلب
+  notes       String? // سبب الرفض أو ملاحظات الأدمن للمحامي
 
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt      @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([status])

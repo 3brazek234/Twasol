@@ -7,9 +7,14 @@ export const joinConversationSchema = z.object({
 
 export const sendMessageSchema = z.object({
   conversationId: z.string().uuid(),
-  content: z.string().min(1).max(5000),
+  content: z.string().max(5000).optional().default(''),
   type: z.nativeEnum(MessageType).default('TEXT'),
   offerAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  attachmentUrl: z.string().optional(),
+  attachmentType: z.enum(['IMAGE', 'DOCUMENT']).optional(),
+  attachmentName: z.string().optional(),
+  attachmentSize: z.number().optional(),
+  replyToId: z.string().uuid().optional()
 }).refine((data) => {
   if (data.type === 'OFFER' && !data.offerAmount) {
     return false;
@@ -18,6 +23,12 @@ export const sendMessageSchema = z.object({
 }, {
   message: 'Offer amount is required for offer messages',
   path: ['offerAmount'],
+}).refine(data => {
+  if (!data.content && !data.attachmentUrl) return false;
+  return true;
+}, {
+  message: 'Content or attachment is required',
+  path: ['content'],
 });
 
 export const acceptOfferSchema = z.object({

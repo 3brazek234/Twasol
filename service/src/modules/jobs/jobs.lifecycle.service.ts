@@ -230,6 +230,34 @@ export class JobsLifecycleService {
     });
   }
 
+  static async acceptOffer(jobId: string, lawyerId: string, agreedSalary: Prisma.Decimal | number, txClient?: any) {
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw AppError.notFound("Job");
+
+    this.assertValidTransition(job.status, 'AGREED');
+
+    const execute = async (tx: any) => {
+      const updated = await tx.job.updateMany({
+        where: { id: jobId, status: job.status, version: job.version },
+        data: { 
+          status: 'AGREED', 
+          assignedLawyerId: lawyerId,
+          agreedSalary,
+          agreedAt: new Date(),
+          version: { increment: 1 } 
+        }
+      });
+
+      if (updated.count === 0) throw AppError.conflict("Job state changed");
+
+      await auditLog(tx as any, job.postedByUserId, "job.agreed", "Job", jobId, { status: job.status }, { status: 'AGREED', assignedLawyerId: lawyerId, agreedSalary });
+
+      return tx.job.findUnique({ where: { id: jobId } });
+    };
+
+    return txClient ? execute(txClient) : prisma.$transaction(execute);
+  }
+
   // Support old endpoint just in case, but route to new state machine internally
   static async updateStatus(jobId: string, userId: string, newStatus: JobStatus) {
     if (newStatus === 'NEGOTIATING') return JobsLifecycleService.startNegotiation(jobId, userId);

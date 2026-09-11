@@ -11,7 +11,7 @@ import { JobDetailScreen } from '../../screens/main/JobDetailScreen';
 import { JobCompletionScreen } from '../../screens/main/JobCompletionScreen';
 import { PostJobScreen } from '../../screens/main/PostJob/PostJobScreen';
 import { ConversationsListScreen } from '../../screens/main/ConversationsListScreen';
-import { ChatScreen } from '../../screens/main/ChatScreen';
+import { NegotiationScreen } from '../../screens/main/NegotiationScreen';
 import { NotificationsScreen } from '../../screens/main/NotificationsScreen';
 import { MyJobsScreen } from '../../screens/main/MyJobsScreen';
 import { PosterReviewScreen } from '../../screens/main/PosterReviewScreen';
@@ -91,7 +91,7 @@ const JobsNavigator = () => {
 const ChatsNavigator = () => (
   <ChatsStack.Navigator screenOptions={defaultScreenOptions}>
     <ChatsStack.Screen name="ConversationsList" component={ConversationsListScreen} options={{ title: 'المحادثات' }} />
-    <ChatsStack.Screen name="Chat" component={ChatScreen} options={{ title: 'المفاوضات' }} />
+    <ChatsStack.Screen name="Chat" component={NegotiationScreen} options={{ title: 'المفاوضات' }} />
   </ChatsStack.Navigator>
 );
 

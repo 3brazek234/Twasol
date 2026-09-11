@@ -22,11 +22,31 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "يحتاج التطبيق للوصول إلى معرض الصور لتحميل صورة الملف الشخصي أو مستندات التوثيق.",
+          "cameraPermission": "يحتاج التطبيق للوصول إلى الكاميرا لالتقاط صور المستندات المطلوبة للتوثيق."
+        }
+      ],
+      "expo-document-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1B3B36"
+        }
+      ],
+      "expo-secure-store"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rebuy.tawasol",
       "infoPlist": {
-        "CFBundleDisplayName": "Tawasol"
+        "CFBundleDisplayName": "Tawasol",
+        "NSCameraUsageDescription": "يحتاج التطبيق للوصول إلى الكاميرا لالتقاط صور المستندات المطلوبة للتوثيق.",
+        "NSPhotoLibraryUsageDescription": "يحتاج التطبيق للوصول إلى معرض الصور لتحميل صورة الملف الشخصي أو مستندات التوثيق."
       }
     },
     "android": {

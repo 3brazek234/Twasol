@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { paginationQuerySchema } from '../../common/schemas/pagination.schema';
 import { AdminSupportService } from './admin-support.service';
-import { io } from '../../server';
 
 const listSupportQuerySchema = paginationQuerySchema.extend({
   status: z.enum(['OPEN', 'RESOLVED']).optional().default('OPEN'),
@@ -40,17 +39,6 @@ export class AdminSupportController {
         adminId: req.user!.userId,
         content,
       });
-
-      // Socket emissions stay in the controller — they are I/O side-effects, not business logic
-      io.to(`conversation:${conversationId}`).emit('message:receive', message);
-      io.to('admins').emit('admin:new_support_message', { conversationId, message });
-      if (lawyerParticipantId) {
-        io.to(`user:${lawyerParticipantId}`).emit('notification:new', {
-          type: 'NEW_MESSAGE',
-          messageId: message.id,
-        });
-      }
-
       res.json({ success: true, data: message });
     } catch (error) {
       next(error);
@@ -62,9 +50,7 @@ export class AdminSupportController {
       const { conversation, systemMessage, conversationId } = await AdminSupportService.resolve(
         req.params.id,
         req.user!.userId,
-      );
-      io.to(`conversation:${conversationId}`).emit('message:receive', systemMessage);
-      res.json({ success: true, data: conversation });
+      );      res.json({ success: true, data: conversation });
     } catch (error) {
       next(error);
     }

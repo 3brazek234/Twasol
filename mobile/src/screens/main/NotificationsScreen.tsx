@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNotifications, useMarkNotificationRead } from '../../hooks/useNotifications';
 import { AppNotification } from '../../schemas/notification.schema';
-import { useSocketStore } from '../../stores/socketStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { tokens } from '../../theme/tokens';
 import { Bell, Briefcase, Landmark, MessageSquare, ShieldAlert } from 'lucide-react-native';

@@ -160,12 +160,6 @@ export class SubscriptionService {
     });
 
     // إشعار للأدمن عبر الـ socket
-    const { io } = await import('../../server');
-    io.to('admins').emit('admin:new_subscription_request', {
-      paymentId: payment.id,
-      userId,
-      plan: { nameAr: plan.nameAr, durationMonths: plan.durationMonths },
-    });
 
     return { payment, plan };
   }
@@ -245,12 +239,6 @@ export class SubscriptionService {
       });
     });
 
-    const { io } = await import('../../server');
-    io.to(`user:${payment.userId}`).emit('account:activated', {
-      subscriptionStatus: 'ACTIVE',
-      subscriptionExpiresAt: expiresAt.toISOString(),
-    });
-
     return { paymentId, userId: payment.userId, expiresAt };
   }
 
@@ -287,9 +275,6 @@ export class SubscriptionService {
         })
       });
     });
-
-    const { io } = await import('../../server');
-    io.to(`user:${payment.userId}`).emit('subscription:rejected', { reason: notes });
 
     return { paymentId };
   }
@@ -338,12 +323,6 @@ export class SubscriptionService {
           data: { expiresAt: expiresAt.toISOString() },
         }),
       });
-    });
-
-    const { io } = await import('../../server');
-    io.to(`user:${userId}`).emit('account:activated', {
-      subscriptionStatus: 'ACTIVE',
-      subscriptionExpiresAt: expiresAt.toISOString(),
     });
 
     return { userId, expiresAt };
