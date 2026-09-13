@@ -63,4 +63,44 @@ export class ChatController {
     }
   }
 
+
+  static async sendMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await ChatMessagesService.sendMessage(
+        req.params.id,
+        req.user!.userId,
+        req.body,
+        req.user!.role
+      );
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async acceptOffer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const data = await ChatMessagesService.acceptOffer(
+        req.params.messageId,
+        req.user!.userId,
+        ipAddress
+      );
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async rejectOffer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await ChatMessagesService.rejectOffer(
+        req.params.messageId,
+        req.user!.userId
+      );
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

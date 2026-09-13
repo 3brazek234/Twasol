@@ -10,22 +10,6 @@ export const ConversationsListScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
   const { data: conversations = [], isLoading, error } = useConversations();
 
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handleNewActivity = () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    };
-
-    socket.on('message:receive', handleNewActivity);
-    socket.on('notification:new', handleNewActivity);
-    
-    return () => {
-      socket.off('message:receive', handleNewActivity);
-      socket.off('notification:new', handleNewActivity);
-    };
-  }, [socket, queryClient]);
-
 
   const renderItem = ({ item }: { item: ConversationSummary }) => {
     const lastMsgTime = item.lastMessageAt

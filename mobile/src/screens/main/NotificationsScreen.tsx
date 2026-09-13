@@ -10,17 +10,6 @@ export const NotificationsScreen = ({ navigation }: any) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useNotifications();
   const { mutate: markAsRead } = useMarkNotificationRead();
   const queryClient = useQueryClient();
-  useEffect(() => {
-    const socket = useSocketStore.getState().socket;
-    if (socket) {
-      socket.on('notification:new', () => {
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      });
-      return () => {
-        socket.off('notification:new');
-      };
-    }
-  }, [queryClient]);
 
   const handleNotificationPress = (item: AppNotification) => {
     if (!item.isRead) {

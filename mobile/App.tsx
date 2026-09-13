@@ -77,7 +77,6 @@ const toastConfig = {
     />
   )
 };
-import './src/socket/socketClient'; // Initialize socket listeners
 
 // Suppress known deprecation warnings from 3rd party libraries
 LogBox.ignoreLogs([

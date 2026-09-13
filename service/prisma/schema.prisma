@@ -154,7 +154,6 @@ model Court {
   type          CourtType
   governorateId String?   @map("governorate_id")
   parentCourtId String?   @map("parent_court_id")
-  replyToId     String?   @map("reply_to_id")
   createdAt     DateTime  @default(now()) @map("created_at")
 
   governorate Governorate?  @relation(fields: [governorateId], references: [id])

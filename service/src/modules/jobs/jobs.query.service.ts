@@ -1,3 +1,4 @@
+import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { Prisma } from '@prisma/client';
@@ -57,7 +58,9 @@ export class JobsQueryService {
       where: { id },
       include: {
         court: true,
-        applications: true,
+        applications: { include: { lawyer: { select: SAFE_USER_SELECT } } },
+        postedBy: { select: SAFE_USER_SELECT },
+        assignedLawyer: { select: SAFE_USER_SELECT },
       },
     });
     if (!job) throw AppError.notFound("Job");
