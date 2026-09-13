@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import React from 'react';
 
 // Stub out tests for verification gate logic

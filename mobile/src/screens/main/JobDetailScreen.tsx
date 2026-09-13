@@ -109,8 +109,14 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           onPress: async () => {
             try {
               await completeJobHook.mutateAsync(jobId);
-              Alert.alert('نجاح', 'تم تأكيد إتمام المهمة وإرسال إشعار للمحامي');
-              navigation.goBack();
+              // Navigate directly to PosterReview so the poster can rate the lawyer
+              navigation.replace('PosterReview', {
+                jobId,
+                jobTitle: job?.title,
+                lawyerId: (job as any)?.assignedLawyerId || (job as any)?.assignedExecutorId,
+                lawyerName: (job as any)?.assignedLawyerName || (job as any)?.assignedLawyer?.fullName,
+                fee: (job as any)?.agreedSalary || job?.salaryMin,
+              });
             } catch (err) {
               Alert.alert('خطأ', 'حدث خطأ أثناء إتمام المهمة');
             }
@@ -143,6 +149,10 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
     : 'قابل للتفاوض';
 
   const courtDisplay = job.courtNameAr ?? job.courtNameEn ?? 'المحكمة';
+
+  // Determine if current user is a participant in this completed job and has already reviewed
+  const isParticipant = isOwnJob || user?.id === (job as any)?.assignedLawyerId;
+  const myReview = (job as any)?.reviews?.find((r: any) => r.reviewerId === user?.id);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -218,7 +228,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         </Text>
       </View>
 
-      {/* 4. Actions */}
+      {/* 4. Actions — conditional on status */}
       {job.status === 'OPEN' && (
         <View style={styles.applyContainer}>
           {!isVerified && !isOwnJob && (
@@ -295,6 +305,48 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
             <CheckCircle size={18} color="#fff" style={{ marginEnd: 8 }} />
             <Text style={styles.applyButtonText}>تأكيد إتمام المهمة</Text>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {/* 5. Review section — only shown on COMPLETED jobs for participants */}
+      {job.status === 'COMPLETED' && isParticipant && (
+        <View style={styles.applyContainer}>
+          {myReview ? (
+            /* Already reviewed — show read-only */
+            <View style={styles.reviewedBadge}>
+              <CheckCircle size={16} color={tokens.colors.verdant} style={{ marginEnd: 8 }} />
+              <Text style={styles.reviewedText}>
+                قيّمت هذه المهمة بـ {myReview.rating} ⭐{myReview.comment ? ` — "${myReview.comment}"` : ''}
+              </Text>
+            </View>
+          ) : (
+            /* Not yet reviewed — show button */
+            <TouchableOpacity
+              style={[styles.applyButton, { backgroundColor: tokens.colors.gold }]}
+              onPress={() => {
+                if (isOwnJob) {
+                  navigation.navigate('PosterReview', {
+                    jobId,
+                    jobTitle: job?.title,
+                    lawyerId: (job as any)?.assignedLawyerId || (job as any)?.assignedExecutorId,
+                    lawyerName: (job as any)?.assignedLawyerName || (job as any)?.assignedLawyer?.fullName,
+                    fee: (job as any)?.agreedSalary || job?.salaryMin,
+                  });
+                } else {
+                  navigation.navigate('JobCompletion', {
+                    jobId,
+                    posterId: job?.posterId || (job as any)?.postedByUserId,
+                    posterName: (job as any)?.posterName,
+                    fee: (job as any)?.agreedSalary,
+                  });
+                }
+              }}
+            >
+              <Text style={[styles.applyButtonText, { color: tokens.colors.white }]}>
+                قيّم تجربتك ⭐
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </ScrollView>
@@ -470,5 +522,21 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: tokens.typography.weights.bold,
     fontFamily: tokens.typography.fonts.body,
-  }
+  },
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.verdantBg,
+    borderWidth: 1,
+    borderColor: tokens.colors.verdant,
+    borderRadius: 12,
+    padding: tokens.spacing.md,
+  },
+  reviewedText: {
+    flex: 1,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    color: tokens.colors.verdant,
+    textAlign: 'right',
+  },
 });

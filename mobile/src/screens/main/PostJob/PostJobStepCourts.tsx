@@ -153,7 +153,7 @@ export const PostJobStepCourts: React.FC<Props> = ({
                   keyExtractor={item => item.id}
                   contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
                   showsVerticalScrollIndicator={false}
-                  style={{ maxHeight: 320 }}
+                  style={{ flex: 1 }}
                   renderItem={({ item }) => {
                     const isSelected = selectedCourt?.id === item.id;
                     return (

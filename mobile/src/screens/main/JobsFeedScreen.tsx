@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
-import { JobListRow } from '../../components/JobListRow';
+import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
@@ -143,8 +143,8 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           data={jobs}
           keyExtractor={(item: any, index) => item?.id || String(index)}
           renderItem={({ item }: any) => (
-            <JobListRow
-              item={item}
+            <JobCard variant="feed"
+              job={item}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}

@@ -8,7 +8,7 @@ import { auditLog } from '../../common/utils/audit';
 export class JobsLifecycleService {
   private static assertValidTransition(current: JobStatus, target: JobStatus) {
     const validTransitions: Record<JobStatus, JobStatus[]> = {
-      OPEN: ['NEGOTIATING', 'CANCELLED', 'EXPIRED'],
+      OPEN: ['NEGOTIATING', 'AGREED', 'CANCELLED', 'EXPIRED'],
       NEGOTIATING: ['OPEN', 'AGREED', 'CANCELLED', 'EXPIRED'],
       AGREED: ['IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED'],
       IN_PROGRESS: ['COMPLETED', 'EXPIRED'], // COMPLETED requires poster action

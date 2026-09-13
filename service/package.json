@@ -12,9 +12,10 @@
     "prisma:migrate:prod": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
-    "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration --runInBand",
-    "test:watch": "jest --watch"
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration --no-threads",
+    "test:watch": "jest --watch",
+    "test": "vitest run"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -65,6 +66,7 @@
     "supertest": "^7.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "vitest-mock-extended": "^2.0.2"
   }
 }

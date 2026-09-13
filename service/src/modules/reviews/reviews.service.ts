@@ -23,35 +23,39 @@ export class ReviewsService {
       throw AppError.badRequest('No valid reviewee found for this job');
     }
 
+    // Check for existing review — handle gracefully with a 409, not a raw Prisma constraint error
     const existingReview = await prisma.review.findUnique({
-      where: {
-        jobId_reviewerId: {
-          jobId,
-          reviewerId
-        }
-      }
+      where: { jobId_reviewerId: { jobId, reviewerId } }
     });
 
     if (existingReview) {
-      throw AppError.badRequest('You have already reviewed this job');
+      throw AppError.conflict('لقد قمت بتقييم هذه المهمة مسبقاً');
     }
 
-    const review = await prisma.review.create({
-      data: {
-        jobId,
-        reviewerId,
-        revieweeId,
-        rating: data.rating,
-        comment: data.comment
-      },
-      include: {
-        job: { select: { title: true } },
-        reviewer: { select: { fullName: true } },
-        reviewee: { select: { fullName: true } }
-      }
-    });
+    try {
+      const review = await prisma.review.create({
+        data: {
+          jobId,
+          reviewerId,
+          revieweeId,
+          rating: data.rating,
+          comment: data.comment
+        },
+        include: {
+          job: { select: { title: true } },
+          reviewer: { select: { fullName: true } },
+          reviewee: { select: { fullName: true } }
+        }
+      });
 
-    return review;
+      return review;
+    } catch (err: any) {
+      // Catch race-condition duplicate (P2002 = unique constraint violation)
+      if (err?.code === 'P2002') {
+        throw AppError.conflict('لقد قمت بتقييم هذه المهمة مسبقاً');
+      }
+      throw err;
+    }
   }
 
   static async getUserReviews(userId: string, { page, limit }: { page: number; limit: number }) {

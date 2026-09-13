@@ -14,8 +14,8 @@ import { useNavigation } from '@react-navigation/native';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
 import { useMyPostedJobs, useMyActiveJobs, useUpdateJobStatus } from '../../hooks/useJobs';
-import { PostedJobCard } from '../../components/jobs/PostedJobCard';
-import { ActiveJobCard } from '../../components/jobs/ActiveJobCard';
+import { JobCard } from '../../components/jobs/JobCard';
+
 import { CompleteJobModal } from '../../components/jobs/CompleteJobModal';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
@@ -85,7 +85,7 @@ console.log('statusFilter', statusFilter);
   };
 
   const renderPostedJob = ({ item }: { item: any }) => (
-    <PostedJobCard
+    <JobCard variant="posted"
       job={item}
       onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
       onViewApplications={(id) => navigation.navigate('JobDetail', { jobId: id, initialTab: 'applications' })}
@@ -96,7 +96,7 @@ console.log('statusFilter', statusFilter);
   );
 
   const renderActiveJob = ({ item }: { item: any }) => (
-    <ActiveJobCard
+    <JobCard variant="active"
       job={item}
       onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
       onOpenChat={(job) => {

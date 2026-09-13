@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import { Prisma } from '@prisma/client';
 import { ChatService } from '../../src/modules/chat/chat.service';
 import { prisma } from '../../src/prisma';

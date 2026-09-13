@@ -14,7 +14,7 @@ import { Search, Plus, Briefcase } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { fetchJobs } from '../../api/jobs.api';
 import { useAuthStore } from '../../stores/authStore';
-import { JobListRow } from '../../components/JobListRow';
+import { JobCard } from '../../components/jobs/JobCard';
 import { Job } from '../../schemas/job.schema';
 
 // ─── Empty State ─────────────────────────────────────────────────────────────
@@ -92,8 +92,8 @@ export const HiringHomeScreen = ({ navigation }: any) => {
           data={myJobs}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <JobListRow
-              item={item}
+            <JobCard variant="feed"
+              job={item}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}

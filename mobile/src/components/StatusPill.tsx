@@ -1,29 +1,46 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { Job } from '../schemas/job.schema';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { tokens } from "../theme/tokens";
 
 interface StatusPillProps {
-  status: Job['status'];
+  status: string;
 }
 
-const statusConfig: Record<string, { label: string; className: string; textClassName: string }> = {
-  OPEN: { label: 'متاح', className: 'bg-signal/10', textClassName: 'text-signal' },
-  NEGOTIATING: { label: 'قيد التفاوض', className: 'bg-docket/10', textClassName: 'text-docket' },
-  AGREED: { label: 'تم الاتفاق', className: 'bg-info/10', textClassName: 'text-info' },
-  IN_PROGRESS: { label: 'جاري التنفيذ', className: 'bg-success/10', textClassName: 'text-success' },
-  COMPLETED: { label: 'مكتمل', className: 'bg-docket/20', textClassName: 'text-navy' },
-  CANCELLED: { label: 'ملغي', className: 'bg-muted/10', textClassName: 'text-muted' },
-  EXPIRED: { label: 'منتهي', className: 'bg-destructive/10', textClassName: 'text-destructive' },
+export const getStatusConfig = (status: string) => {
+  switch (status) {
+    case "OPEN": return { label: "متاح", bg: "#E0F2F1", text: tokens.colors.signal }; // Teal tint
+    case "NEGOTIATING": return { label: "قيد التفاوض", bg: tokens.colors.amberBg, text: tokens.colors.amber };
+    case "AGREED": return { label: "تم الاتفاق", bg: "#E3F2FD", text: tokens.colors.signal }; // Or tokens.colors.info if it exists
+    case "IN_PROGRESS": return { label: "جاري التنفيذ", bg: tokens.colors.verdantBg, text: tokens.colors.verdant };
+    case "COMPLETED": return { label: "مكتمل", bg: "#F1F5F9", text: tokens.colors.navy };
+    case "CANCELLED": return { label: "ملغي", bg: "#F1F5F9", text: tokens.colors.muted };
+    case "EXPIRED": return { label: "منتهي", bg: tokens.colors.crimsonBg, text: tokens.colors.crimson };
+    default: return { label: "متاح", bg: "#E0F2F1", text: tokens.colors.signal };
+  }
 };
 
 export const StatusPill = ({ status }: StatusPillProps) => {
-  const config = statusConfig[status] || statusConfig.OPEN;
+  const config = getStatusConfig(status);
 
   return (
-    <View className={`px-2 py-0.5 rounded-sm ${config.className}`}>
-      <Text className={`text-[10px] font-bodySemibold tracking-[0.5px] ${config.textClassName}`}>
+    <View style={[styles.container, { backgroundColor: config.bg }]}>
+      <Text style={[styles.text, { color: config.text }]}>
         {config.label}
       </Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: tokens.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: tokens.radius.xs,
+    alignSelf: "flex-start",
+  },
+  text: {
+    fontSize: 11,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    letterSpacing: 0.5,
+  },
+});

@@ -264,30 +264,26 @@ export const PostJobScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       {renderStepIndicator()}
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <AnimatePresence>
-            {step === 1 && renderStep1()}
-            {step === 2 && (
-              <PostJobStepCourts 
+        {step === 2 ? (
+          /* ── Step 2: Courts — NOT inside a ScrollView.
+             PostJobStepCourts contains its own FlatList that must be
+             the primary scrollable. Wrapping it in a ScrollView would
+             prevent the FlatList from scrolling on iOS entirely. ── */
+          <View style={styles.courtsStepContainer}>
+            <View style={styles.courtsStepContent}>
+              <PostJobStepCourts
                 selectedCourt={selectedCourt}
                 onCourtSelected={handleCourtSelected}
                 errors={errors}
               />
-            )}
-            {step === 3 && renderStep3()}
-            {step === 4 && renderStep4()}
-          </AnimatePresence>
-
-          <View style={styles.actionButtons}>
-            {step > 1 && (
+            </View>
+            {/* Action buttons pinned below the list */}
+            <View style={styles.actionButtonsPinned}>
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={prevStep}
@@ -296,36 +292,70 @@ export const PostJobScreen = ({ navigation }: any) => {
               >
                 <Text style={styles.secondaryButtonText}>السابق</Text>
               </TouchableOpacity>
-            )}
-
-            {step < 4 ? (
               <TouchableOpacity
-                style={[styles.primaryButton, step === 1 && { marginStart: 0 }]}
+                style={styles.primaryButton}
                 onPress={nextStep}
                 activeOpacity={0.8}
               >
                 <Text style={styles.primaryButtonText}>التالي</Text>
                 <ChevronRight size={18} color={tokens.colors.white} style={{ marginStart: 4 }} />
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => handleSubmit(onSubmit)()}
-                disabled={isPending}
-                activeOpacity={0.8}
-              >
-                {isPending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Text style={styles.primaryButtonText}>نشر الطلب</Text>
-                    <Check size={18} color={tokens.colors.white} style={{ marginStart: 8 }} />
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
+            </View>
           </View>
-        </ScrollView>
+        ) : (
+          /* ── Steps 1, 3, 4: inside the shared ScrollView ── */
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <AnimatePresence>
+              {step === 1 && renderStep1()}
+              {step === 3 && renderStep3()}
+              {step === 4 && renderStep4()}
+            </AnimatePresence>
+
+            <View style={styles.actionButtons}>
+              {step > 1 && (
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={prevStep}
+                  disabled={isPending}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.secondaryButtonText}>السابق</Text>
+                </TouchableOpacity>
+              )}
+
+              {step < 4 ? (
+                <TouchableOpacity
+                  style={[styles.primaryButton, step === 1 && { marginStart: 0 }]}
+                  onPress={nextStep}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.primaryButtonText}>التالي</Text>
+                  <ChevronRight size={18} color={tokens.colors.white} style={{ marginStart: 4 }} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => handleSubmit(onSubmit)()}
+                  disabled={isPending}
+                  activeOpacity={0.8}
+                >
+                  {isPending ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonText}>نشر الطلب</Text>
+                      <Check size={18} color={tokens.colors.white} style={{ marginStart: 8 }} />
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
+        )}
       </KeyboardAvoidingView>
     </View>
   );
@@ -336,6 +366,27 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContainer: { padding: tokens.spacing.lg },
 
+  // ── Court step specific layout (not inside ScrollView) ──────────────────────
+  courtsStepContainer: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  courtsStepContent: {
+    flex: 1,
+    paddingHorizontal: tokens.spacing.lg,
+    paddingTop: tokens.spacing.lg,
+    overflow: 'hidden',
+  },
+  actionButtonsPinned: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing.lg,
+    paddingVertical: tokens.spacing.md,
+    backgroundColor: tokens.colors.paper,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.line,
+  },
+  // ────────────────────────────────────────────────────────────────────────────
   stepIndicatorOuter: {
     backgroundColor: tokens.colors.white,
     paddingTop: Platform.OS === 'ios' ? 10 : 0,
