@@ -172,7 +172,12 @@ console.log('statusFilter', statusFilter);
             </TouchableOpacity>
           </View>
           
-          <FlatList
+          {postedJobsQuery.isLoading ? (
+            <ScrollView contentContainerStyle={ padding: 16 }>
+              {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="posted" />)}
+            </ScrollView>
+          ) : (
+            <FlatList
             data={postedJobs}
             keyExtractor={(item) => item.id}
             renderItem={renderPostedJob}
@@ -188,6 +193,7 @@ console.log('statusFilter', statusFilter);
                 refreshing={postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage}
                 onRefresh={() => postedJobsQuery.refetch()}
               />
+          )}
             }
             ListEmptyComponent={
               !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
@@ -206,7 +212,12 @@ console.log('statusFilter', statusFilter);
 
       {activeTab === 'active' && showGigTab && (
         <View style={styles.tabContent}>
-          <FlatList
+          {activeJobsQuery.isLoading ? (
+            <ScrollView contentContainerStyle={ padding: 16 }>
+              {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="active" />)}
+            </ScrollView>
+          ) : (
+            <FlatList
             data={activeJobs}
             keyExtractor={(item) => item.id}
             renderItem={renderActiveJob}
@@ -216,6 +227,7 @@ console.log('statusFilter', statusFilter);
                 refreshing={activeJobsQuery.isFetching}
                 onRefresh={() => activeJobsQuery.refetch()}
               />
+          )}
             }
             ListEmptyComponent={
               !activeJobsQuery.isFetching ? (

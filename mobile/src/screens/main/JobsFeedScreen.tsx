@@ -10,21 +10,9 @@ import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { Briefcase, Search, X } from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
+import { JobCardSkeleton } from "../../components/jobs/JobCardSkeleton";
 
-const SkeletonJobCard = () => {
-  return (
-    <MotiView
-      from={{ opacity: 0.3 }}
-      animate={{ opacity: 0.7 }}
-      transition={{ type: 'timing', duration: 1000, loop: true }}
-      className="bg-white mx-6 mb-4 p-6 rounded-2xl shadow-sm border border-line"
-    >
-      <View className="h-4 bg-line rounded w-3/5" />
-      <View className="h-4 bg-line rounded w-2/5 mt-2" />
-      <View className="h-4 bg-line rounded w-4/5 mt-3" />
-    </MotiView>
-  );
-};
+
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(undefined);
@@ -123,7 +111,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
 
       {isLoading ? (
         <ScrollView className="pt-4">
-          {[1, 2, 3, 4, 5].map(i => <SkeletonJobCard key={i} />)}
+          {[1, 2, 3, 4, 5].map(i => <JobCardSkeleton key={i} variant="feed" />)}
         </ScrollView>
       ) : error ? (
         <View className="flex-1 justify-center items-center p-8">

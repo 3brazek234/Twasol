@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, interpolateColor } from "react-native-reanimated";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { getDeadlineInfo, formatCurrency, daysBetween } from "../../utils/dateUtils";
@@ -8,13 +9,16 @@ interface JobCardProps {
   job: any;
   variant: "feed" | "posted" | "active" | "compact";
   onPress?: (jobId: string) => void;
-  // Specific callbacks for standard buttons across states
   onViewApplications?: (jobId: string) => void;
   onOpenChat?: (job: any) => void;
   onCancel?: (jobId: string) => void;
   onComplete?: (job: any) => void;
   onStartJob?: (jobId: string) => void;
+  onReview?: (jobId: string) => void;
+  hasReviewed?: boolean;
 }
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const JobCard: React.FC<JobCardProps> = ({
   job,
@@ -25,9 +29,45 @@ export const JobCard: React.FC<JobCardProps> = ({
   onCancel,
   onComplete,
   onStartJob,
+  onReview,
+  hasReviewed = false,
 }) => {
   const fee = job.agreedSalary || job.salaryMin || 0;
   
+  // Status change animation tracking
+  const prevStatusRef = React.useRef(job.status);
+  const flashValue = useSharedValue(0);
+
+  useEffect(() => {
+    if (prevStatusRef.current !== job.status) {
+      prevStatusRef.current = job.status;
+      flashValue.value = withSequence(
+        withTiming(1, { duration: 150 }),
+        withTiming(0, { duration: 800 })
+      );
+    }
+  }, [job.status, flashValue]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "NEGOTIATING": return tokens.colors.amber;
+      case "IN_PROGRESS": return tokens.colors.verdant;
+      case "EXPIRED": return tokens.colors.crimson;
+      default: return tokens.colors.navy;
+    }
+  };
+
+  const animatedBorderStyle = useAnimatedStyle(() => {
+    return {
+      borderColor: interpolateColor(
+        flashValue.value,
+        [0, 1],
+        [tokens.colors.line, getStatusColor(job.status)]
+      ),
+      borderWidth: flashValue.value > 0.01 ? 2 : 1, // slightly thicker when flashing
+    };
+  });
+
   let deadlineInfo = null;
   let progress = 0;
   
@@ -49,50 +89,47 @@ export const JobCard: React.FC<JobCardProps> = ({
   const courtName = job.courtNameAr || job.court?.nameAr || "محكمة غير محددة";
   const govName = job.court?.governorate?.nameAr ? ` - ${job.court.governorate.nameAr}` : "";
 
+  const isCompact = variant === "compact";
+
   return (
-    <TouchableOpacity 
-      style={styles.card} 
+    <AnimatedTouchableOpacity 
+      style={[styles.card, isCompact && styles.cardCompact, animatedBorderStyle]} 
       onPress={() => onPress?.(job.id)}
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress}
     >
-      {/* Shared Header: Court + Status */}
       <View style={styles.headerRow}>
-        <Text style={styles.courtName} numberOfLines={1}>
+        <Text style={[styles.courtName, isCompact && styles.courtNameCompact]} numberOfLines={1}>
           {courtName}{govName}
         </Text>
         <StatusPill status={job.status || "OPEN"} />
       </View>
 
-      {/* Shared Title */}
-      <Text style={styles.title} numberOfLines={2}>{job.title}</Text>
+      <Text style={[styles.title, isCompact && styles.titleCompact]} numberOfLines={2}>{job.title}</Text>
 
-      {/* Variant Specific: Poster Name */}
-      {(variant === "feed" || variant === "active") && (
+      {!isCompact && (variant === "feed" || variant === "active") && (
         <Text style={styles.posterName} numberOfLines={1}>
           الموكِّل: {job.posterName || job.postedBy?.fullName || "غير معروف"}
         </Text>
       )}
 
-      {/* Shared Meta: Fee + Deadline */}
-      <View style={styles.metaRow}>
-        <Text style={styles.fee}>💰 {formatCurrency(fee)}</Text>
+      <View style={[styles.metaRow, isCompact && { marginTop: 4, marginBottom: 0 }]}>
+        <Text style={[styles.fee, isCompact && styles.feeCompact]}>💰 {formatCurrency(fee)}</Text>
         
-        {variant === "posted" && job._count?.applications !== undefined && (
+        {!isCompact && variant === "posted" && job._count?.applications !== undefined && (
           <Text style={styles.applicantBadge}>
             👥 {job._count.applications} {job._count.applications === 1 ? "متقدم" : "متقدمين"}
           </Text>
         )}
 
-        {deadlineInfo && variant !== "compact" && (
+        {!isCompact && deadlineInfo && (
           <Text style={[styles.deadline, { color: deadlineInfo.color }]}>
             📅 {deadlineInfo.label}
           </Text>
         )}
       </View>
 
-      {/* Variant Specific: Active Progress Bar */}
-      {variant === "active" && job.expiresAt && (
+      {!isCompact && variant === "active" && job.expiresAt && (
         <View style={styles.progressBarContainer}>
           <View
             style={[
@@ -103,8 +140,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         </View>
       )}
 
-      {/* Variant Specific: Action Buttons */}
-      {variant === "feed" && (
+      {!isCompact && variant === "feed" && (
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.primaryButton} onPress={() => onPress?.(job.id)}>
             <Text style={styles.primaryButtonText}>عرض التفاصيل</Text>
@@ -112,7 +148,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         </View>
       )}
 
-      {variant === "posted" && (
+      {!isCompact && variant === "posted" && (
         <View style={styles.actionRow}>
           {job.status === "OPEN" && (
             <>
@@ -144,7 +180,23 @@ export const JobCard: React.FC<JobCardProps> = ({
               </TouchableOpacity>
             </>
           )}
-          {(job.status === "COMPLETED" || job.status === "CANCELLED" || job.status === "EXPIRED") && (
+          {job.status === "COMPLETED" && (
+            <>
+              {hasReviewed ? (
+                <View style={styles.reviewedBadge}>
+                  <Text style={styles.reviewedBadgeText}>تقييمك: ★★★★★</Text>
+                </View>
+              ) : (
+                <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tokens.colors.gold }]} onPress={() => onReview?.(job.id)}>
+                  <Text style={styles.primaryButtonText}>قيّم المحامي ⭐</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.secondaryButton} onPress={() => onPress?.(job.id)}>
+                <Text style={styles.secondaryButtonText}>عرض التفاصيل</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {(job.status === "CANCELLED" || job.status === "EXPIRED") && (
             <TouchableOpacity style={styles.secondaryButton} onPress={() => onPress?.(job.id)}>
               <Text style={styles.secondaryButtonText}>عرض التفاصيل</Text>
             </TouchableOpacity>
@@ -152,7 +204,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         </View>
       )}
 
-      {variant === "active" && (
+      {!isCompact && variant === "active" && (
         <View style={styles.actionRow}>
           {job.status === "AGREED" && (
             <>
@@ -172,16 +224,52 @@ export const JobCard: React.FC<JobCardProps> = ({
               <Text style={styles.infoText}>في انتظار تأكيد الموكِّل للإتمام</Text>
             </>
           )}
-          {(job.status === "COMPLETED" || job.status === "CANCELLED" || job.status === "EXPIRED") && (
+          {job.status === "COMPLETED" && (
+            <>
+              {hasReviewed ? (
+                <View style={styles.reviewedBadge}>
+                  <Text style={styles.reviewedBadgeText}>تقييمك: ★★★★★</Text>
+                </View>
+              ) : (
+                <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tokens.colors.gold }]} onPress={() => onReview?.(job.id)}>
+                  <Text style={styles.primaryButtonText}>قيّم الموكِّل ⭐</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.secondaryButton} onPress={() => onPress?.(job.id)}>
+                <Text style={styles.secondaryButtonText}>عرض التفاصيل</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {(job.status === "CANCELLED" || job.status === "EXPIRED") && (
             <TouchableOpacity style={styles.secondaryButton} onPress={() => onPress?.(job.id)}>
               <Text style={styles.secondaryButtonText}>عرض التفاصيل</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
-    </TouchableOpacity>
+
+      {/* Terminal State Footer */}
+      {!isCompact && job.status === "CANCELLED" && (
+        <Text style={styles.terminalFooterText}>تم الإلغاء بواسطة الموكِّل</Text>
+      )}
+      {!isCompact && job.status === "EXPIRED" && (
+        <Text style={[styles.terminalFooterText, { color: tokens.colors.crimson }]}>
+          {job.agreedAt ? "انتهت المهلة أثناء التنفيذ" : "انتهت المهلة دون اتفاق"}
+        </Text>
+      )}
+    </AnimatedTouchableOpacity>
   );
 };
+
+export default React.memo(JobCard, (prev, next) => {
+  return (
+    prev.job.id === next.job.id &&
+    prev.job.status === next.job.status &&
+    prev.job.version === next.job.version &&
+    prev.variant === next.variant &&
+    prev.hasReviewed === next.hasReviewed
+  );
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -193,6 +281,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     direction: "rtl",
     ...tokens.shadows.sm,
+  },
+  cardCompact: {
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   headerRow: {
     flexDirection: "row",
@@ -208,12 +301,19 @@ const styles = StyleSheet.create({
     textAlign: "right",
     paddingLeft: 8,
   },
+  courtNameCompact: {
+    fontSize: 11,
+  },
   title: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 16,
     marginBottom: 4,
     textAlign: "right",
+  },
+  titleCompact: {
+    fontSize: 14,
+    marginBottom: 0,
   },
   posterName: {
     color: tokens.colors.muted,
@@ -233,6 +333,9 @@ const styles = StyleSheet.create({
     color: tokens.colors.gold,
     fontFamily: tokens.typography.fonts.mono,
     fontSize: 14,
+  },
+  feeCompact: {
+    fontSize: 13,
   },
   applicantBadge: {
     backgroundColor: tokens.colors.paper,
@@ -301,5 +404,28 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     flex: 1,
     textAlign: "center",
+  },
+  terminalFooterText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 12,
+    fontStyle: "italic",
+  },
+  reviewedBadge: {
+    flex: 1,
+    backgroundColor: tokens.colors.paper,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+  },
+  reviewedBadgeText: {
+    color: tokens.colors.gold,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 14,
   },
 });

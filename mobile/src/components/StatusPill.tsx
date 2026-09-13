@@ -8,14 +8,14 @@ interface StatusPillProps {
 
 export const getStatusConfig = (status: string) => {
   switch (status) {
-    case "OPEN": return { label: "متاح", bg: "#E0F2F1", text: tokens.colors.signal }; // Teal tint
+    case "OPEN": return { label: "متاح", bg: tokens.colors.slateBg, text: tokens.colors.signal }; 
     case "NEGOTIATING": return { label: "قيد التفاوض", bg: tokens.colors.amberBg, text: tokens.colors.amber };
-    case "AGREED": return { label: "تم الاتفاق", bg: "#E3F2FD", text: tokens.colors.signal }; // Or tokens.colors.info if it exists
+    case "AGREED": return { label: "تم الاتفاق", bg: tokens.colors.slateBg, text: tokens.colors.slate };
     case "IN_PROGRESS": return { label: "جاري التنفيذ", bg: tokens.colors.verdantBg, text: tokens.colors.verdant };
-    case "COMPLETED": return { label: "مكتمل", bg: "#F1F5F9", text: tokens.colors.navy };
-    case "CANCELLED": return { label: "ملغي", bg: "#F1F5F9", text: tokens.colors.muted };
+    case "COMPLETED": return { label: "مكتمل", bg: tokens.colors.slateBg, text: tokens.colors.navy };
+    case "CANCELLED": return { label: "ملغي", bg: tokens.colors.surface, text: tokens.colors.muted };
     case "EXPIRED": return { label: "منتهي", bg: tokens.colors.crimsonBg, text: tokens.colors.crimson };
-    default: return { label: "متاح", bg: "#E0F2F1", text: tokens.colors.signal };
+    default: return { label: "متاح", bg: tokens.colors.slateBg, text: tokens.colors.signal };
   }
 };
 
