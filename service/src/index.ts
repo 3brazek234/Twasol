@@ -1,3 +1,4 @@
+import { scheduleExpirationCheck } from './workers/job-expiration.worker';
 import './env'; // validate env vars first (fail fast)
 import server from './server';
 import { env } from './env';
@@ -14,6 +15,7 @@ if (env.SENTRY_DSN) {
 }
 
 server.listen(env.PORT, '0.0.0.0', async () => {
-  await setupRepeatableJobs();
+  setupRepeatableJobs().catch(err => logger.error('Failed to setup repeatable jobs', err));
+  scheduleExpirationCheck().catch(err => logger.error('Failed to schedule expiration check', err));
   logger.info({ port: env.PORT, env: env.NODE_ENV }, '🚀 Server started (0.0.0.0)');
 });

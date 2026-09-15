@@ -1,3 +1,4 @@
+import { PushNotificationService } from '../notifications/push.service';
 import { buildNotification } from "../notifications/notification-payload";
 
 import { prisma } from '../../prisma';
@@ -5,6 +6,15 @@ import { AppError } from '../../common/errors/AppError';
 import { paginate } from '../../common/schemas/pagination.schema';
 
 export class VerificationService {
+    static async submitVerification(userId: string, documents: any) {
+    // Always sets status to PENDING, regardless of what the client sends
+    // This closes the security hole where a client could send status: "APPROVED"
+    return prisma.user.update({
+      where: { id: userId },
+      data: { verificationStatus: "PENDING" },
+    });
+  }
+
   static async getUploadUrl(userId: string, documentType: string, contentType: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw AppError.notFound('User not found');
@@ -104,7 +114,7 @@ export class VerificationService {
 
   static async review(docId: string, adminUserId: string, { status, notes }: { status: 'APPROVED' | 'REJECTED'; notes?: string }) {
     const { auditLog } = await import('../../common/utils/audit');
-    return prisma.$transaction(async (tx) => {
+    const resultDoc = await prisma.$transaction(async (tx) => {
       const updateResult = await tx.verificationDocument.updateMany({
         where: { id: docId, status: 'PENDING' },
         data: {
@@ -152,6 +162,15 @@ export class VerificationService {
           where: { id: doc.userId },
           data: { verificationStatus: 'REJECTED' },
         });
+
+        await tx.notification.create({
+          data: buildNotification({
+            userId: doc.userId,
+            type: 'VERIFICATION_REJECTED',
+            titleAr: 'تم رفض طلب التوثيق',
+            messageAr: `تم رفض طلب التوثيق${notes ? ': ' + notes : ''}. يرجى المراجعة وإعادة التقديم.`,
+          }),
+        });
       }
 
       await auditLog(
@@ -166,6 +185,24 @@ export class VerificationService {
 
       return doc;
     });
+
+    if (status === 'APPROVED') {
+      await PushNotificationService.sendPushToUser(
+        resultDoc.userId,
+        'تم توثيق حسابك بنجاح ✅',
+        'مبروك! تم التحقق من هويتك. يرجى إتمام الاشتراك لتفعيل حسابك والبدء في استخدام خدمات وكيل.',
+        { nextStep: 'SUBSCRIPTION_PAYMENT' }
+      ).catch(e => console.error(e));
+    } else if (status === 'REJECTED') {
+      await PushNotificationService.sendPushToUser(
+        resultDoc.userId,
+        'تم رفض طلب التوثيق',
+        `تم رفض طلب التوثيق${notes ? ': ' + notes : ''}. يرجى المراجعة وإعادة التقديم.`,
+        {}
+      ).catch(e => console.error(e));
+    }
+
+    return resultDoc;
   }
 
   static async getViewUrl(documentId: string, adminUserId: string) {

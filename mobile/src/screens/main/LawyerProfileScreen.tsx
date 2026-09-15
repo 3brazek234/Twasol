@@ -1,109 +1,183 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { ShieldCheck, MessageSquare, ChevronRight } from 'lucide-react-native';
-import { StarRating } from '../../components/StarRating';
-import { LawyerData } from '../../components/LawyerCard';
-
-const MOCK_LAWYER: LawyerData & { barNumber: string; bio: string } = {
-  id: 'l1',
-  name: 'Harvey Specter',
-  isVerified: true,
-  averageRating: 4.9,
-  reviewCount: 42,
-  isActive: true,
-  courts: ['NY Supreme', 'SDNY'],
-  barNumber: '•••1234',
-  bio: 'محامي متمرس في القضايا المدنية والتجارية. I have successfully argued in front of the NY Supreme court on numerous occasions, providing swift and decisive results.',
-};
+import React, { useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { ShieldCheck, MessageSquare } from "lucide-react-native";
+import { StarRating } from "../../components/StarRating";
+import { useLawyerProfile } from "../../hooks/useUsers";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "../../api/client";
+import { tokens } from "../../theme/tokens";
 
 export const LawyerProfileScreen = ({ route, navigation }: any) => {
+  const { lawyerId } = route.params || {};
+  const { data: profile, isLoading, error } = useLawyerProfile(lawyerId);
   const [loadingMsg, setLoadingMsg] = useState(false);
-  const lawyer = MOCK_LAWYER;
+
+  // Quick hook for reviews
+  const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
+    queryKey: ["reviews", lawyerId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/users/${lawyerId}/reviews`);
+      return res.data?.data || { items: [] };
+    },
+    enabled: !!lawyerId,
+  });
 
   const handleMessage = async () => {
+    if (!profile) return;
     setLoadingMsg(true);
     try {
       setTimeout(() => {
-        navigation.navigate('Chat', { 
-          conversationId: 'stub-conv-1',
-          conversationType: 'DIRECT_INQUIRY',
-          otherPartyName: lawyer.name
+        navigation.navigate("ChatsTab", { 
+          screen: "Chat",
+          params: { 
+            conversationId: "new", 
+            conversationType: "DIRECT_INQUIRY", 
+            otherPartyName: profile.fullName || "محامي",
+            targetUserId: lawyerId
+          }
         });
         setLoadingMsg(false);
       }, 500);
     } catch (err: any) {
       setLoadingMsg(false);
-      Alert.alert('Error', 'Failed to start conversation.');
+      Alert.alert("خطأ", "فشل في بدء المحادثة.");
     }
   };
 
+  if (!lawyerId) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: tokens.colors.paper }}>
+        <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, color: tokens.colors.crimson }}>لم يتم توفير معرف المحامي.</Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: tokens.colors.paper }}>
+        <ActivityIndicator size="large" color={tokens.colors.signal} />
+      </View>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: tokens.colors.paper }}>
+        <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, color: tokens.colors.crimson }}>حدث خطأ في تحميل الملف الشخصي.</Text>
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-paper">
+    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
         
         {/* Header */}
-        <View className="mb-8">
-          <View className="flex-row items-center mb-1">
-            <Text className="text-3xl font-displayBold text-ink mr-3">{lawyer.name}</Text>
-            {lawyer.isVerified && (
-              <ShieldCheck size={24} color="#2A8F85" />
-            )}
-          </View>
-          <Text className="text-base font-mono text-muted">Bar No. {lawyer.barNumber}</Text>
-        </View>
-
-        {/* Rating Summary */}
-        <TouchableOpacity 
-          className="flex-row justify-between items-center bg-white p-6 rounded-2xl border border-line mb-8 shadow-sm"
-          activeOpacity={0.7}
-        >
-          <View>
-            <Text className="text-base font-displayBold text-ink mb-2">Client Reviews</Text>
-            <View className="flex-row items-center mb-1">
-              <Text className="text-xl font-displayBold text-ink mr-2">{lawyer.averageRating}</Text>
-              <StarRating rating={lawyer.averageRating || 0} size={20} />
-            </View>
-            <Text className="text-xs text-muted font-body">بناءً على {lawyer.reviewCount} تقييمات</Text>
-          </View>
-          <ChevronRight size={24} color="#718096" />
-        </TouchableOpacity>
-
-        {/* Tags */}
-        <View className="mb-8">
-          <Text className="text-lg font-displayBold text-ink mb-4">Jurisdictions</Text>
-          <View className="flex-row flex-wrap gap-3">
-            {lawyer.courts.map((court, idx) => (
-              <View key={`court-${idx}`} className="bg-paper px-4 py-2 rounded-lg border border-line">
-                <Text className="text-sm text-muted font-bodyMedium">{court}</Text>
+        <View style={{ marginBottom: 32 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 24, color: tokens.colors.ink, textAlign: "right", marginBottom: 8 }}>
+                {profile.fullName}
+              </Text>
+              
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
+                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.verdant, marginRight: 6 }}>
+                  موثق
+                </Text>
+                <ShieldCheck color={tokens.colors.verdant} size={18} />
               </View>
-            ))}
+
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
+                <Text style={{ fontFamily: tokens.typography.fonts.mono, fontSize: 14, color: tokens.colors.muted, marginRight: 8 }}>
+                  رقم القيد: {profile.barNumber || "غير متوفر"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Stats Row */}
+          <View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: tokens.colors.white, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.line }}>
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 20, color: tokens.colors.ink }}>{profile.averageRating?.toFixed(1) || "0.0"}</Text>
+              <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 12, color: tokens.colors.muted, marginTop: 4 }}>التقييم</Text>
+            </View>
+            <View style={{ width: 1, backgroundColor: tokens.colors.line }} />
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 20, color: tokens.colors.ink }}>{profile.reviewCount || 0}</Text>
+              <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 12, color: tokens.colors.muted, marginTop: 4 }}>المراجعات</Text>
+            </View>
           </View>
         </View>
 
         {/* Bio */}
-        {lawyer.bio && (
-          <View className="mb-8">
-            <Text className="text-lg font-displayBold text-ink mb-4">About</Text>
-            <Text className="text-base font-body text-ink leading-6">{lawyer.bio}</Text>
+        {profile.bio && (
+          <View style={{ marginBottom: 32 }}>
+            <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink, textAlign: "right", marginBottom: 12 }}>نبذة</Text>
+            <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 15, color: tokens.colors.ink, textAlign: "right", lineHeight: 24 }}>
+              {profile.bio}
+            </Text>
           </View>
         )}
 
+        {/* Courts */}
+        {profile.courts && profile.courts.length > 0 && (
+          <View style={{ marginBottom: 32 }}>
+            <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink, textAlign: "right", marginBottom: 12 }}>المحاكم المعتمدة</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 }}>
+              {profile.courts.map((courtAssoc: any, index: number) => (
+                <View key={index} style={{ backgroundColor: tokens.colors.navy + "1A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+                  <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 13, color: tokens.colors.navy }}>{courtAssoc.court?.nameAr || "محكمة"}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Reviews */}
+        <View style={{ marginBottom: 32 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink, textAlign: "right", flex: 1 }}>التقييمات</Text>
+          </View>
+
+          {isLoadingReviews ? (
+            <ActivityIndicator size="small" color={tokens.colors.signal} />
+          ) : reviewsData?.items?.length > 0 ? (
+            reviewsData.items.map((review: any) => (
+              <View key={review.id} style={{ backgroundColor: tokens.colors.white, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.line, marginBottom: 12 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 12, color: tokens.colors.muted }}>
+                    {new Date(review.createdAt).toLocaleDateString("ar-EG")}
+                  </Text>
+                  <StarRating rating={review.rating} />
+                </View>
+                <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 14, color: tokens.colors.ink, textAlign: "right", marginBottom: 4 }}>
+                  {review.reviewer?.fullName || "مستخدم"}
+                </Text>
+                {review.comment && (
+                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.ink, textAlign: "right", marginTop: 8 }}>
+                    {review.comment}
+                  </Text>
+                )}
+              </View>
+            ))
+          ) : (
+            <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.muted, textAlign: "right" }}>لا توجد تقييمات بعد.</Text>
+          )}
+        </View>
+
       </ScrollView>
 
-      {/* Action Footer */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white p-6 border-t border-line flex-row justify-center pb-10">
+      {/* Floating Action Bar */}
+      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tokens.colors.white, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderTopColor: tokens.colors.line }}>
         <TouchableOpacity 
-          className={`flex-1 flex-row h-14 items-center justify-center bg-signal rounded-xl shadow-md ${loadingMsg ? 'opacity-70' : ''}`}
-          activeOpacity={0.8}
+          style={{ backgroundColor: tokens.colors.navy, paddingVertical: 16, borderRadius: 12, flexDirection: "row", justifyContent: "center", alignItems: "center" }}
           onPress={handleMessage}
           disabled={loadingMsg}
         >
-          {loadingMsg ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
+          {loadingMsg ? <ActivityIndicator color={tokens.colors.white} /> : (
             <>
-              <MessageSquare size={20} color="#FFFFFF" className="mr-2" />
-              <Text className="text-white text-lg font-bodyBold">Message</Text>
+              <Text style={{ color: tokens.colors.white, fontFamily: tokens.typography.fonts.displayBold, fontSize: 16, marginRight: 8 }}>مراسلة المحامي</Text>
+              <MessageSquare color={tokens.colors.white} size={20} />
             </>
           )}
         </TouchableOpacity>

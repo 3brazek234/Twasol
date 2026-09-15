@@ -12,6 +12,7 @@ import { MainNavigator } from './stacks/MainTabNavigator';
 import { SettingsScreen } from '../screens/main/SettingsScreen';
 import { EditProfileScreen } from '../screens/main/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/main/ChangePasswordScreen';
+import { AdminVerificationQueueScreen } from '../screens/admin/AdminVerificationQueueScreen';
 import { PendingReviewScreen } from '../screens/verification/PendingReviewScreen';
 import { ResubmitScreen } from '../screens/verification/ResubmitScreen';
 
@@ -34,6 +35,7 @@ const SettingsNavigator = () => (
     <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'الإعدادات' }} />
     <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'تعديل الملف الشخصي' }} />
     <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'تغيير كلمة المرور' }} />
+    <SettingsStack.Screen name="AdminVerificationQueue" component={AdminVerificationQueueScreen} options={{ title: 'طلبات التوثيق' }} />
   </SettingsStack.Navigator>
 );
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Modal, TouchableOpacity } from 'react-native';
 import { View, Text, StyleSheet, ScrollView, Alert, Linking, I18nManager } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
@@ -14,6 +15,21 @@ if (!__DEV__ && (TERMS_URL.includes('example.com') || PRIVACY_URL.includes('exam
 }
 
 export const SettingsScreen = ({ navigation }: any) => {
+  const [showModeModal, setShowModeModal] = useState(false);
+  const [updatingMode, setUpdatingMode] = useState(false);
+  
+  const handleUpdateMode = async (mode: "GIG" | "HIRING" | "BOTH") => {
+    setUpdatingMode(true);
+    try {
+      await useAuthStore.getState().updateAccountMode(mode);
+      setShowModeModal(false);
+    } catch (err) {
+      Alert.alert("خطأ", "فشل في تحديث نوع الحساب");
+    } finally {
+      setUpdatingMode(false);
+    }
+  };
+
   const { logout, user } = useAuthStore();
   
   // Local state for notification preferences (stubbing backend)
@@ -76,6 +92,11 @@ export const SettingsScreen = ({ navigation }: any) => {
         <Text style={styles.sectionTitle}>الحساب</Text>
         <View style={styles.card}>
           <SettingsRow 
+            label="نوع الحساب" 
+            value={user?.accountMode === "GIG" ? "أبحث عن عمل" : user?.accountMode === "HIRING" ? "أبحث عن محامي" : "كلا الخيارين"} 
+            onPress={() => setShowModeModal(true)} 
+          />
+          <SettingsRow 
             label="تعديل الملف الشخصي" 
             onPress={() => navigation.navigate('EditProfile')} 
           />
@@ -91,6 +112,18 @@ export const SettingsScreen = ({ navigation }: any) => {
           />
         </View>
       </View>
+
+      {(user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>الإدارة</Text>
+          <View style={styles.card}>
+            <SettingsRow 
+              label="مراجعة طلبات التوثيق" 
+              onPress={() => navigation.navigate("AdminVerificationQueue")} 
+            />
+          </View>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الإشعارات</Text>
@@ -166,6 +199,30 @@ export const SettingsScreen = ({ navigation }: any) => {
         </View>
       </View>
 
+
+      <Modal visible={showModeModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 24 }}>
+          <View style={{ backgroundColor: tokens.colors.white, borderRadius: 16, padding: 24 }}>
+            <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink, textAlign: "center", marginBottom: 24 }}>اختر نوع الحساب</Text>
+            
+            <TouchableOpacity disabled={updatingMode} onPress={() => handleUpdateMode("GIG")} style={{ padding: 16, backgroundColor: tokens.colors.paper, borderRadius: 8, marginBottom: 12 }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, textAlign: "center" }}>أبحث عن عمل (محامي)</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity disabled={updatingMode} onPress={() => handleUpdateMode("HIRING")} style={{ padding: 16, backgroundColor: tokens.colors.paper, borderRadius: 8, marginBottom: 12 }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, textAlign: "center" }}>أبحث عن محامي (موكِّل)</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity disabled={updatingMode} onPress={() => handleUpdateMode("BOTH")} style={{ padding: 16, backgroundColor: tokens.colors.paper, borderRadius: 8, marginBottom: 24 }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, textAlign: "center" }}>كلا الخيارين</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity disabled={updatingMode} onPress={() => setShowModeModal(false)} style={{ padding: 16 }}>
+              <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, textAlign: "center", color: tokens.colors.muted }}>إلغاء</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };

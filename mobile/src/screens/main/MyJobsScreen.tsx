@@ -15,6 +15,7 @@ import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
 import { useMyPostedJobs, useMyActiveJobs, useUpdateJobStatus } from '../../hooks/useJobs';
 import { JobCard } from '../../components/jobs/JobCard';
+import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 
 import { CompleteJobModal } from '../../components/jobs/CompleteJobModal';
 import { FilterChipRow } from '../../components/FilterChipRow';
@@ -173,7 +174,7 @@ console.log('statusFilter', statusFilter);
           </View>
           
           {postedJobsQuery.isLoading ? (
-            <ScrollView contentContainerStyle={ padding: 16 }>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
               {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="posted" />)}
             </ScrollView>
           ) : (
@@ -193,7 +194,6 @@ console.log('statusFilter', statusFilter);
                 refreshing={postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage}
                 onRefresh={() => postedJobsQuery.refetch()}
               />
-          )}
             }
             ListEmptyComponent={
               !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
@@ -207,13 +207,14 @@ console.log('statusFilter', statusFilter);
               ) : null
             }
           />
+          )}
         </View>
       )}
 
       {activeTab === 'active' && showGigTab && (
         <View style={styles.tabContent}>
           {activeJobsQuery.isLoading ? (
-            <ScrollView contentContainerStyle={ padding: 16 }>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
               {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="active" />)}
             </ScrollView>
           ) : (
@@ -227,7 +228,6 @@ console.log('statusFilter', statusFilter);
                 refreshing={activeJobsQuery.isFetching}
                 onRefresh={() => activeJobsQuery.refetch()}
               />
-          )}
             }
             ListEmptyComponent={
               !activeJobsQuery.isFetching ? (
@@ -241,6 +241,7 @@ console.log('statusFilter', statusFilter);
               ) : null
             }
           />
+          )}
         </View>
       )}
 

@@ -1,5 +1,6 @@
 import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 import { buildNotification } from '../notifications/notification-payload';
+import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
@@ -69,14 +70,11 @@ export class ChatMessagesService {
       const titleAr = data.type === 'OFFER' ? 'عرض جديد 💰' : sender?.fullName || 'رسالة جديدة';
       const messageAr = data.type === 'OFFER' ? 'لقد تلقيت عرضاً مالياً جديداً للمهمة' : truncatedBody;
 
-      await prisma.notification.create({
-        data: buildNotification({
-          userId: receiver.userId,
+      await NotificationsService.notifyManyUsers([receiver.userId], {
           type,
           titleAr,
           messageAr,
           data: { jobId: conversation.jobId, conversationId: conversation.id, messageId: result.id, jobTitle: job?.title },
-        })
       });
     }
 
@@ -84,14 +82,11 @@ export class ChatMessagesService {
       const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } });
       if (admins.length > 0) {
         for (const admin of admins) {
-          await prisma.notification.create({
-            data: buildNotification({
-              userId: admin.id,
+          await NotificationsService.notifyManyUsers([admin.id], {
               type: NotificationType.NEW_MESSAGE,
               titleAr: 'رسالة دعم فني جديدة 💬',
               messageAr: 'يوجد رسالة جديدة في قسم الدعم الفني تحتاج لردك',
               data: { conversationId: conversation.id }
-            })
           });
         }
       }
@@ -137,14 +132,11 @@ export class ChatMessagesService {
     const job = await prisma.job.findUnique({ where: { id: (message.conversation.jobId as string) }, select: { title: true } });
     for (const p of message.conversation.participants) {
       if (p.userId !== userId) {
-        await prisma.notification.create({
-          data: buildNotification({
-            userId: p.userId,
+        await NotificationsService.notifyManyUsers([p.userId], {
             type: NotificationType.OFFER_ACCEPTED,
             titleAr: 'تم قبول العرض ✅',
             messageAr: `تم قبول عرضك المالي لمهمة: ${job?.title || 'غير معروف'}`,
             data: { jobId: (message.conversation.jobId as string) as string, conversationId: message.conversation.id }
-          })
         });
       }
     }
@@ -174,14 +166,11 @@ export class ChatMessagesService {
     for (const p of message.conversation.participants) {
       if (p.userId !== userId) {
         // Assume you have an OFFER_REJECTED enum or similar, if not just use NEW_MESSAGE
-        await prisma.notification.create({
-          data: buildNotification({
-            userId: p.userId,
-            type: NotificationType.NEW_MESSAGE,
+        await NotificationsService.notifyManyUsers([p.userId], {
+            type: NotificationType.OFFER_REJECTED,
             titleAr: 'تم رفض العرض ❌',
             messageAr: `تم رفض العرض المالي لمهمة: ${job?.title || 'غير معروف'}`,
             data: { jobId: (message.conversation.jobId as string) as string, conversationId: message.conversation.id }
-          })
         });
       }
     }

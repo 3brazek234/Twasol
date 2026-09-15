@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { getErrorMessage } from '../utils/errorMessages';
 import { Alert } from 'react-native';
@@ -37,3 +37,14 @@ export const useCreateReview = () => {
 
 // ─── Alias — keeps existing callers working ───────────────────────────────────
 export const useSubmitReview = useCreateReview;
+
+export const useUserReviews = (userId: string, page = 1) => {
+  return useQuery({
+    queryKey: ["reviews", userId, page],
+    queryFn: async () => {
+      const res = await apiClient.get(`/users/${userId}/reviews?page=${page}`);
+      return res.data?.data;
+    },
+    enabled: !!userId,
+  });
+};

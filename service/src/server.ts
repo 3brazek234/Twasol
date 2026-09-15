@@ -9,6 +9,7 @@ const server = http.createServer(app);
 import './workers/notification-fanout.worker';
 import './workers/push-notification.worker';
 import './workers/job-expiration.worker';
+import { scheduleExpirationCheck } from './workers/job-expiration.worker';
 import './workers/cleanup.worker';
 
 export default server;

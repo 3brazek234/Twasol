@@ -1,6 +1,6 @@
 import { AppError } from "../common/errors/AppError";
 
-import { Worker, Job as BullJob } from 'bullmq';
+import { Worker, Job as BullJob, Queue } from 'bullmq';
 import { redisConnection } from '../common/utils/queue';
 import { prisma } from '../prisma';
 import { logger } from '../common/utils/logger';
@@ -84,3 +84,30 @@ export const jobExpirationWorker = new Worker(
 jobExpirationWorker.on('failed', (job, err) => {
   logger.error({ jobId: job?.id, err }, 'Job expiration worker failed');
 });
+
+
+
+export const expirationQueue = new Queue("job-expiration", { connection: redisConnection });
+
+export async function scheduleExpirationCheck() {
+  if (expirationQueue.upsertJobScheduler) {
+    await expirationQueue.upsertJobScheduler(
+      "expiration-check-recurring",
+      { every: 15 * 60 * 1000 },
+      {
+        name: "check-expired-jobs",
+        data: {}
+      }
+    );
+  } else {
+    // Fallback for older bullmq versions
+    await expirationQueue.add(
+      "check-expired-jobs",
+      {},
+      {
+        repeat: { every: 15 * 60 * 1000 },
+        jobId: "expiration-check-recurring",
+      } as any
+    );
+  }
+}

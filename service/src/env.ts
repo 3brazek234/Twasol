@@ -21,6 +21,13 @@ const envSchema = z.object({
   R2_BUCKET_NAME: z.string().default('lawyer-verification-docs'),
   R2_PUBLIC_URL: z.string().optional(),
 
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // CORS
+  CORS_ORIGINS: z.string().optional(),
   // Sentry (optional)
   DEBUG_SOCKET_AUTH: z.string().optional().transform(v => v === 'true'),
   SENTRY_DSN: z.string().optional(),

@@ -19,9 +19,9 @@ export const AccountModeScreen = ({ navigation }: any) => {
         await updateAccountMode('HIRING');
         
         if (user) {
-          setUser({ ...user, accountMode: 'HIRING', verificationStatus: 'APPROVED' });
+          setUser({ ...user, accountMode: 'HIRING' }); // Removed insecure verificationStatus mock
         }
-        submitVerification('APPROVED');
+        // Removed client-side mock
       } else {
         await updateAccountMode(selected);
         navigation.navigate('VerificationIntro');

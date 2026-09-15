@@ -35,7 +35,7 @@ if (env.SENTRY_DSN) {
 }
 
 app.use(requestId);
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'], credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(generalLimiter);
