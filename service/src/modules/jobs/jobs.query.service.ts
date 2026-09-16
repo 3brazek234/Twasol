@@ -39,6 +39,10 @@ export class JobsQueryService {
         take: limit,
         include: {
           court: true,
+          // Gap 1: expose poster name so the feed card can show who posted the job
+          postedBy: { select: { fullName: true } },
+          // Gap 2: expose application count for competition signal on feed cards
+          _count: { select: { applications: true } },
         },
       }),
       prisma.job.count({ where }),
@@ -47,7 +51,9 @@ export class JobsQueryService {
     const mappedItems = items.map(item => ({
       ...item,
       courtNameAr: item.court?.nameAr,
-      courtNameEn: item.court?.nameEn
+      courtNameEn: item.court?.nameEn,
+      posterName: item.postedBy?.fullName ?? null,           // Gap 1
+      applicantCount: item._count?.applications ?? 0,        // Gap 2
     }));
 
     return paginate(mappedItems, total, page, limit);
