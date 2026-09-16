@@ -79,7 +79,9 @@ export class JobsQueryService {
         where: { postedByUserId: userId },
         include: {
           applications: { select: { id: true, status: true } },
-          court: true
+          court: true,
+          // Gap 3: expose hired lawyer name for AGREED/IN_PROGRESS posted cards
+          assignedLawyer: { select: { fullName: true } },
         }
       }),
       prisma.job.findMany({
@@ -147,6 +149,10 @@ export class JobsQueryService {
         court_name: j.court?.nameAr || 'Unknown',
         court_governorate: j.court?.governorate?.nameAr || 'Unknown',
         conversationId: j.conversations[0]?.id || null,
+        // Gap 4: elapsed-time calculation needs the start timestamp
+        agreedAt: j.agreedAt ?? null,
+        // Gap 5: fee strike-through needs the original asking fee
+        salaryMin: j.salaryMin !== null && j.salaryMin !== undefined ? Number(j.salaryMin) : null,
       };
     });
   }
