@@ -76,3 +76,40 @@ export function safeFormatTime(
     minute: '2-digit',
   }).format(date);
 }
+
+/** Returns a relative time string in Arabic (e.g., "منذ ساعتين", "منذ 3 أيام") */
+export function getTimeAgo(dateInput: string | Date | null | undefined): string {
+  const date = safeParseDate(dateInput);
+  if (!date) return '';
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'الآن';
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    if (diffInMinutes === 1) return 'منذ دقيقة';
+    if (diffInMinutes === 2) return 'منذ دقيقتين';
+    if (diffInMinutes <= 10) return `منذ ${diffInMinutes} دقائق`;
+    return `منذ ${diffInMinutes} دقيقة`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    if (diffInHours === 1) return 'منذ ساعة';
+    if (diffInHours === 2) return 'منذ ساعتين';
+    if (diffInHours <= 10) return `منذ ${diffInHours} ساعات`;
+    return `منذ ${diffInHours} ساعة`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) {
+    if (diffInDays === 1) return 'منذ يوم';
+    if (diffInDays === 2) return 'منذ يومين';
+    if (diffInDays <= 10) return `منذ ${diffInDays} أيام`;
+    return `منذ ${diffInDays} يوم`;
+  }
+
+  return safeFormatDate(date);
+}

@@ -7,37 +7,15 @@ import Animated, {
   withSequence,
   interpolateColor,
 } from "react-native-reanimated";
+import { MapPin, Users, Clock } from "lucide-react-native";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { Avatar } from "../Avatar";
-import { getDeadlineInfo, formatCurrency, daysBetween } from "../../utils/dateUtils";
+import { getDeadlineInfo, formatCurrency, daysBetween, getTimeAgo } from "../../utils/dateUtils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JobCard
-//
-// Variants:
-//   feed    — public marketplace list. Lighter, flatter. No action buttons.
-//             Card is the tap target (caller's onPress). Shows: court, title,
-//             poster avatar, fee (large), deadline.
-//
-//   posted  — client tracking their own jobs. Right-edge status accent strip.
-//             Status-tinted card background. Shows: court, title, applicant
-//             count (OPEN/NEGOTIATING), hired lawyer avatar (AGREED+), fee with
-//             strike-through if negotiated down, deadline pill, status-driven
-//             action buttons.
-//
-//   active  — lawyer executing a job. Right-edge accent + status tint. Shows:
-//             court, title, client avatar + name, fee, progress bar with
-//             deadline label, status-driven action buttons.
-//
-//   compact — dense reference card (notifications, history). No accent strip,
-//             no action buttons. Court + title + fee + status pill only.
-//
-// IMPORTANT — prop API and callbacks are UNCHANGED from v1.
-// This is a visual/informational redesign only.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface JobCardProps {
   job: any;
@@ -52,78 +30,43 @@ interface JobCardProps {
   hasReviewed?: boolean;
 }
 
-// ─── Status helpers ───────────────────────────────────────────────────────────
-
-/**
- * Used inside useAnimatedStyle worklet — returns the color to flash toward
- * when a job's status changes. MUST remain a worklet.
- */
 const getStatusFlashColor = (status: string): string => {
   "worklet";
   switch (status) {
-    case "NEGOTIATING":
-      return tokens.colors.amber;
+    case "NEGOTIATING": return tokens.colors.amber;
     case "AGREED":
-    case "IN_PROGRESS":
-      return tokens.colors.verdant;
-    case "EXPIRED":
-      return tokens.colors.crimson;
-    case "COMPLETED":
-      return tokens.colors.slate;
-    default:
-      return tokens.colors.navy;
+    case "IN_PROGRESS": return tokens.colors.verdant;
+    case "EXPIRED": return tokens.colors.crimson;
+    case "COMPLETED": return tokens.colors.slate;
+    default: return tokens.colors.navy;
   }
 };
 
-/**
- * Returns the persistent right-edge accent color for posted/active cards.
- * Regular JS — not used inside animated contexts.
- */
 const getStatusAccentColor = (status: string): string => {
   switch (status) {
-    case "NEGOTIATING":
-      return tokens.colors.amber;
+    case "NEGOTIATING": return tokens.colors.amber;
     case "AGREED":
-    case "IN_PROGRESS":
-      return tokens.colors.verdant;
-    case "COMPLETED":
-      return tokens.colors.slate;
-    case "CANCELLED":
-      return tokens.colors.muted;
-    case "EXPIRED":
-      return tokens.colors.crimson;
-    default:
-      return tokens.colors.navy;
+    case "IN_PROGRESS": return tokens.colors.verdant;
+    case "COMPLETED": return tokens.colors.slate;
+    case "CANCELLED": return tokens.colors.muted;
+    case "EXPIRED": return tokens.colors.crimson;
+    default: return tokens.colors.navy;
   }
 };
 
-/**
- * Returns a very faint status-tinted card background for posted/active variants.
- * Feed and compact cards are always pure white (many on screen; shouldn't compete).
- */
 const getStatusCardBg = (status: string, variant: string): string => {
   if (variant === "feed" || variant === "compact") return tokens.colors.white;
   switch (status) {
-    case "NEGOTIATING":
-      return tokens.colors.amberBg;
+    case "NEGOTIATING": return tokens.colors.amberBg;
     case "AGREED":
-    case "IN_PROGRESS":
-      return tokens.colors.verdantBg;
-    case "COMPLETED":
-      return tokens.colors.slateBg;
-    case "EXPIRED":
-      return tokens.colors.crimsonBg;
-    case "CANCELLED":
-      return tokens.colors.surface;
-    default:
-      return tokens.colors.white;
+    case "IN_PROGRESS": return tokens.colors.verdantBg;
+    case "COMPLETED": return tokens.colors.slateBg;
+    case "EXPIRED": return tokens.colors.crimsonBg;
+    case "CANCELLED": return tokens.colors.surface;
+    default: return tokens.colors.white;
   }
 };
 
-/**
- * Returns the color for the progress bar fill based on elapsed fraction.
- * Shared between active progress bar and posted deadline dot.
- */
 const getProgressColor = (p: number): string => {
   if (p < 0.6) return tokens.colors.verdant;
   if (p < 0.85) return tokens.colors.amber;
@@ -131,11 +74,7 @@ const getProgressColor = (p: number): string => {
 };
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "CANCELLED", "EXPIRED"]);
-
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
-
-// ─── Component ────────────────────────────────────────────────────────────────
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const JobCard: React.FC<JobCardProps> = ({
   job,
@@ -149,80 +88,44 @@ export const JobCard: React.FC<JobCardProps> = ({
   onReview,
   hasReviewed = false,
 }) => {
-  // ── Derived flags ─────────────────────────────────────────────────────────
   const isCompact = variant === "compact";
   const isPostedOrActive = variant === "posted" || variant === "active";
   const isTerminalStatus = TERMINAL_STATUSES.has(job.status);
   const showAccentStrip = isPostedOrActive && !isTerminalStatus;
 
-  // ── Fee resolution ────────────────────────────────────────────────────────
-  // agreedSalary is a direct Job model field — available in posted/active queries.
-  // For active cards mapped via getMyActiveJobs(), the field is under `job.fee`.
   const agreedFee = Number(job.agreedSalary ?? job.fee ?? 0);
   const askingFee = Number(job.salaryMin ?? 0);
   const displayFee = agreedFee > 0 ? agreedFee : askingFee;
-  // Show strike-through on posted cards when negotiation resulted in a different fee.
-  // Not shown on active (salaryMin is not in the active mapper response — backend gap).
-  const showStrikethrough =
-    variant === "posted" &&
-    agreedFee > 0 &&
-    askingFee > 0 &&
-    Math.abs(agreedFee - askingFee) > 0.01;
+  const showStrikethrough = variant === "posted" && agreedFee > 0 && askingFee > 0 && Math.abs(agreedFee - askingFee) > 0.01;
 
-  // ── Name resolution ───────────────────────────────────────────────────────
-  // getMyActiveJobs() mapper outputs `poster_name` (snake_case).
-  // Most other queries use camelCase `postedBy.fullName`.
-  // The card handles both to avoid a silent empty field (the key mismatch bug).
-  const clientName: string | null =
-    job.poster_name ??
-    job.posterName ??
-    job.postedBy?.fullName ??
-    null;
-
-  // Hired lawyer — only available if backend includes assignedLawyer.
-  // Currently NOT in getMyJobs() response. Shows "—" (backend gap flagged below).
+  const clientName: string | null = job.poster_name ?? job.posterName ?? job.postedBy?.fullName ?? null;
   const hiredLawyerName: string | null = job.assignedLawyer?.fullName ?? null;
+  
+  // Applicant count can now be used by both posted and feed variants
+  const applicantCount: number | undefined = job._count?.applications ?? (Array.isArray(job.applications) ? job.applications.length : undefined);
 
-  // ── Applicant count ───────────────────────────────────────────────────────
-  // getMyJobs() includes the full `applications` array (not _count).
-  // Derive count from array length; fall back to _count if present.
-  const applicantCount: number | undefined =
-    job._count?.applications ??
-    (Array.isArray(job.applications) ? job.applications.length : undefined);
-
-  // ── Court name ────────────────────────────────────────────────────────────
-  // getMyActiveJobs() maps to `court_name`; other queries include `court.nameAr`.
-  const courtName =
-    job.courtNameAr ??
-    job.court_name ??
-    job.court?.nameAr ??
-    "محكمة غير محددة";
+  const courtName = job.courtNameAr ?? job.court_name ?? job.court?.nameAr ?? "محكمة غير محددة";
   const govSuffix = (() => {
-    const g =
-      job.court?.governorate?.nameAr ?? job.court_governorate ?? null;
+    const g = job.court?.governorate?.nameAr ?? job.court_governorate ?? null;
     return g ? ` · ${g}` : "";
   })();
 
-  // ── Card background ───────────────────────────────────────────────────────
   const cardBg = getStatusCardBg(job.status, variant);
-
-  // ── Deadline and progress ─────────────────────────────────────────────────
-  // getMyActiveJobs() mapper outputs `deadline`; other queries use `expiresAt`.
   const expiresAt = job.expiresAt ?? job.deadline ?? null;
+  const createdAt = job.createdAt ?? job.created_at ?? null;
+  
   let deadlineInfo: ReturnType<typeof getDeadlineInfo> | null = null;
   let progress = 0;
 
   if (expiresAt) {
     deadlineInfo = getDeadlineInfo(expiresAt);
     if (variant === "active") {
-      const start = job.createdAt ?? job.created_at;
-      const totalDays = start ? daysBetween(start, expiresAt) : 0;
-      const usedDays = start ? daysBetween(start, new Date()) : 0;
+      const totalDays = createdAt ? daysBetween(createdAt, expiresAt) : 0;
+      const usedDays = createdAt ? daysBetween(createdAt, new Date()) : 0;
       progress = totalDays > 0 ? Math.min(Math.max(usedDays / totalDays, 0), 1) : 1;
     }
   }
 
-  // ── Status-change flash animation ─────────────────────────────────────────
   const prevStatusRef = React.useRef(job.status);
   const flashValue = useSharedValue(0);
 
@@ -245,8 +148,75 @@ export const JobCard: React.FC<JobCardProps> = ({
     borderWidth: flashValue.value > 0.01 ? 2 : 1,
   }));
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════════
+  // FEED VARIANT — Upwork-style Marketplace Layout
+  // ════════════════════════════════════════════════════════════════════════════
+  if (variant === "feed") {
+    return (
+      <AnimatedTouchableOpacity
+        style={[styles.card, styles.feedCard, animatedBorderStyle]}
+        onPress={() => onPress?.(job.id)}
+        activeOpacity={0.7}
+      >
+        {/* Top Row: Title & Fee */}
+        <View style={styles.feedTopRow}>
+          <Text style={styles.feedTitle} numberOfLines={2}>
+            {job.title}
+          </Text>
+          <Text style={styles.feedFee}>{formatCurrency(displayFee)}</Text>
+        </View>
 
+        {/* Second Row: Court & Freshness */}
+        <View style={styles.feedSubRow}>
+          <View style={styles.feedIconText}>
+            <MapPin size={12} color={tokens.colors.muted} />
+            <Text style={styles.feedSubText} numberOfLines={1}>
+              {courtName}{govSuffix}
+            </Text>
+          </View>
+          <Text style={styles.feedDot}>•</Text>
+          <View style={styles.feedIconText}>
+            <Clock size={12} color={tokens.colors.muted} />
+            <Text style={styles.feedSubText}>{getTimeAgo(createdAt)}</Text>
+          </View>
+        </View>
+
+        {/* Description Snippet */}
+        {job.description ? (
+          <Text style={styles.feedDescription} numberOfLines={2}>
+            {job.description}
+          </Text>
+        ) : null}
+
+        <View style={styles.feedDivider} />
+
+        {/* Footer Row: Poster Identity & Applicant Count */}
+        <View style={styles.feedFooterRow}>
+          <View style={styles.feedPosterIdentity}>
+            <Avatar name={clientName} size={22} />
+            <Text style={styles.feedPosterName} numberOfLines={1}>
+              {clientName ?? "غير معروف"}
+            </Text>
+          </View>
+
+          {applicantCount !== undefined && applicantCount > 0 ? (
+            <View style={styles.feedIconText}>
+              <Users size={14} color={tokens.colors.navy} />
+              <Text style={styles.feedApplicantText}>
+                {applicantCount} {applicantCount === 1 ? 'متقدم' : 'متقدمين'}
+              </Text>
+            </View>
+          ) : (
+            <StatusPill status={job.status || "OPEN"} />
+          )}
+        </View>
+      </AnimatedTouchableOpacity>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // POSTED / ACTIVE / COMPACT VARIANTS
+  // ════════════════════════════════════════════════════════════════════════════
   return (
     <AnimatedTouchableOpacity
       style={[
@@ -293,8 +263,8 @@ export const JobCard: React.FC<JobCardProps> = ({
 
       {/* ══════════════ PERSON ROW ══════════════ */}
 
-      {/* Feed / Active: show client/poster name with avatar */}
-      {!isCompact && (variant === "feed" || variant === "active") && (
+      {/* Active: show client/poster name with avatar */}
+      {!isCompact && variant === "active" && (
         <View style={styles.personRow}>
           {/* In RTL flexRow, Avatar (first) appears RIGHT of text (second) */}
           <Avatar name={clientName} size={26} />
@@ -353,13 +323,6 @@ export const JobCard: React.FC<JobCardProps> = ({
             <Text style={styles.feeStrike}>{formatCurrency(askingFee)}</Text>
           )}
         </View>
-
-        {/* Deadline label — feed only (active uses full bar; posted uses pill below) */}
-        {!isCompact && variant === "feed" && deadlineInfo && (
-          <Text style={[styles.deadlineText, { color: deadlineInfo.color }]}>
-            {deadlineInfo.label}
-          </Text>
-        )}
       </View>
 
       {/* ══════════════ POSTED: INLINE DEADLINE PILL ══════════════ */}
@@ -942,5 +905,86 @@ const styles = StyleSheet.create({
     color: tokens.colors.gold,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 13,
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Feed Variant Specific Styles (Upwork Style)
+  // ════════════════════════════════════════════════════════════════════════════
+  feedCard: {
+    padding: tokens.spacing.md,
+    paddingTop: tokens.spacing.lg,
+    marginBottom: tokens.spacing.sm,
+  },
+  feedTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: tokens.spacing.xs,
+  },
+  feedTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: 16,
+    lineHeight: 24,
+    flex: 1,
+    marginLeft: tokens.spacing.md,
+  },
+  feedFee: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.mono,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  feedSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.sm,
+  },
+  feedIconText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  feedSubText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 12,
+  },
+  feedDot: {
+    color: tokens.colors.muted,
+    marginHorizontal: 8,
+    fontSize: 12,
+  },
+  feedDescription: {
+    color: tokens.colors.slate,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: tokens.spacing.xs,
+  },
+  feedDivider: {
+    height: 1,
+    backgroundColor: tokens.colors.surface,
+    marginVertical: tokens.spacing.md,
+  },
+  feedFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  feedPosterIdentity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.xs,
+  },
+  feedPosterName: {
+    color: tokens.colors.slate,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 12,
+  },
+  feedApplicantText: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 12,
   },
 });
