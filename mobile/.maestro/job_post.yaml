@@ -1,4 +1,4 @@
-appId: com.tawasol.app
+appId: com.wakeel.app
 ---
 - launchApp
 - tapOn: "Post a Job"

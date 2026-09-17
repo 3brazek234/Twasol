@@ -15,6 +15,8 @@ import { ChangePasswordScreen } from '../screens/main/ChangePasswordScreen';
 import { AdminVerificationQueueScreen } from '../screens/admin/AdminVerificationQueueScreen';
 import { PendingReviewScreen } from '../screens/verification/PendingReviewScreen';
 import { ResubmitScreen } from '../screens/verification/ResubmitScreen';
+import { LegalScreen } from '../screens/main/LegalScreen';
+import { NegotiationScreen } from '../screens/main/NegotiationScreen';
 
 import * as Linking from 'expo-linking';
 import Constants from 'expo-constants';
@@ -36,6 +38,9 @@ const SettingsNavigator = () => (
     <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'تعديل الملف الشخصي' }} />
     <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'تغيير كلمة المرور' }} />
     <SettingsStack.Screen name="AdminVerificationQueue" component={AdminVerificationQueueScreen} options={{ title: 'طلبات التوثيق' }} />
+    <SettingsStack.Screen name="MyCourts" component={require('../screens/main/MyCourtsScreen').MyCourtsScreen} options={{ title: 'الاختصاصات القضائية' }} />
+    <SettingsStack.Screen name="Legal" component={LegalScreen} options={({ route }: any) => ({ title: route.params?.type === 'terms' ? 'شروط الخدمة' : 'سياسة الخصوصية' })} />
+    <SettingsStack.Screen name="SupportChat" component={NegotiationScreen} options={{ title: 'الدعم الفني' }} />
   </SettingsStack.Navigator>
 );
 

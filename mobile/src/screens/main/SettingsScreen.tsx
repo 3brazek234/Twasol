@@ -5,14 +5,8 @@ import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
-import { useSupportConversation } from '../../hooks/useSupport';
 
-const TERMS_URL = process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://example.com/terms';
-const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://example.com/privacy';
-
-if (!__DEV__ && (TERMS_URL.includes('example.com') || PRIVACY_URL.includes('example.com'))) {
-  console.error('[CRITICAL] Placeholder legal URLs detected in production build!');
-}
+// Legal URLs have been moved to native LegalScreen
 
 export const SettingsScreen = ({ navigation }: any) => {
   const [showModeModal, setShowModeModal] = useState(false);
@@ -38,7 +32,6 @@ export const SettingsScreen = ({ navigation }: any) => {
   const [offerNotifications, setOfferNotifications] = useState(true);
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
 
-  const { mutateAsync: getOrCreateSupport } = useSupportConversation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -75,10 +68,18 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   const handleContactSupport = async () => {
     try {
-      const convId = await getOrCreateSupport();
-      navigation.navigate('Chat', { conversationId: convId, jobTitle: 'فريق الدعم', otherPartyName: 'الدعم الفني' });
+      // Egyptian number format: +20 followed by the number without the leading 0
+      const phoneNumber = '+201154812698';
+      const url = `whatsapp://send?phone=${phoneNumber}`;
+      
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('تنبيه', 'يرجى التأكد من تثبيت تطبيق واتساب على جهازك للتواصل مع الدعم.');
+      }
     } catch (err: any) {
-      Alert.alert('خطأ', 'لا يمكن فتح محادثة الدعم: ' + err.message);
+      Alert.alert('خطأ', 'لا يمكن فتح تطبيق واتساب: ' + err.message);
     }
   };
 
@@ -98,17 +99,17 @@ export const SettingsScreen = ({ navigation }: any) => {
           />
           <SettingsRow 
             label="تعديل الملف الشخصي" 
-            onPress={() => navigation.navigate('EditProfile')} 
+            onPress={() => navigation.navigate('SettingsStack', { screen: 'EditProfile' })} 
           />
           {(user as any)?.role === 'LAWYER' && (
             <SettingsRow 
               label="إدارة الاختصاصات القضائية" 
-              onPress={() => navigation.navigate('MyCourts')} 
+              onPress={() => navigation.navigate('SettingsStack', { screen: 'MyCourts' })} 
             />
           )}
           <SettingsRow 
             label="تغيير كلمة المرور" 
-            onPress={() => navigation.navigate('ChangePassword')} 
+            onPress={() => navigation.navigate('SettingsStack', { screen: 'ChangePassword' })} 
           />
         </View>
       </View>
@@ -119,7 +120,7 @@ export const SettingsScreen = ({ navigation }: any) => {
           <View style={styles.card}>
             <SettingsRow 
               label="مراجعة طلبات التوثيق" 
-              onPress={() => navigation.navigate("AdminVerificationQueue")} 
+              onPress={() => navigation.navigate('SettingsStack', { screen: 'AdminVerificationQueue' })} 
             />
           </View>
         </View>
@@ -171,11 +172,11 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.card}>
           <SettingsRow 
             label="شروط الخدمة" 
-            onPress={() => Linking.openURL(TERMS_URL)} 
+            onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'terms' } })} 
           />
           <SettingsRow 
             label="سياسة الخصوصية" 
-            onPress={() => Linking.openURL(PRIVACY_URL)} 
+            onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'privacy' } })} 
           />
           <SettingsRow 
             label="التواصل مع الدعم" 

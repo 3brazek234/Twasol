@@ -3,8 +3,8 @@
     "extra": {
       "supportsRTL": true
     },
-    "name": "Tawasol",
-    "slug": "tawasol-mobile",
+    "name": "وكيل",
+    "slug": "wakeel-mobile",
     "scheme": "wakeel",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -42,9 +42,9 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rebuy.tawasol",
+      "bundleIdentifier": "com.rebuy.wakeel",
       "infoPlist": {
-        "CFBundleDisplayName": "Tawasol",
+        "CFBundleDisplayName": "wakeel",
         "NSCameraUsageDescription": "يحتاج التطبيق للوصول إلى الكاميرا لالتقاط صور المستندات المطلوبة للتوثيق.",
         "NSPhotoLibraryUsageDescription": "يحتاج التطبيق للوصول إلى معرض الصور لتحميل صورة الملف الشخصي أو مستندات التوثيق."
       }
@@ -55,7 +55,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "backgroundColor": "#F9FAFB"
       },
-      "package": "com.rebuy.tawasol"
+      "package": "com.rebuy.wakeel"
     },
     "web": {
       "favicon": "./assets/favicon.png"

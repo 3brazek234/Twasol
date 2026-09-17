@@ -97,7 +97,7 @@ const ChatsNavigator = () => (
 
 const ProfileNavigator = () => (
   <ProfileStack.Navigator screenOptions={defaultScreenOptions}>
-    <ProfileStack.Screen name="ProfileHome" component={SettingsScreen} options={{ title: 'Counselor' }} />
+    <ProfileStack.Screen name="ProfileHome" component={SettingsScreen} options={{ title: 'الاعدادات' }} />
     <ProfileStack.Screen name="MyCourts" component={MyCourtsScreen} options={{ title: 'Jurisdictions' }} />
   </ProfileStack.Navigator>
 );
