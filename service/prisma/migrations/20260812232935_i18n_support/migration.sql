@@ -11,17 +11,17 @@
 */
 -- CreateEnum
 CREATE TYPE "Locale" AS ENUM ('EN', 'AR');
-COMMIT;
+
 
 -- AlterEnum
 ALTER TYPE "NotificationType" ADD VALUE 'JOB_INVITE';
-COMMIT;
+
 
 -- AlterEnum
 ALTER TYPE "VerificationStatus" ADD VALUE 'PENDING_UPLOAD';
-COMMIT;
 
-BEGIN;
+
+
 
 -- DropIndex
 DROP INDEX "jobs_search_idx";
@@ -44,11 +44,11 @@ ALTER TABLE "users" ADD COLUMN     "preferred_locale" "Locale" NOT NULL DEFAULT 
 ALTER TABLE "verification_documents" DROP COLUMN "file_url",
 ADD COLUMN     "file_key" TEXT NOT NULL;
 
-COMMIT;
+
 
 ALTER TABLE "verification_documents" ALTER COLUMN "status" SET DEFAULT 'PENDING_UPLOAD';
 
-BEGIN;
+
 
 -- CreateTable
 CREATE TABLE "practice_areas" (

@@ -9,5 +9,6 @@ const router = Router();
 router.post('/register', authLimiter, validate(registerSchema), AuthController.register);
 router.post('/login',    authLimiter, validate(loginSchema),    AuthController.login);
 router.post('/refresh',  validate(refreshSchema),               AuthController.refresh);
+router.post('/google',   authLimiter,                           AuthController.googleSignIn);
 
 export default router;

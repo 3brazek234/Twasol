@@ -5,7 +5,7 @@ import { AppError } from '../../common/errors/AppError';
 import { hashPassword, comparePassword } from '../../common/utils/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, TokenPayload } from '../../common/utils/jwt';
 import { RegisterInput, LoginInput } from './auth.schema';
-import { NotificationType } from '@prisma/client';
+import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 
 export class AuthService {
   static async register(data: RegisterInput) {
@@ -73,7 +73,8 @@ export class AuthService {
         courts: {
           create: userCourtsToCreate.map(id => ({ courtId: id, isActive: true }))
         }
-      }
+      },
+      select: SAFE_USER_SELECT,
     });
 
     const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR' };
@@ -100,11 +101,9 @@ export class AuthService {
       );
     }
 
-    const { passwordHash: _, pushTokens: __, ...userWithoutPassword } = user as any;
-
     return {
       user: {
-        ...userWithoutPassword,
+        ...user,
         name: user.fullName
       },
       accessToken,
@@ -117,7 +116,8 @@ export class AuthService {
       where: { 
         email: data.email,
         deletedAt: null
-      }
+      },
+      select: { ...SAFE_USER_SELECT, passwordHash: true },
     });
 
     if (!user) {
@@ -134,12 +134,12 @@ export class AuthService {
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    const { passwordHash: _, pushTokens: __, ...userWithoutPassword } = user as any;
+    const { passwordHash: _, ...safeUser } = user;
 
     return {
       user: {
-        ...userWithoutPassword,
-        name: user.fullName
+        ...safeUser,
+        name: safeUser.fullName
       },
       accessToken,
       refreshToken

@@ -24,16 +24,6 @@ import * as Sentry from '@sentry/node';
 
 const app = express();
 
-if (env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: env.SENTRY_DSN,
-    environment: env.NODE_ENV,
-    tracesSampleRate: 1.0,
-  });
-  // Sentry request handler must be the first middleware on the app
-  Sentry.setupExpressErrorHandler(app);
-}
-
 app.use(requestId);
 app.use(cors({ origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'], credentials: true }));
 app.use(express.json());
@@ -69,6 +59,13 @@ app.get('/health/queue', checkQueueHealth);
 app.use('/api/admin', adminRoutes);
 app.use('/admin/queues', queueRoutes);
 
+app.get("/debug-sentry", function mainHandler(_req, _res) {
+  // Send a log before throwing the error
+  // @ts-ignore - Sentry.logger might not be exposed in the types, but we'll try to just throw the error
+  Sentry.metrics?.increment('test_counter', 1);
+  throw new Error("My first Sentry error!");
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courts', courtsRoutes);
@@ -85,6 +82,9 @@ app.use('/api/uploads', uploadsRouter);
 // Review routes (nested)
 app.use('/api/jobs/:id/reviews', jobReviewsRouter);
 app.use('/api/users/:id/reviews', userReviewsRouter);
+
+// The error handler must be registered before any other error middleware and after all controllers
+Sentry.setupExpressErrorHandler(app);
 
 // Error handler (must be last)
 app.use(errorHandler);

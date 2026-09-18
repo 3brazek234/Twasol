@@ -1,18 +1,10 @@
+import './instrument';
 import { scheduleExpirationCheck } from './workers/job-expiration.worker';
 import './env'; // validate env vars first (fail fast)
 import server from './server';
 import { env } from './env';
 import { logger } from './common/utils/logger';
 import { setupRepeatableJobs } from './common/utils/queue';
-
-// Optional: Sentry initialization
-if (env.SENTRY_DSN) {
-  // require('@sentry/node').init({
-  //   dsn: env.SENTRY_DSN,
-  //   environment: env.NODE_ENV,
-  // });
-  logger.info('Sentry is configured.');
-}
 
 server.listen(env.PORT, '0.0.0.0', async () => {
   setupRepeatableJobs().catch(err => logger.error('Failed to setup repeatable jobs', err));

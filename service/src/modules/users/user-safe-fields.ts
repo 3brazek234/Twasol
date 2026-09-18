@@ -18,4 +18,5 @@ export const SAFE_USER_SELECT = {
   barId: true,
   subscriptionStatus: true,
   subscriptionExpiresAt: true,
+  googleId: true,
 } as const;

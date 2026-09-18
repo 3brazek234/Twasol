@@ -22,3 +22,8 @@ export const register = async (
   });
   return response.data;
 };
+
+export const googleSignIn = async (idToken: string): Promise<AuthResponse> => {
+  const response = await apiClient.post<AuthResponse>('/auth/google', { idToken });
+  return response.data;
+};

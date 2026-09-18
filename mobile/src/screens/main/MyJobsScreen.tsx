@@ -200,7 +200,7 @@ console.log('statusFilter', statusFilter);
                 <EmptyState
                   icon={<Briefcase size={48} color={tokens.colors.muted} />}
                   headline="لا توجد طلبات منشورة"
-                  body={postedJobsQuery.isError ? `Error: ${postedJobsQuery.error?.message}` : `Debug: isError=${postedJobsQuery.isError}, fetchStatus=${postedJobsQuery.fetchStatus}, status=${postedJobsQuery.status}, data=${JSON.stringify(postedJobsQuery.data)}`}
+                  body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل الطلبات. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي طلبات حتى الآن."}
                   ctaText="نشر طلب جديد +"
                   onCtaPress={() => navigation.navigate('PostJob')}
                 />

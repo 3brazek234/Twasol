@@ -31,6 +31,10 @@ const envSchema = z.object({
   // Sentry (optional)
   DEBUG_SOCKET_AUTH: z.string().optional().transform(v => v === 'true'),
   SENTRY_DSN: z.string().optional(),
+  // Google OAuth Client IDs (free, for ID token verification)
+  GOOGLE_WEB_CLIENT_ID: z.string().optional(),
+  GOOGLE_IOS_CLIENT_ID: z.string().optional(),
+  GOOGLE_ANDROID_CLIENT_ID: z.string().optional(),
 });
 
 // Fail fast if env is missing/malformed

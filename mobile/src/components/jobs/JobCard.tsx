@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   // ── Card shell ──────────────────────────────────────────────────────────────
   card: {
     backgroundColor: tokens.colors.white,
-    borderRadius: tokens.radius.lg,      // 12 — slightly tighter than original 16
+    borderRadius: tokens.radius.xl,      // 12 — slightly tighter than original 16
     padding: tokens.spacing.md,          // 16
     borderWidth: 1,
     borderColor: tokens.colors.line,

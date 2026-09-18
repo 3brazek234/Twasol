@@ -81,6 +81,7 @@ enum NotificationType {
   JOB_COMPLETED
   JOB_CANCELLED
   JOB_EXPIRED_WITHDRAWN
+  GOOGLE_ACCOUNT_LINKED // تم ربط حساب Google
 }
 
 enum ReportStatus {
@@ -189,6 +190,7 @@ model User {
   subscriptionExpiresAt DateTime?          @map("subscription_expires_at") // تاريخ انتهاء الاشتراك
   // ─── الإشعارات ─────────────────────────────────────────────────────────────
   pushTokens            String[]           @default([]) @map("push_tokens") // Expo Push Tokens
+  googleId              String?            @unique @map("google_id")
 
   governorate                  Governorate?              @relation(fields: [governorateId], references: [id])
   courts                       LawyerCourt[]
