@@ -47,10 +47,10 @@ export default function DashboardLayout() {
       setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
 
       queryClient.setQueryData(['admin-overview'], (oldData: any) => {
-        if (!oldData) return oldData;
+        if (!oldData || !oldData.funnel) return oldData;
         return {
           ...oldData,
-          users: { ...oldData.users, total: oldData.users.total + 1, activeLast30d: oldData.users.activeLast30d + 1 }
+          funnel: { ...oldData.funnel, totalRegistered: oldData.funnel.totalRegistered + 1 }
         };
       });
     };

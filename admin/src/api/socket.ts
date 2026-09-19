@@ -11,21 +11,23 @@ class AdminSocketClient {
     if (this.socket || this.isConnecting) return;
     this.isConnecting = true;
 
+    // TODO: WebSocket server is not yet implemented on the Node.js backend.
+    // Disabling connection to prevent "bad response" polling errors in the admin dashboard.
+    console.warn("[AdminSocketClient] WebSocket connection is disabled because the backend does not have a socket.io server yet.");
+    this.isConnecting = false;
+
+    /*
     this.socket = io(SOCKET_URL, {
       withCredentials: true,
       transports: ['websocket', 'polling']
     });
+    */
 
-    this.socket.on('connect', () => {
-      this.isConnecting = false;
-    });
-
-    this.socket.on('disconnect', (reason) => {
-    });
-
+    /*
     this.socket.io.on('reconnect', () => {
       this.onReconnectCallbacks.forEach(cb => cb());
     });
+    */
   }
 
   disconnect() {

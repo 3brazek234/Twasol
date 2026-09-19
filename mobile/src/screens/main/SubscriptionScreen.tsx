@@ -32,9 +32,11 @@ export const SubscriptionScreen = () => {
     }
   }, [plans]);
 
-  if (error) {
-    Toast.show({ type: 'error', text1: 'خطأ', text2: 'تعذر جلب خطط الاشتراك' });
-  }
+  useEffect(() => {
+    if (error) {
+      Toast.show({ type: 'error', text1: 'خطأ', text2: 'تعذر جلب خطط الاشتراك' });
+    }
+  }, [error]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({

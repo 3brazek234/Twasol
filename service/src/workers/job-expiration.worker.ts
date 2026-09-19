@@ -11,6 +11,28 @@ export const jobExpirationWorker = new Worker(
   async (job: BullJob) => {
     const { jobId } = job.data;
     
+    if (!jobId) {
+      if (job.name === "check-expired-jobs") {
+        logger.info('Running recurring expiration sweep');
+        const expiredJobs = await prisma.job.findMany({
+          where: {
+            expiresAt: { lt: new Date() },
+            status: { in: ['OPEN', 'NEGOTIATING', 'AGREED', 'IN_PROGRESS'] }
+          },
+          select: { id: true }
+        });
+        
+        logger.info({ count: expiredJobs.length }, 'Found expired jobs during sweep');
+        for (const expired of expiredJobs) {
+          // Re-queue them as individual targeted jobs so they get processed safely
+          await (job as any).queue.add('expire-specific-job', { jobId: expired.id });
+        }
+        return;
+      }
+      logger.warn('Job received without jobId, skipping');
+      return;
+    }
+
     logger.info({ jobId }, 'Processing job expiration');
 
     try {

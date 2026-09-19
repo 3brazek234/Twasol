@@ -65,6 +65,7 @@ export const createJob = async (jobData: {
     title: jobData.title,
     description: jobData.description,
     courtId: jobData.courtId,
+    taskType: jobData.taskType,
     invitedLawyerId: jobData.invitedLawyerId,
     salaryMin: jobData.salaryMin || (jobData.offerAmount ? jobData.offerAmount.toString() : undefined),
     salaryMax: jobData.salaryMax || (jobData.offerAmount ? jobData.offerAmount.toString() : undefined),

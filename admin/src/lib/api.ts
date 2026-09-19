@@ -17,9 +17,18 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle 401s
+// Response interceptor to handle 401s and automatic unwrapping
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && typeof response.data === 'object' && 'success' in response.data && 'data' in response.data) {
+      if ('meta' in response.data) {
+        response.data = { data: response.data.data, meta: response.data.meta };
+      } else {
+        response.data = response.data.data;
+      }
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('adminAccessToken');

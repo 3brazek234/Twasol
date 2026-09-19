@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 
 export const fetchSubscriptionPlans = async () => {
   const res = await apiClient.get('/subscription/plans');
-  return res.data.data;
+  return res.data;
 };
 
 export const getReceiptUploadUrl = async (variables: { contentType: string }) => {
@@ -14,7 +14,12 @@ export const getReceiptUploadUrl = async (variables: { contentType: string }) =>
 };
 
 export const submitSubscription = async (variables: { planId: string; receiptKey: string; paymentMethod: string }) => {
-  const res = await apiClient.post('/subscription/submit', variables);
+  const payload = {
+    planId: variables.planId,
+    paymentMethod: variables.paymentMethod,
+    receiptFileKey: variables.receiptKey,
+  };
+  const res = await apiClient.post('/subscription/submit', payload);
   return res.data;
 };
 

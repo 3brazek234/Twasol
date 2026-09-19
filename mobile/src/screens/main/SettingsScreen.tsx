@@ -126,6 +126,10 @@ export const SettingsScreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitle}>الإدارة</Text>
           <View style={styles.card}>
             <SettingsRow 
+              label="لوحة المؤشرات والإحصائيات" 
+              onPress={() => navigation.navigate('SettingsStack', { screen: 'AdminAnalytics' })} 
+            />
+            <SettingsRow 
               label="مراجعة طلبات التوثيق" 
               onPress={() => navigation.navigate('SettingsStack', { screen: 'AdminVerificationQueue' })} 
             />

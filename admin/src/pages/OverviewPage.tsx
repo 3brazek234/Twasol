@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Users, ClipboardList, Briefcase, FileText } from 'lucide-react';
+import { Users, ClipboardList, Briefcase, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function OverviewPage() {
@@ -26,55 +26,55 @@ export default function OverviewPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">MRR (Monthly Revenue)</CardTitle>
+            <CreditCard className="h-4 w-4 text-brand-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(data.revenue.mrr / 100).toLocaleString()} EGP</div>
+            <p className="text-xs text-brand-muted">
+              Active subscriptions only
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Registered Users</CardTitle>
             <Users className="h-4 w-4 text-brand-muted" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.users.total}</div>
+            <div className="text-2xl font-bold">{data.funnel.totalRegistered}</div>
             <p className="text-xs text-brand-muted">
-              {data.users.activeLast30d} active in last 30d
+              {data.funnel.totalVerified} verified • {data.funnel.totalActiveSubscriptions} subscribed
             </p>
           </CardContent>
         </Card>
 
         <Link to="/verification" className="block transition-transform hover:scale-105">
-          <Card className={data.verifications.pending > 0 ? 'border-brand-docket' : ''}>
+          <Card className={data.queues.pendingVerifications > 0 ? 'border-brand-docket' : ''}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Verifications</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Queues</CardTitle>
               <ClipboardList className="h-4 w-4 text-brand-muted" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{data.verifications.pending}</div>
-              <p className="text-xs text-brand-muted">Requires review</p>
+              <div className="text-2xl font-bold">{data.queues.pendingVerifications} Verifications</div>
+              <p className="text-xs text-brand-muted">{data.queues.pendingPayments} Pending Payments</p>
             </CardContent>
           </Card>
         </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jobs (Last 7d)</CardTitle>
+            <CardTitle className="text-sm font-medium">Job Fill Rate (30d)</CardTitle>
             <Briefcase className="h-4 w-4 text-brand-muted" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.jobs.postedLast7d}</div>
+            <div className="text-2xl font-bold">{Math.round(data.fillRate.fillRate * 100)}%</div>
             <p className="text-xs text-brand-muted">
-              {data.jobs.completedLast7d} completed
+              {data.fillRate.completedCount} completed out of {data.fillRate.terminalCount} terminal jobs
             </p>
           </CardContent>
         </Card>
-
-        <Link to="/reports" className="block transition-transform hover:scale-105">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Open Reports</CardTitle>
-              <FileText className="h-4 w-4 text-brand-muted" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.reports.open}</div>
-              <p className="text-xs text-brand-muted">Pending resolution</p>
-            </CardContent>
-          </Card>
-        </Link>
       </div>
     </div>
   );

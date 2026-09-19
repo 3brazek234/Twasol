@@ -42,6 +42,7 @@ const SettingsNavigator = () => (
     <SettingsStack.Screen name="AdminVerificationDetail" component={require('../screens/admin/AdminVerificationDetailScreen').AdminVerificationDetailScreen} options={{ headerShown: false }} />
     <SettingsStack.Screen name="AdminSubscriptionQueue" component={require('../screens/admin/AdminSubscriptionQueueScreen').AdminSubscriptionQueueScreen} options={{ title: 'طلبات الاشتراكات' }} />
     <SettingsStack.Screen name="AdminSubscriptionDetail" component={require('../screens/admin/AdminSubscriptionDetailScreen').AdminSubscriptionDetailScreen} options={{ headerShown: false }} />
+    <SettingsStack.Screen name="AdminAnalytics" component={require('../screens/admin/AdminAnalyticsScreen').AdminAnalyticsScreen} options={{ title: 'مؤشرات الأداء (الإدارة)' }} />
     <SettingsStack.Screen name="Subscription" component={require('../screens/main/SubscriptionScreen').SubscriptionScreen} options={{ title: 'تفعيل الاشتراك' }} />
     <SettingsStack.Screen name="MyCourts" component={require('../screens/main/MyCourtsScreen').MyCourtsScreen} options={{ title: 'الاختصاصات القضائية' }} />
     <SettingsStack.Screen name="Legal" component={LegalScreen} options={({ route }: any) => ({ title: route.params?.type === 'terms' ? 'شروط الخدمة' : 'سياسة الخصوصية' })} />

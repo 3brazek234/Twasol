@@ -26,7 +26,7 @@ import * as Sentry from '@sentry/node';
 const app = express();
 
 app.use(requestId);
-app.use(cors({ origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'], credentials: true }));
+app.use(cors({ origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000', 'http://localhost:5173'], credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(generalLimiter);

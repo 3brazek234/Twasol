@@ -31,7 +31,7 @@ export class JobsLifecycleService {
     // SUBSCRIPTION GATE (Live date check)
     const isActiveSub = user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date();
     if (!isActiveSub) {
-      throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.", "SUBSCRIPTION_REQUIRED");
+      throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.");
     }
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
