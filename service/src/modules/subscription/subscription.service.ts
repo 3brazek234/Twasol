@@ -198,15 +198,20 @@ export class SubscriptionService {
   static async approvePayment(paymentId: string, adminId: string, notes?: string) {
     const payment = await prisma.subscriptionPayment.findUnique({
       where: { id: paymentId },
-      include: { user: { select: { fullName: true } } },
+      include: { user: { select: { fullName: true, subscriptionExpiresAt: true } } },
     });
     if (!payment) throw AppError.notFound('طلب الاشتراك غير موجود');
     if (payment.status !== 'PENDING') {
       throw AppError.conflict('هذا الطلب ليس في انتظار المراجعة');
     }
 
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + payment.durationMonths);
+    const now = new Date();
+    const baseDate = payment.user.subscriptionExpiresAt && payment.user.subscriptionExpiresAt > now 
+      ? payment.user.subscriptionExpiresAt 
+      : now;
+    
+    const newExpiresAt = new Date(baseDate);
+    newExpiresAt.setMonth(newExpiresAt.getMonth() + payment.durationMonths);
 
     await prisma.$transaction(async (tx) => {
       await tx.subscriptionPayment.update({
@@ -223,23 +228,26 @@ export class SubscriptionService {
         where: { id: payment.userId },
         data: {
           subscriptionStatus: 'ACTIVE',
-          subscriptionExpiresAt: expiresAt,
+          subscriptionExpiresAt: newExpiresAt,
           isActive: true,
         },
       });
+
+      const { auditLog } = await import('../../common/utils/audit');
+      await auditLog(tx as any, adminId, 'SUBSCRIPTION_PAYMENT_APPROVED', 'SubscriptionPayment', paymentId, null, { newExpiresAt, extendedFrom: baseDate });
 
       await tx.notification.create({
         data: buildNotification({
           userId: payment.userId,
           type: 'SUBSCRIPTION_ACTIVATED',
           titleAr: 'تم تفعيل حسابك 🎉',
-          messageAr: `مرحباً بك في وكيل! تم تفعيل اشتراكك بنجاح. حسابك نشط الآن ويمكنك الاستفادة من جميع الخدمات. ينتهي اشتراكك في ${expiresAt.toLocaleDateString('ar-EG')}.`,
-          data: { paymentId: payment.id, expiresAt: expiresAt.toISOString() },
+          messageAr: `مرحباً بك في وكيل! تم تفعيل اشتراكك بنجاح. حسابك نشط الآن ويمكنك الاستفادة من جميع الخدمات. ينتهي اشتراكك في ${newExpiresAt.toLocaleDateString('ar-EG')}.`,
+          data: { paymentId: payment.id, expiresAt: newExpiresAt.toISOString() },
         })
       });
     });
 
-    return { paymentId, userId: payment.userId, expiresAt };
+    return { paymentId, userId: payment.userId, expiresAt: newExpiresAt };
   }
 
   // ─── [أدمن] رفض طلب الاشتراك ───────────────────────────────────────────────

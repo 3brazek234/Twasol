@@ -101,6 +101,13 @@ export const SettingsScreen = ({ navigation }: any) => {
             label="تعديل الملف الشخصي" 
             onPress={() => navigation.navigate('SettingsStack', { screen: 'EditProfile' })} 
           />
+          {user?.accountMode !== 'HIRING' && (
+            <SettingsRow 
+              label="حالة الاشتراك" 
+              value={user?.subscriptionStatus === 'ACTIVE' ? 'نشط' : 'يتطلب تفعيل'}
+              onPress={() => navigation.navigate('SettingsStack', { screen: 'Subscription' })} 
+            />
+          )}
           {(user as any)?.role === 'LAWYER' && (
             <SettingsRow 
               label="إدارة الاختصاصات القضائية" 
@@ -121,6 +128,10 @@ export const SettingsScreen = ({ navigation }: any) => {
             <SettingsRow 
               label="مراجعة طلبات التوثيق" 
               onPress={() => navigation.navigate('SettingsStack', { screen: 'AdminVerificationQueue' })} 
+            />
+            <SettingsRow 
+              label="مراجعة طلبات الاشتراك" 
+              onPress={() => navigation.navigate('SettingsStack', { screen: 'AdminSubscriptionQueue' })} 
             />
           </View>
         </View>

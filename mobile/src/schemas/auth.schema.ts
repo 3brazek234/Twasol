@@ -10,8 +10,10 @@ export const UserSchema = z.object({
   role: z.enum(['USER', 'LAWYER', 'ADMIN', 'SUPER_ADMIN']).optional(),
   verificationStatus: z.enum(['UNVERIFIED', 'PENDING_UPLOAD', 'PENDING', 'APPROVED', 'REJECTED']).default('UNVERIFIED'),
   subscriptionStatus: z.enum(['NOT_REQUIRED', 'PENDING_PAYMENT', 'ACTIVE', 'EXPIRED', 'SUSPENDED']).default('PENDING_PAYMENT'),
+  subscriptionExpiresAt: z.string().nullable().optional(),
   accountMode: z.enum(['GIG', 'HIRING', 'BOTH']).default('BOTH'),
   governorateId: z.string().nullable().optional(),
+  verificationRejectionReason: z.string().nullable().optional(),
 });
 export type User = z.infer<typeof UserSchema>;
 

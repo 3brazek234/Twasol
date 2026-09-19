@@ -18,31 +18,23 @@ export const jobAlertWorker = new Worker('job-alert', async (job: Job) => {
   if (jobEntity.invitedLawyerId) return;
 
   // Build query to find matching saved searches
-  // We want saved searches where:
   // (courtId is null OR courtId matches) AND (taskType is null OR taskType matches)
-  const matchingSearches = await prisma.savedSearch.findMany({
-    where: {
-      userId: { not: jobEntity.postedByUserId },
-      AND: [
-        {
-          OR: [
-            { courtId: null },
-            { courtId: jobEntity.courtId }
-          ]
-        },
-        {
-          OR: [
-            { taskType: null },
-            { taskType: jobEntity.taskType }
-          ]
-        }
-      ]
-    },
-    select: { userId: true }
-  });
+  // AND (query is null OR job title/desc contains query)
+  const matchingSearches = await prisma.$queryRaw<{ user_id: string }[]>`
+    SELECT user_id
+    FROM saved_searches
+    WHERE user_id != ${jobEntity.postedByUserId}
+      AND (court_id IS NULL OR court_id = ${jobEntity.courtId})
+      AND (task_type IS NULL OR task_type = ${jobEntity.taskType}::"JobTaskType")
+      AND (
+        query IS NULL 
+        OR ${jobEntity.title} ILIKE '%' || query || '%'
+        OR ${jobEntity.description} ILIKE '%' || query || '%'
+      )
+  `;
 
   if (matchingSearches.length > 0) {
-    const uniqueLawyerIds = Array.from(new Set(matchingSearches.map(s => s.userId)));
+    const uniqueLawyerIds = Array.from(new Set(matchingSearches.map(s => s.user_id)));
     
     await NotificationsService.notifyManyUsers(
       uniqueLawyerIds,

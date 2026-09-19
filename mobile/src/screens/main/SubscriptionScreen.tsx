@@ -97,6 +97,16 @@ export const SubscriptionScreen = () => {
     return <View className="flex-1 justify-center items-center bg-paper"><ActivityIndicator size="large" color="#1B2A4A" /></View>;
   }
 
+  // Pure POSTER/HIRING accounts should never see this
+  if (user?.accountMode === 'HIRING') {
+    return (
+      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
+        <Text className="text-xl font-displayBold text-ink mb-2">غير مصرح</Text>
+        <Text className="text-center font-body text-muted">أصحاب حسابات التوظيف غير مطالبين باشتراك.</Text>
+      </SafeAreaView>
+    );
+  }
+
   // If user has a pending request
   if (user?.subscriptionStatus === 'PENDING_PAYMENT' && user?.verificationStatus === 'APPROVED' && user?.isActive === false && !isLoading && file && isUploading === false) {
     // Wait, the API doesn't push a distinct state to the frontend for 'PENDING_REVIEW' of the receipt.

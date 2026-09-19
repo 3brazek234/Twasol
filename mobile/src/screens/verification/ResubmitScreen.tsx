@@ -6,7 +6,7 @@ import { AlertCircle } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 
 export const ResubmitScreen = ({ navigation }: any) => {
-  const { submitVerification, logout } = useAuthStore();
+  const { user, submitVerification, logout } = useAuthStore();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -23,7 +23,7 @@ export const ResubmitScreen = ({ navigation }: any) => {
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              Reason: The Bar Association number provided does not match our records or is inactive.
+              السبب: {user?.verificationRejectionReason || "تأكد من وضوح الصورة وصحة البيانات."}
             </Text>
           </View>
         </View>

@@ -5,7 +5,7 @@ import { useLawyersAtCourt } from '../../hooks/useCourts';
 import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { tokens } from '../../theme/tokens';
-import { Landmark, Users, Calendar, Gavel, CheckCircle } from 'lucide-react-native';
+import { Landmark, Users, Calendar, Gavel, CheckCircle, AlertTriangle } from 'lucide-react-native';
 import { useCompleteJob } from '../../hooks/useJobs';
 import { safeFormatDate } from '../../utils/dateUtils';
 
@@ -22,12 +22,15 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const { user } = useAuthStore();
   
   // Backend uses uppercase APPROVED
-  const isVerified = (user?.verificationStatus as string) === 'APPROVED' || user?.verificationStatus === 'APPROVED';
+  const isVerified = (user?.verificationStatus as string) === 'APPROVED';
   const isOwnJob = user?.id === job?.posterId;
+  const isLawyer = user?.accountMode !== 'HIRING';
+  const hasActiveSubscription = user?.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
   const [translatedTitle, setTranslatedTitle] = React.useState<string | null>(null);
   const [translatedDescription, setTranslatedDescription] = React.useState<string | null>(null);
   const [isTranslated, setIsTranslated] = React.useState(false);
+  const [showApplyModal, setShowApplyModal] = React.useState(false);
 
   const handleTranslate = () => {
     if (isTranslated) {
@@ -55,6 +58,19 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
   const handleApply = () => {
     if (!jobId) return;
+    
+    if (isLawyer && !hasActiveSubscription) {
+      Alert.alert(
+        "يتطلب التقديم اشتراكاً فعالاً",
+        "لتقديم عروض على المهام، يجب عليك تفعيل اشتراكك.",
+        [
+          { text: "إلغاء", style: "cancel" },
+          { text: "الاشتراك الآن", onPress: () => navigation.navigate('SettingsStack', { screen: 'Subscription' }) }
+        ]
+      );
+      return;
+    }
+
     apply(jobId, {
       onSuccess: (data: any) => {
         const convId = data?.conversationId;
@@ -260,16 +276,18 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           ) : (
             <TouchableOpacity 
               activeOpacity={0.8}
-              style={[styles.applyButton, (!isVerified || isApplying) && styles.applyButtonDisabled]}
+              style={[styles.applyButton, ((!isVerified || (isLawyer && !hasActiveSubscription)) || isApplying) && styles.applyButtonDisabled]}
               onPress={handleApply}
-              disabled={!isVerified || isApplying}
+              disabled={(!isVerified && !(!isLawyer)) || isApplying}
             >
               {isApplying ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} />
-                  <Text style={styles.applyButtonText}>{'تقديم عرض تمثيل قانوني'}</Text>
+                  {(!isLawyer || hasActiveSubscription) ? <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} /> : <AlertTriangle size={18} color="#fff" style={{ marginEnd: 8 }} />}
+                  <Text style={styles.applyButtonText}>
+                    {(!isLawyer || hasActiveSubscription) ? 'تقديم عرض تمثيل قانوني' : 'اشترك للتقديم على المهام'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>

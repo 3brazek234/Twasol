@@ -9,6 +9,7 @@ import jobsRoutes from './jobs.routes';
 import reportsRoutes from './reports.routes';
 import supportRoutes from './support.routes';
 import { adminSubscriptionRouter } from '../subscription/subscription.routes';
+import adminVerificationsRoutes from './verifications/admin-verifications.routes';
 
 const router = Router();
 
@@ -23,5 +24,6 @@ router.use('/jobs', jobsRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/support', supportRoutes);
 router.use('/subscription', adminSubscriptionRouter);
+router.use('/verifications', adminVerificationsRoutes);
 
 export default router;

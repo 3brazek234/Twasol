@@ -91,7 +91,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const { verificationApi } = require('../api/verification.api');
           const statusData = await verificationApi.getStatus();
           if (currentUser) {
-            currentUser = { ...currentUser, verificationStatus: statusData.verificationStatus };
+            currentUser = { 
+              ...currentUser, 
+              verificationStatus: statusData.verificationStatus,
+              verificationRejectionReason: statusData.verificationRejectionReason
+            };
             await SecureStore.setItemAsync('userProfile', JSON.stringify(currentUser));
             set({ user: currentUser });
           }

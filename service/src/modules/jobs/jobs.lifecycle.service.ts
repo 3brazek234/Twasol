@@ -28,6 +28,12 @@ export class JobsLifecycleService {
     if (!user?.isActive) throw AppError.forbidden("Account is not active");
     if (user?.verificationStatus !== "APPROVED") throw AppError.forbidden("Account must be verified to apply for jobs");
 
+    // SUBSCRIPTION GATE (Live date check)
+    const isActiveSub = user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date();
+    if (!isActiveSub) {
+      throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.", "SUBSCRIPTION_REQUIRED");
+    }
+
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job) throw AppError.notFound("Job");
 

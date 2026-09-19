@@ -8,7 +8,15 @@ const router = Router();
 
 const createSchema = z.object({
   name: z.string().min(1),
-  criteria: z.record(z.any()),
+  criteria: z.object({
+    courtId: z.string().uuid().or(z.literal('')).transform(v => v === '' ? null : v).optional().nullable(),
+    taskType: z.string().or(z.literal('')).transform(v => v === '' ? null : v).optional().nullable(),
+    q: z.string().or(z.literal('')).transform(v => v === '' ? null : v).optional().nullable(),
+  }).refine(data => {
+    return !!data.courtId || !!data.taskType || !!data.q;
+  }, {
+    message: "يجب اختيار فلتر واحد على الأقل (محكمة، نوع المهمة، أو نص البحث)" // Must choose at least one filter
+  }),
 });
 
 router.post('/', authenticate, validate(createSchema, 'body'), async (req: any, res) => {

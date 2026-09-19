@@ -81,7 +81,7 @@ export class VerificationService {
   static async getStatus(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { verificationStatus: true },
+      select: { verificationStatus: true, verificationRejectionReason: true },
     });
     if (!user) throw AppError.notFound('User not found');
 
@@ -92,6 +92,7 @@ export class VerificationService {
 
     return {
       verificationStatus: user.verificationStatus,
+      verificationRejectionReason: user.verificationRejectionReason,
       documents,
     };
   }

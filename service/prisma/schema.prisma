@@ -185,6 +185,7 @@ model User {
   fullName              String             @map("full_name")
   barNumber             String?            @unique @map("bar_number")
   verificationStatus    VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  verificationRejectionReason String?            @map("verification_rejection_reason")
   preferredLocale       Locale             @default(EN) @map("preferred_locale")
   bio                   String?
   isActive              Boolean            @default(false) @map("is_active")
