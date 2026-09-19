@@ -1,6 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+import {  Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
 
 class AdminSocketClient {
   private socket: Socket | null = null;
