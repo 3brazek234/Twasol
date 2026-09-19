@@ -108,6 +108,15 @@ enum SupportStatus {
   RESOLVED
 }
 
+enum JobTaskType {
+  ATTEND_SESSION
+  OBTAIN_DOCUMENT
+  FILE_PLEADING
+  REGISTER_PROPERTY
+  REVIEW_DOCKET
+  OTHER
+}
+
 enum CourtType {
   PARTIAL
   PRIMARY
@@ -212,6 +221,8 @@ model User {
   subscriptionPayments         SubscriptionPayment[] // سجل مدفوعات الاشتراك
 
   @@index([isActive, isOnline])
+  savedSearches                SavedSearch[]
+
   @@map("users")
 }
 
@@ -245,6 +256,9 @@ model Job {
   assignedLawyerId String?                  @map("assigned_lawyer_id")
   invitedLawyerId  String?                  @map("invited_lawyer_id")
   courtId          String?                  @map("court_id")
+  taskType         JobTaskType?             @map("task_type")
+  sessionDate      DateTime?                @map("session_date")
+  circuitName      String?                  @map("circuit_name")
   version          Int                      @default(0)
   negotiatingSince DateTime?                @map("negotiating_since")
   agreedAt         DateTime?                @map("agreed_at")
@@ -473,4 +487,17 @@ model SubscriptionPayment {
   @@index([userId, status])
   @@index([status])
   @@map("subscription_payments")
+}
+
+model SavedSearch {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  criteria  Json     // { courtId?: string, taskType?: string, q?: string }
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
 }

@@ -11,7 +11,7 @@ router.get('/governorates', CourtsController.getGovernorates);
 router.get('/search', authenticate, validate(searchCourtsSchema, 'query'), CourtsController.search);
 router.get('/', authenticate, validate(listCourtsSchema, 'query'), CourtsController.list);
 router.get('/:id', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.getById);
-router.get('/:id/active-lawyers', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.getActiveLawyers);
+router.get('/:id/lawyers', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.getLawyers);
 router.post('/register', authenticate, validate(registerLawyerSchema, 'body'), CourtsController.registerLawyer);
 router.delete('/:id/deactivate', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.deactivateLawyer);
 router.post('/', authenticate, authorize('ADMIN'), validate(createCourtSchema, 'body'), CourtsController.create);

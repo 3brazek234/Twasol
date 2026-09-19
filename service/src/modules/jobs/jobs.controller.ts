@@ -14,12 +14,14 @@ export class JobsController {
 
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const { page, limit, courtId, status, q } = req.query as any;
+      const { page, limit, courtId, status, taskType, sortBy, q } = req.query as any;
       const result = await JobsService.list({ 
         page: Number(page) || 1, 
         limit: Number(limit) || 25, 
         courtId, 
         status, 
+        taskType,
+        sortBy,
         search: q 
       });
       res.json(result);

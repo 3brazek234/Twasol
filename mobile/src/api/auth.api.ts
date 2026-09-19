@@ -27,3 +27,8 @@ export const googleSignIn = async (idToken: string): Promise<AuthResponse> => {
   const response = await apiClient.post<AuthResponse>('/auth/google', { idToken });
   return response.data;
 };
+
+export const completeProfile = async (barNumber: string, governorateId: string) => {
+  const response = await apiClient.patch('/auth/complete-profile', { barNumber, governorateId });
+  return response.data;
+};

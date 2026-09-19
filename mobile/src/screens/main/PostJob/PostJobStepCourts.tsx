@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, TextInput } from 'react-native';
 import { MotiView } from 'moti';
 import { tokens } from '../../../theme/tokens';
 import { Landmark, Check } from 'lucide-react-native';
 import { useAllCourts } from '../../../hooks/useCourts';
 import { SelectedCourt } from './usePostJob';
+import { CourtRow } from '../../../components/courts/CourtRow';
 
 type CourtType = 'PARTIAL' | 'PRIMARY' | 'APPEAL' | 'CASSATION';
 
@@ -30,10 +31,34 @@ export const PostJobStepCourts: React.FC<Props> = ({
     selectedCourt?.type ?? null
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCourts, setExpandedCourts] = useState<Set<string>>(new Set());
 
   const { data: courts = [], isFetching: isLoading } = useAllCourts({
     type: selectedLevel || undefined,
   });
+
+  const handleLevelSelect = (level: CourtType) => {
+    setSelectedLevel(level);
+    setSearchQuery('');
+    setExpandedCourts(new Set()); // Reset expanded on tab switch
+    
+    // If cassation, auto-select it if we already fetched it
+    if (level === 'CASSATION') {
+      const cassationCourt = courts.find(c => c.type === 'CASSATION');
+      if (cassationCourt) {
+        onCourtSelected(cassationCourt);
+      }
+    }
+  };
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedCourts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   // Filter courts by search query
   const filteredCourts = courts.filter(court => 
@@ -154,39 +179,15 @@ export const PostJobStepCourts: React.FC<Props> = ({
                   contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
                   showsVerticalScrollIndicator={false}
                   style={{ flex: 1 }}
-                  renderItem={({ item }) => {
-                    const isSelected = selectedCourt?.id === item.id;
-                    return (
-                      <TouchableOpacity
-                        style={[
-                          styles.courtRow,
-                          isSelected && styles.courtRowSelected,
-                        ]}
-                        onPress={() => handleCourtPress(item)}
-                      >
-                        <View style={[
-                          styles.courtRowRadio,
-                          isSelected && styles.courtRowRadioSelected,
-                        ]}>
-                          {isSelected && <View style={styles.courtRowRadioDot} />}
-                        </View>
-                        <View style={styles.courtRowText}>
-                          <Text style={[
-                            styles.courtName,
-                            isSelected && styles.courtNameSelected,
-                          ]}>
-                            {item.nameAr}
-                          </Text>
-                          {item.governorate?.nameAr && (
-                            <Text style={styles.courtCity}>{item.governorate.nameAr}</Text>
-                          )}
-                        </View>
-                        {isSelected && (
-                          <Landmark size={18} color={tokens.colors.signal} />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  }}
+                  renderItem={({ item }) => (
+                    <CourtRow
+                      item={item as any}
+                      isSelected={selectedCourt?.id === item.id}
+                      isExpanded={expandedCourts.has(item.id)}
+                      onSelect={handleCourtPress}
+                      onToggleExpand={toggleExpand}
+                    />
+                  )}
                 />
               )}
             </>

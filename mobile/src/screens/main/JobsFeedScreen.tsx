@@ -8,8 +8,12 @@ import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, Search, X } from 'lucide-react-native';
+import { Briefcase, Search, X, Filter } from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
+import { tokens } from '../../theme/tokens';
+import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
+
+import { SaveSearchButton } from '../../components/jobs/SaveSearchButton';
 
 const SkeletonJobCard = () => {
   return (
@@ -29,6 +33,9 @@ const SkeletonJobCard = () => {
 export const JobsFeedScreen = ({ navigation, route }: any) => {
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [taskType, setTaskType] = useState<string | undefined>(undefined);
+  const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
 
   const isSearchVisible = route.params?.isSearchVisible ?? false;
   const [searchInput, setSearchInput] = useState('');
@@ -42,7 +49,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useJobs(selectedCourtId, selectedStatus, searchInput);
+  } = useJobs(selectedCourtId, selectedStatus, searchInput, taskType, sortBy);
 
   // ── Refetch when the screen comes back into focus ──────────────────────────
   // This handles: navigating back from JobDetail, returning from PostJob, etc.
@@ -111,12 +118,48 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center' }}
+          contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center', gap: 8, flexDirection: 'row' }}
         >
           <FilterChipRow
             options={filterOptions}
             selectedValue={selectedStatus}
             onSelect={setSelectedStatus}
+          />
+          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus !== 'OPEN' ? selectedStatus : undefined, taskType, q: searchInput }} />
+        </ScrollView>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center', marginTop: 8, gap: 8, flexDirection: 'row' }}
+        >
+          <TouchableOpacity
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: taskType ? tokens.colors.signal : tokens.colors.line,
+              backgroundColor: taskType ? tokens.colors.signal + '15' : tokens.colors.paper,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 4
+            }}
+            onPress={() => setIsFilterSheetVisible(true)}
+          >
+            <Text style={{ fontSize: 13, fontFamily: tokens.typography.fonts.bodyMedium, color: taskType ? tokens.colors.signal : tokens.colors.muted }}>
+              تصفية بالمهمة {taskType && '•'}
+            </Text>
+          </TouchableOpacity>
+          <View style={{ width: 1, height: 20, backgroundColor: tokens.colors.line, marginHorizontal: 4 }} />
+          <FilterChipRow
+            options={[
+              { label: 'الأحدث', value: 'newest' },
+              { label: 'الأعلى أجراً', value: 'fee_desc' },
+              { label: 'الأقرب موعداً', value: 'deadline_asc' },
+            ]}
+            selectedValue={sortBy}
+            onSelect={(val) => setSortBy(val || 'newest')}
           />
         </ScrollView>
       </View>
@@ -183,6 +226,13 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           }
         />
       )}
+
+      <JobFiltersBottomSheet
+        isVisible={isFilterSheetVisible}
+        onClose={() => setIsFilterSheetVisible(false)}
+        currentTaskType={taskType}
+        onApply={(type) => setTaskType(type)}
+      />
     </View>
   );
 };

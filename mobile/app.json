@@ -11,11 +11,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "image": "./assets/nellie-adamyan-I2Ge7bLAhV4-unsplash.jpg",
+      "resizeMode": "cover",
       "backgroundColor": "#F9FAFB",
       "dark": {
-        "image": "./assets/splash-dark.png",
+        "image": "./assets/nellie-adamyan-I2Ge7bLAhV4-unsplash.jpg",
         "backgroundColor": "#14181F"
       }
     },

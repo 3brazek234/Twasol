@@ -39,10 +39,11 @@ export class CourtsController {
     } catch (error) { next(error); }
   }
 
-  static async getActiveLawyers(req: Request, res: Response, next: NextFunction) {
+  static async getLawyers(req: Request, res: Response, next: NextFunction) {
     try {
-      const lawyers = await CourtsService.getActiveLawyers(req.params.id);
-      res.json({ success: true, data: lawyers });
+      const { page, limit } = req.query as any;
+      const lawyers = await CourtsService.getLawyers(req.params.id, Number(page) || 1, Number(limit) || 20);
+      res.json(lawyers); // paginated response format
     } catch (error) { next(error); }
   }
 

@@ -1,7 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
+import { randomBytes } from 'crypto';
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { signAccessToken, signRefreshToken, TokenPayload } from '../../common/utils/jwt';
+import { hashPassword } from '../../common/utils/password';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 import { env } from '../../env';
@@ -18,13 +20,12 @@ const GOOGLE_CLIENT_IDS = [
 
 export class GoogleAuthService {
   /**
-   * Verify a Google ID token and sign the user in using the existing JWT system.
+   * Verify a Google ID token and either sign in an existing user or create
+   * a new account.
    *
-   * Verification is FREE — google-auth-library fetches and caches Google's
-   * public keys locally. No per-call API cost, no external rate limit.
-   *
-   * Option A (confirmed): Login-only. If no Wakeel account exists for this
-   * email, the user is directed to register via the normal flow first.
+   * New users are created with Google's name + email and a random password
+   * hash. barNumber and governorateId are left null — the mobile app's
+   * CompleteProfileScreen collects those before proceeding to verification.
    */
   static async verifyAndSignInWithGoogle(idToken: string) {
     if (GOOGLE_CLIENT_IDS.length === 0) {
@@ -51,20 +52,57 @@ export class GoogleAuthService {
       );
     }
 
-    const { email, sub: googleId } = payload;
+    const { email, sub: googleId, name: googleName } = payload;
 
-    // ── Step 2: Look up existing user by email (using safe select to fail closed)
-    const user = await prisma.user.findFirst({
+    // ── Step 2: Look up existing user by email ────────────────────────────
+    let user = await prisma.user.findFirst({
       where: { email, deletedAt: null },
       select: SAFE_USER_SELECT,
     });
 
+    let isNewUser = false;
+
     if (!user) {
-      // Option A: Login-only — no auto-registration via Google.
-      // notFound() appends " not found" so we use unauthorized for a cleaner message.
-      throw AppError.unauthorized(
-        'لا يوجد حساب مرتبط بهذا البريد الإلكتروني. يرجى إنشاء حساب أولاً ثم استخدام تسجيل الدخول بواسطة Google.'
-      );
+      // ── Step 2b: Create new user via Google ─────────────────────────────
+      // Random password hash — user signs in via Google, can set a real
+      // password later via ChangePasswordScreen in Settings.
+      const randomPassword = randomBytes(32).toString('hex');
+      const passwordHash = await hashPassword(randomPassword);
+
+      user = await prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          fullName: googleName || email.split('@')[0],
+          googleId,
+          role: 'LAWYER',
+          preferredLocale: 'AR',
+          isActive: true,
+          // barNumber and governorateId are left null —
+          // collected on CompleteProfileScreen
+        },
+        select: SAFE_USER_SELECT,
+      });
+
+      isNewUser = true;
+
+      // Notify admins about new signup (same as email/password register)
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] }, isActive: true, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (admins.length > 0) {
+        await NotificationsService.notifyManyUsers(
+          admins.map(a => a.id),
+          {
+            type: 'NEW_USER_SIGNUP',
+            titleAr: 'تسجيل مستخدم جديد',
+            messageAr: `قام مستخدم جديد بالتسجيل عبر Google: ${user.fullName}`,
+            data: { newUserId: user.id, fullName: user.fullName, email: user.email, role: user.role },
+          }
+        );
+      }
     }
 
     // ── Step 3: Link Google ID on first sign-in + audit trail notification ─
@@ -73,8 +111,10 @@ export class GoogleAuthService {
         where: { id: user.id },
         data: { googleId },
       });
+    }
 
-      // In-app notification + push (if push tokens present on the user record)
+    // Audit notification on first-time link (both new and existing users)
+    if (!user.googleId || isNewUser) {
       await NotificationsService.notifyManyUsers([user.id], {
         type: 'GOOGLE_ACCOUNT_LINKED',
         titleAr: 'ربط حساب Google',
@@ -83,7 +123,7 @@ export class GoogleAuthService {
       });
     }
 
-    // ── Step 4: Issue JWT tokens (same flow as email/password login) ───────
+    // ── Step 4: Issue JWT tokens ──────────────────────────────────────────
     const tokenPayload: TokenPayload = {
       userId: user.id,
       email: user.email,

@@ -27,6 +27,7 @@ export const PostJobScreen = ({ navigation }: any) => {
       title: data.title,
       description: data.description,
       courtId: data.courtId,
+      taskType: data.taskType,
       invitedLawyerId: data.invitedLawyerId || undefined,
       offerAmount: formattedAmount,
       expiresAt,
@@ -125,6 +126,48 @@ export const PostJobScreen = ({ navigation }: any) => {
         />
       </View>
       {errors.description && <Text style={styles.errorText}>{errors.description.message}</Text>}
+
+      <Text style={[styles.inputLabel, { marginTop: tokens.spacing.md }]}>نوع المهمة</Text>
+      <Controller
+        control={control}
+        name="taskType"
+        render={({ field: { onChange, value } }) => (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            {[
+              { label: 'حضور جلسة', value: 'ATTEND_SESSION' },
+              { label: 'استخراج مستند', value: 'OBTAIN_DOCUMENT' },
+              { label: 'تقديم مذكرة', value: 'FILE_PLEADING' },
+              { label: 'تسجيل عقاري', value: 'REGISTER_PROPERTY' },
+              { label: 'مراجعة دوسيه', value: 'REVIEW_DOCKET' },
+              { label: 'أخرى', value: 'OTHER' },
+            ].map(type => {
+              const isSelected = value === type.value;
+              return (
+                <TouchableOpacity
+                  key={type.value}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: isSelected ? tokens.colors.signal : tokens.colors.line,
+                    backgroundColor: isSelected ? tokens.colors.signal + '15' : tokens.colors.paper,
+                  }}
+                  onPress={() => onChange(type.value)}
+                >
+                  <Text style={{
+                    fontFamily: isSelected ? tokens.typography.fonts.bodySemibold : tokens.typography.fonts.bodyMedium,
+                    color: isSelected ? tokens.colors.signal : tokens.colors.muted,
+                  }}>
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+      />
+      {errors.taskType && <Text style={styles.errorText}>{errors.taskType.message}</Text>}
     </MotiView>
   );
 
@@ -223,6 +266,15 @@ export const PostJobScreen = ({ navigation }: any) => {
           </View>
           <Text style={styles.reviewLabel}>العنوان</Text>
           <Text style={styles.reviewValue}>{formData.title}</Text>
+          <Text style={styles.reviewLabel}>نوع المهمة</Text>
+          <Text style={styles.reviewValue}>{
+            formData.taskType === 'ATTEND_SESSION' ? 'حضور جلسة' :
+            formData.taskType === 'OBTAIN_DOCUMENT' ? 'استخراج مستند' :
+            formData.taskType === 'FILE_PLEADING' ? 'تقديم مذكرة' :
+            formData.taskType === 'REGISTER_PROPERTY' ? 'تسجيل عقاري' :
+            formData.taskType === 'REVIEW_DOCKET' ? 'مراجعة دوسيه' :
+            formData.taskType === 'OTHER' ? 'أخرى' : 'غير محدد'
+          }</Text>
           <Text style={styles.reviewLabel}>الوصف</Text>
           <Text style={styles.reviewValue} numberOfLines={3}>{formData.description}</Text>
         </View>

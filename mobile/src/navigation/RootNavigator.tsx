@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { tokens } from '../theme/tokens';
 import { useAuthStore } from '../stores/authStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import { CompleteProfileScreen } from '../screens/auth/CompleteProfileScreen';
 
 import { AuthNavigator } from './stacks/AuthNavigator';
 import { VerificationNavigator } from './stacks/VerificationNavigator';
@@ -153,8 +154,21 @@ export const RootNavigator = () => {
       </NavigationContainer>
     );
   }
+  // ── State 2: Authenticated but profile incomplete (Google sign-up) ────
+  //    Google-registered users have no barNumber yet — collect it before
+  //    proceeding to verification. Email/password users skip this gate
+  //    because they always provide barNumber during registration.
+  if (isAuthenticated && user && !user.barNumber) {
+    return (
+      <NavigationContainer linking={linking as any}>
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          <RootStack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
+        </RootStack.Navigator>
+      </NavigationContainer>
+    );
+  }
 
-  // ── State 2: Authenticated but NOT verified ─────────────────────────────
+  // ── State 3: Authenticated but NOT verified ─────────────────────────────
   const vs = user?.verificationStatus;
 
   if (vs === 'UNVERIFIED' || vs === 'PENDING_UPLOAD') {

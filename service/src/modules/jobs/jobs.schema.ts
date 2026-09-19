@@ -8,6 +8,7 @@ const createJobBody = z.object({
   description: z.string().min(10),
   courtId: z.string().uuid('معرف المحكمة غير صالح'),
   invitedLawyerId: z.string().uuid().optional(),
+  taskType: z.enum(['ATTEND_SESSION', 'OBTAIN_DOCUMENT', 'FILE_PLEADING', 'REGISTER_PROPERTY', 'REVIEW_DOCKET', 'OTHER']),
   salaryMin: z.string().regex(moneyRegex, 'Invalid money format').optional(),
   salaryMax: z.string().regex(moneyRegex, 'Invalid money format').optional(),
   currency: z.string().default('EGP'),
@@ -28,6 +29,8 @@ export const createJobSchema = createJobBody;
 export const listJobsSchema = paginationQuerySchema.extend({
   courtId: z.string().uuid().optional(),
   status: z.string().optional(),
+  taskType: z.string().optional(),
+  sortBy: z.enum(['newest', 'fee_desc', 'deadline_asc']).optional(),
   q: z.string().optional(),
 });
 

@@ -23,6 +23,8 @@ export const fetchJobs = async (
   courtId?: string,
   status?: string,
   searchQuery?: string,
+  taskType?: string,
+  sortBy?: string,
   page: number = 1,
   limit: number = 10
 ): Promise<{ data: Job[]; meta: { total: number; page: number; limit: number; pages: number } }> => {
@@ -30,6 +32,8 @@ export const fetchJobs = async (
   if (courtId) params.append('courtId', courtId);
   if (status) params.append('status', status);
   if (searchQuery) params.append('q', searchQuery);
+  if (taskType) params.append('taskType', taskType);
+  if (sortBy) params.append('sortBy', sortBy);
   params.append('page', page.toString());
   params.append('limit', limit.toString());
 
@@ -50,6 +54,7 @@ export const createJob = async (jobData: {
   title: string;
   description: string;
   courtId: string;
+  taskType: string;
   invitedLawyerId?: string;
   offerAmount?: number;
   salaryMin?: string;

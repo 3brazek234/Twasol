@@ -32,6 +32,7 @@ export const CourtSchema = z.object({
   governorateId: z.string().uuid().nullable().optional(),
   parentCourtId: z.string().uuid().nullable().optional(),
   governorate:   GovernorateSchema.nullable().optional(),
+  lawyerCount:   z.number().optional(),
 });
 export type Court = z.infer<typeof CourtSchema>;
 

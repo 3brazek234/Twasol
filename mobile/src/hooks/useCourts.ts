@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import {
   getAllCourts, getMyCourts, registerCourt, removeCourt,
-  toggleCourtStatus, getActiveLawyers, getGovernorates, searchCourts,
+  toggleCourtStatus, getLawyers, getGovernorates, searchCourts,
 } from '../api/courts.api';
 import { CourtType } from '../schemas/court.schema';
 
@@ -88,12 +88,13 @@ export const useToggleCourtStatus = () => {
   });
 };
 
-// ─── Active Lawyers at a Court ────────────────────────────────────────────────
+// ─── Lawyers at a Court ───────────────────────────────────────────────────────
 
-export const useActiveLawyers = (courtId: string) => {
+export const useLawyersAtCourt = (courtId: string, enabled: boolean) => {
   return useQuery({
-    queryKey: ['courts', courtId, 'active-lawyers'],
-    queryFn: () => getActiveLawyers(courtId),
-    enabled: !!courtId,
+    queryKey: ['courts', courtId, 'lawyers'],
+    queryFn: () => getLawyers(courtId),
+    enabled: !!courtId && enabled,
+    staleTime: 60_000,
   });
 };

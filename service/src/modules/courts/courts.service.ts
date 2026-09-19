@@ -40,7 +40,7 @@ export class CourtsService {
   static async list({
     page = 1, limit = 25, type, governorateId,
   }: { page?: number; limit?: number; type?: CourtType; governorateId?: string; }) {
-    const cacheKey = `courts:list:${page}:${limit}:${type || 'all'}:${governorateId || 'all'}`;
+    const cacheKey = `courts:list:v2:${page}:${limit}:${type || 'all'}:${governorateId || 'all'}`;
     return getCached(cacheKey, async () => {
       const where: any = {};
       if (type) where.type = type;
@@ -48,15 +48,42 @@ export class CourtsService {
       const [items, total] = await Promise.all([
         prisma.court.findMany({
           where,
-          include: { governorate: true },
+          include: { 
+            governorate: true,
+            _count: {
+              select: {
+                lawyers: {
+                  where: {
+                    isActive: true,
+                    user: {
+                      verificationStatus: 'APPROVED',
+                      isActive: true,
+                      deletedAt: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
           orderBy: [{ type: 'asc' }, { nameAr: 'asc' }],
           skip: (page - 1) * limit,
           take: limit,
         }),
         prisma.court.count({ where }),
       ]);
-      return paginate(items, total, page, limit);
-    }, 300);
+      
+      const mappedItems = items.map(c => ({
+        id: c.id,
+        nameAr: c.nameAr,
+        nameEn: c.nameEn,
+        type: c.type,
+        governorateId: c.governorateId,
+        governorateName: c.governorate?.nameAr,
+        lawyerCount: c._count?.lawyers || 0,
+      }));
+      
+      return paginate(mappedItems, total, page, limit);
+    }, 60); // 60s TTL since counts change more frequently than court metadata
   }
 
   static async search(query: string) {
@@ -73,12 +100,49 @@ export class CourtsService {
     });
   }
 
-  static async getActiveLawyers(courtId: string) {
-    const lawyers = await prisma.lawyerCourt.findMany({
-      where: { courtId, isActive: true, user: { isActive: true, deletedAt: null } },
-      include: { user: { select: { id: true, email: true, fullName: true } } },
-    });
-    return lawyers.map((lc: any) => lc.user);
+  static async getLawyers(courtId: string, page = 1, limit = 20) {
+    // Make sure the court exists
+    const court = await prisma.court.findUnique({ where: { id: courtId } });
+    if (!court) throw AppError.notFound('Court');
+
+    // Use raw query for aggregating averageRating and totalReviews optimally
+    const offset = (page - 1) * limit;
+    
+    // We only fetch lawyers whose LawyerCourt record is active AND user is active/verified/not deleted
+    const lawyers = await prisma.$queryRaw`
+      SELECT 
+        u.id, 
+        u.full_name AS "fullName", 
+        u.bar_number AS "barNumber", 
+        COALESCE(ROUND(AVG(r.rating), 1), 0) AS "averageRating",
+        COUNT(r.id) AS "totalReviews"
+      FROM users u
+      JOIN lawyer_courts lc ON lc.user_id = u.id
+      LEFT JOIN reviews r ON r.reviewee_id = u.id
+      WHERE lc.court_id = ${courtId}
+        AND lc.is_active = true
+        AND u.verification_status = 'APPROVED'
+        AND u.is_active = true
+        AND u.deleted_at IS NULL
+      GROUP BY u.id
+      ORDER BY "averageRating" DESC, "totalReviews" DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    // Count total for pagination
+    const totalResult: any = await prisma.$queryRaw`
+      SELECT COUNT(u.id) as count
+      FROM users u
+      JOIN lawyer_courts lc ON lc.user_id = u.id
+      WHERE lc.court_id = ${courtId}
+        AND lc.is_active = true
+        AND u.verification_status = 'APPROVED'
+        AND u.is_active = true
+        AND u.deleted_at IS NULL
+    `;
+    const total = Number(totalResult[0]?.count || 0);
+
+    return paginate(lawyers as any[], total, page, limit);
   }
 
   static async registerLawyer(userId: string, courtId: string) {

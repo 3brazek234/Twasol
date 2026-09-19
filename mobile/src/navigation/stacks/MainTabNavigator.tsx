@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
-import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase } from 'lucide-react-native';
+import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase, Bookmark } from 'lucide-react-native';
 
 import { HiringHomeScreen } from '../../screens/main/HiringHomeScreen';
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
@@ -64,6 +64,12 @@ const JobsNavigator = () => {
                   </>
                 )}
                 <TouchableOpacity
+                  onPress={() => navigation.navigate('SavedSearches')}
+                  style={{ marginEnd: 16 }}
+                >
+                  <Bookmark size={22} color={tokens.colors.ink} />
+                </TouchableOpacity>
+                <TouchableOpacity
                   onPress={() => navigation.setParams({ isSearchVisible: true })}
                   style={{ marginEnd: 16 }}
                 >
@@ -81,6 +87,7 @@ const JobsNavigator = () => {
       />
       <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل القضية' }} />
       <JobsStack.Screen name="JobCompletion" component={JobCompletionScreen} options={{ title: 'إتمام المهمة' }} />
+      <JobsStack.Screen name="SavedSearches" component={require('../../screens/main/SavedSearchesScreen').SavedSearchesScreen} options={{ headerShown: false }} />
       <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'إضافة طلب' }} />
       <JobsStack.Screen name="FindLawyers" component={FindLawyersScreen} options={{ title: 'Find Lawyers' }} />
       <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'Lawyer Profile' }} />

@@ -11,6 +11,7 @@ function mapCourt(c: any): Court {
     type:          c.type,
     governorateId: c.governorateId || c.governorate_id || null,
     parentCourtId: c.parentCourtId || c.parent_court_id || null,
+    lawyerCount:   c.lawyerCount || 0,
     governorate:   c.governorate ? {
       id:     c.governorate.id,
       nameAr: c.governorate.nameAr || c.governorate.name_ar || '',
@@ -93,7 +94,7 @@ export const toggleCourtStatus = async (courtId: string, isActive: boolean): Pro
   }
 };
 
-export const getActiveLawyers = async (courtId: string): Promise<any[]> => {
-  const res = await apiClient.get<any[]>(`/courts/${courtId}/active-lawyers`);
+export const getLawyers = async (courtId: string, page = 1, limit = 20): Promise<any> => {
+  const res = await apiClient.get<any>(`/courts/${courtId}/lawyers`, { params: { page, limit } });
   return res.data;
 };

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
 import { GoogleAuthService } from './google-auth.service';
+import { CompleteProfileService } from './complete-profile.service';
 import { AppError } from '../../common/errors/AppError';
 
 export class AuthController {
@@ -62,6 +63,26 @@ export class AuthController {
       }
 
       res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async completeProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.userId;
+      const { barNumber, governorateId } = req.body;
+
+      if (!barNumber || !governorateId) {
+        throw AppError.badRequest('barNumber and governorateId are required');
+      }
+
+      const user = await CompleteProfileService.completeProfile(userId, {
+        barNumber,
+        governorateId,
+      });
+
+      res.json({ success: true, data: { user } });
     } catch (error) {
       next(error);
     }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useJob, useApplyToJob, useTranslateJob, useUpdateJobStatus } from '../../hooks/useJobs';
-import { useActiveLawyers } from '../../hooks/useCourts';
+import { useLawyersAtCourt } from '../../hooks/useCourts';
 import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { tokens } from '../../theme/tokens';
@@ -14,7 +14,8 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
   const { data: job, isLoading, error } = useJob(jobId);
   // Only fetch active lawyers once we have a real courtId — avoids firing with empty string
-  const { data: activeLawyers, isLoading: isLoadingLawyers } = useActiveLawyers(job?.courtId ?? '');
+  const { data: lawyersResponse, isLoading: isLoadingLawyers } = useLawyersAtCourt(job?.courtId ?? '', !!job?.courtId);
+  const activeLawyers = lawyersResponse?.data || lawyersResponse || [];
   const { mutate: apply, isPending: isApplying } = useApplyToJob();
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateJobStatus();

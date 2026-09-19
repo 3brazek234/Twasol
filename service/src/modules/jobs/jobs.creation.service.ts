@@ -20,6 +20,7 @@ export class JobsCreationService {
       title,
       description,
       courtId,
+      taskType,
       invitedLawyerId,
       salaryMin,
       salaryMax,
@@ -31,6 +32,7 @@ export class JobsCreationService {
         data: {
           title,
           description,
+          taskType,
           status: "OPEN",
           postedByUserId: userId,
           salaryMin: salaryMin ? parseFloat(salaryMin) : null,

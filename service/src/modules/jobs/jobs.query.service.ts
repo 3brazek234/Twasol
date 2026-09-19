@@ -10,50 +10,109 @@ export class JobsQueryService {
     limit,
     status,
     courtId,
+    taskType,
+    sortBy = 'newest',
     search,
   }: {
     page: number;
     limit: number;
     status?: string;
     courtId?: string;
+    taskType?: string;
+    sortBy?: 'newest' | 'fee_desc' | 'deadline_asc';
     search?: string;
   }) {
-    const where: Prisma.JobWhereInput = {
-      // By default, only list OPEN jobs for public feed unless filtering
-      ...(status ? { status: status as any } : { status: "OPEN" }),
+    const SORT_MAP: Record<string, Prisma.JobOrderByWithRelationInput> = {
+      newest: { createdAt: 'desc' },
+      fee_desc: { salaryMax: 'desc' },
+      deadline_asc: { expiresAt: 'asc' },
     };
 
-    if (courtId) {
-      where.courtId = courtId;
-    }
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    let items: any[] = [];
+    let total = 0;
 
-    const [items, total] = await Promise.all([
-      prisma.job.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
+    if (search) {
+      // ─── TRIGRAM SEARCH PATH ───────────────────────────────────────────────
+      // We use raw SQL for pg_trgm similarity, returning just IDs to maintain 
+      // the cleanly-typed Prisma include graph below.
+      const offset = (page - 1) * limit;
+      const threshold = 0.15; // TODO: Needs manual tuning against real Arabic job titles
+      
+      const rawResults = await prisma.$queryRaw<any[]>`
+        SELECT id, similarity(title, ${search}) AS sim
+        FROM "jobs"
+        WHERE status = ${status || 'OPEN'}
+          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : Prisma.empty}
+          ${taskType ? Prisma.sql`AND task_type = ${taskType}::"JobTaskType"` : Prisma.empty}
+          AND similarity(title, ${search}) > ${threshold}
+        ORDER BY sim DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      const jobIds = rawResults.map(r => r.id);
+      
+      if (jobIds.length === 0) {
+        return paginate([], 0, page, limit);
+      }
+
+      const countResult = await prisma.$queryRaw<any[]>`
+        SELECT COUNT(*) as count
+        FROM "jobs"
+        WHERE status = ${status || 'OPEN'}
+          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : Prisma.empty}
+          ${taskType ? Prisma.sql`AND task_type = ${taskType}::"JobTaskType"` : Prisma.empty}
+          AND similarity(title, ${search}) > ${threshold}
+      `;
+      total = Number(countResult[0]?.count || 0);
+
+      // Fetch the full records
+      const unorderedItems = await prisma.job.findMany({
+        where: { id: { in: jobIds } },
         include: {
           court: true,
-          // Gap 1: expose poster name so the feed card can show who posted the job
           postedBy: { select: { fullName: true } },
-          // Gap 2: expose application count for competition signal on feed cards
           _count: { select: { applications: true } },
         },
-      }),
-      prisma.job.count({ where }),
-    ]);
+      });
+
+      // Restore similarity order from the raw query
+      items = jobIds.map(id => unorderedItems.find(i => i.id === id)).filter(Boolean);
+
+    } else {
+      // ─── STANDARD FILTER & SORT PATH ───────────────────────────────────────
+      const where: Prisma.JobWhereInput = {
+        ...(status ? { status: status as any } : { status: "OPEN" }),
+      };
+
+      if (courtId) where.courtId = courtId;
+      if (taskType) where.taskType = taskType as any;
+
+      const orderBy = SORT_MAP[sortBy] || SORT_MAP['newest'];
+
+      const [prismaItems, prismaTotal] = await Promise.all([
+        prisma.job.findMany({
+          where,
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            court: true,
+            postedBy: { select: { fullName: true } },
+            _count: { select: { applications: true } },
+          },
+        }),
+        prisma.job.count({ where }),
+      ]);
+      items = prismaItems;
+      total = prismaTotal;
+    }
 
     const mappedItems = items.map(item => ({
       ...item,
       courtNameAr: item.court?.nameAr,
       courtNameEn: item.court?.nameEn,
-      posterName: item.postedBy?.fullName ?? null,           // Gap 1
-      applicantCount: item._count?.applications ?? 0,        // Gap 2
+      posterName: item.postedBy?.fullName ?? null,
+      applicantCount: item._count?.applications ?? 0,
     }));
 
     return paginate(mappedItems, total, page, limit);

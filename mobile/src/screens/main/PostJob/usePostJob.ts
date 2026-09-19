@@ -18,6 +18,9 @@ export const postJobSchema = z.object({
   title: z.string().min(5, 'يجب أن يكون العنوان ٥ أحرف على الأقل'),
   description: z.string().min(10, 'يجب أن يكون الوصف ١٠ أحرف على الأقل'),
   courtId: z.string().uuid('يرجى اختيار المحكمة'),
+  taskType: z.enum(['ATTEND_SESSION', 'OBTAIN_DOCUMENT', 'FILE_PLEADING', 'REGISTER_PROPERTY', 'REVIEW_DOCKET', 'OTHER'], {
+    message: 'يرجى اختيار نوع المهمة',
+  }),
   invitedLawyerId: z.string().uuid('معرف المحامي غير صالح').or(z.literal('')).optional(),
   salaryMin: z.string().optional(),
   salaryMax: z.string().optional(),

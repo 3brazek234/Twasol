@@ -4,10 +4,10 @@ import { getErrorMessage } from "../utils/errorMessages";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { fetchJobs, createJob, applyToJob, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
 
-export const useJobs = (courtId?: string, status?: string, searchQuery?: string) => {
+export const useJobs = (courtId?: string, status?: string, searchQuery?: string, taskType?: string, sortBy?: string) => {
   return useInfiniteQuery({
-    queryKey: ['jobs', { courtId, status, searchQuery }],
-    queryFn: ({ pageParam = 1 }) => fetchJobs(courtId, status, searchQuery, pageParam, 10),
+    queryKey: ['jobs', 'feed', { courtId, status, searchQuery, taskType, sortBy }],
+    queryFn: ({ pageParam = 1 }) => fetchJobs(courtId, status, searchQuery, taskType, sortBy, pageParam, 10),
     getNextPageParam: (lastPage: any, allPages: any) => {
       const nextPage = (allPages?.length || 0) + 1;
       return nextPage <= lastPage.meta?.pages ? nextPage : undefined;
