@@ -8,6 +8,7 @@ const server = http.createServer(app);
 // Initialize background workers
 import './workers/notification-fanout.worker';
 import './workers/push-notification.worker';
+import './workers/job-alert.worker';
 import './workers/job-expiration.worker';
 import { scheduleExpirationCheck } from './workers/job-expiration.worker';
 import './workers/cleanup.worker';

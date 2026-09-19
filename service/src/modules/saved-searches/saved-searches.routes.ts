@@ -17,10 +17,21 @@ router.post('/', authenticate, validate(createSchema, 'body'), async (req: any, 
     data: {
       userId: req.user.userId,
       name,
-      criteria,
+      courtId: criteria.courtId || null,
+      taskType: criteria.taskType || null,
+      query: criteria.q || null,
     }
   });
-  res.json({ success: true, data: search });
+  // Return it in the format the app expects
+  const formatted = {
+    ...search,
+    criteria: {
+      courtId: search.courtId,
+      taskType: search.taskType,
+      q: search.query,
+    }
+  };
+  res.json({ success: true, data: formatted });
 });
 
 router.get('/', authenticate, async (req: any, res) => {
@@ -28,7 +39,17 @@ router.get('/', authenticate, async (req: any, res) => {
     where: { userId: req.user.userId },
     orderBy: { createdAt: 'desc' }
   });
-  res.json({ success: true, data: searches });
+  
+  const formatted = searches.map(s => ({
+    ...s,
+    criteria: {
+      courtId: s.courtId,
+      taskType: s.taskType,
+      q: s.query,
+    }
+  }));
+
+  res.json({ success: true, data: formatted });
 });
 
 router.delete('/:id', authenticate, async (req: any, res) => {

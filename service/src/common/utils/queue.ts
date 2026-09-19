@@ -23,6 +23,13 @@ export const pushNotificationQueue = new Queue('push-notification', {
 export const emailDigestQueue = new Queue('email-digest', { connection: redisConnection });
 export const cleanupQueue = new Queue('cleanup-queue', { connection: redisConnection });
 export const jobExpirationQueue = new Queue('job-expiration', { connection: redisConnection });
+export const jobAlertQueue = new Queue('job-alert', { 
+  connection: redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 1000 }
+  }
+});
 
 // Set up repeatable jobs
 export async function setupRepeatableJobs() {

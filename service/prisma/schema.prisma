@@ -67,6 +67,7 @@ enum VerificationStatus {
 
 enum NotificationType {
   NEW_JOB
+  NEW_JOB_ALERT
   JOB_INVITE
   OFFER_RECEIVED
   OFFER_ACCEPTED
@@ -493,11 +494,14 @@ model SavedSearch {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   name      String
-  criteria  Json     // { courtId?: string, taskType?: string, q?: string }
+  courtId   String?      @map("court_id")
+  taskType  JobTaskType? @map("task_type")
+  query     String?      @map("query")
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([courtId, taskType])
   @@index([userId])
   @@map("saved_searches")
 }

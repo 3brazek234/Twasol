@@ -230,6 +230,14 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
       </View>
 
       {/* 4. Actions — conditional on status */}
+      {job.status !== 'OPEN' && !isOwnJob && !isParticipant && (
+        <View style={{ marginHorizontal: 24, padding: 16, backgroundColor: tokens.colors.paper, borderRadius: 12, borderWidth: 1, borderColor: tokens.colors.line, marginBottom: 24 }}>
+          <Text style={{ fontFamily: tokens.typography.fonts.bodyMedium, fontSize: 14, color: tokens.colors.muted, textAlign: 'center' }}>
+            عذراً، هذا الطلب لم يعد متاحاً وتم قبوله من محامٍ آخر.
+          </Text>
+        </View>
+      )}
+
       {job.status === 'OPEN' && (
         <View style={styles.applyContainer}>
           {!isVerified && !isOwnJob && (

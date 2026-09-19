@@ -1,7 +1,7 @@
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
-import { pushNotificationQueue } from '../../common/utils/queue';
+import { pushNotificationQueue, jobAlertQueue } from '../../common/utils/queue';
 import { auditLog } from '../../common/utils/audit';
 
 export class JobsCreationService {
@@ -80,6 +80,11 @@ export class JobsCreationService {
         jobId: result.id,
         courtIds: [courtId],
         postedByUserId: userId,
+      });
+
+      // Trigger Saved Search alerts
+      await jobAlertQueue.add("job-alert", {
+        jobId: result.id
       });
     }
 
