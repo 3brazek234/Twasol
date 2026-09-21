@@ -45,7 +45,7 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { data } = response.data;
+      const { data } = response;
       if (data.user.role !== 'ADMIN' && data.user.role !== 'SUPER_ADMIN') {
         throw new Error('Unauthorized: Admin access required');
       }

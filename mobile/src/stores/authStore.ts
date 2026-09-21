@@ -10,10 +10,13 @@ interface AuthState {
   login: (accessToken: string, refreshToken: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
   submitVerification: (status: 'UNVERIFIED' | 'PENDING_UPLOAD' | 'PENDING' | 'APPROVED' | 'REJECTED') => Promise<void>;
   selectedMode: 'GIG' | 'HIRING' | null;
   setSelectedMode: (mode: 'GIG' | 'HIRING') => void;
   updateAccountMode: (mode: 'GIG' | 'HIRING' | 'BOTH') => Promise<void>;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: (val: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -21,6 +24,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: true, // true until hydrated
   selectedMode: null,
+  hasSeenOnboarding: false,
+
+  setHasSeenOnboarding: (val) => set({ hasSeenOnboarding: val }),
 
   setUser: (user) => {
     // Determine the initial selected mode based on accountMode
@@ -77,6 +83,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
+  // Fetches live user profile from /auth/me and updates store + SecureStore cache.
+  // Called on: app foreground, subscription screen mount, apply flow.
+  refreshUserProfile: async () => {
+    try {
+      const { apiClient } = require('../api/client');
+      const res = await apiClient.get('/auth/me');
+      const freshUser = res.data?.user ?? res.data;
+      if (freshUser) {
+        await SecureStore.setItemAsync('userProfile', JSON.stringify(freshUser));
+        set({ user: freshUser });
+      }
+    } catch (err) {
+      console.warn('[authStore] refreshUserProfile failed, using cached state', err);
+    }
+  },
+
   hydrate: async () => {
     try {
       const token = await SecureStore.getItemAsync('accessToken');
@@ -84,31 +106,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const userJson = await SecureStore.getItemAsync('userProfile');
         let currentUser = userJson ? JSON.parse(userJson) : null;
         
-        // Optimistically set authenticated state
+        // Optimistically set authenticated state from cache
         set({ isAuthenticated: true, user: currentUser });
 
+        // Fetch full fresh profile from server (covers verificationStatus AND subscriptionStatus)
         try {
-          const { verificationApi } = require('../api/verification.api');
-          const statusData = await verificationApi.getStatus();
-          if (currentUser) {
-            currentUser = { 
-              ...currentUser, 
-              verificationStatus: statusData.verificationStatus,
-              verificationRejectionReason: statusData.verificationRejectionReason
-            };
-            await SecureStore.setItemAsync('userProfile', JSON.stringify(currentUser));
-            set({ user: currentUser });
+          const { apiClient } = require('../api/client');
+          const res = await apiClient.get('/auth/me');
+          const freshUser = res.data?.user ?? res.data;
+          if (freshUser) {
+            await SecureStore.setItemAsync('userProfile', JSON.stringify(freshUser));
+            set({ user: freshUser });
+            currentUser = freshUser;
           }
         } catch (apiErr) {
-          console.warn('Failed to fetch fresh verification status, using cached state', apiErr);
+          console.warn('[authStore] Failed to fetch fresh user profile, using cached state', apiErr);
         }
 
         const savedMode = await SecureStore.getItemAsync('selectedMode');
         if (savedMode === 'GIG' || savedMode === 'HIRING') {
           set({ selectedMode: savedMode });
+        } else if (currentUser?.accountMode === 'GIG') {
+          set({ selectedMode: 'GIG' });
+        } else if (currentUser?.accountMode === 'HIRING') {
+          set({ selectedMode: 'HIRING' });
         } else {
           set({ selectedMode: 'GIG' });
         }
+      }
+
+      // Read Onboarding status
+      try {
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        const seen = await AsyncStorage.getItem('@has_seen_onboarding');
+        if (seen === 'true') {
+          set({ hasSeenOnboarding: true });
+        }
+      } catch (e) {
+        console.warn('Failed to read onboarding status', e);
       }
     } catch (e) {
       console.error('Failed to hydrate auth state', e);

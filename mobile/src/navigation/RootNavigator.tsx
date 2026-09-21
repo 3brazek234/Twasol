@@ -208,9 +208,11 @@ export const RootNavigator = () => {
   }
 
   // ── State 3: Verified (APPROVED) — full app ────────────────────────────
+  const hasSeenOnboarding = useAuthStore(state => state.hasSeenOnboarding);
   return (
     <NavigationContainer linking={linking as any}>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainAppFallback' : 'OnboardingWalkthrough'}>
+        <RootStack.Screen name="OnboardingWalkthrough" component={require('../screens/main/OnboardingWalkthroughScreen').OnboardingWalkthroughScreen} />
         <RootStack.Screen name="MainAppFallback" component={MainNavigator} />
         <RootStack.Screen name="SettingsStack" component={SettingsNavigator} />
       </RootStack.Navigator>

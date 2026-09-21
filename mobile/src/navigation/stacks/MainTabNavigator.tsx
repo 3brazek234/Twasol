@@ -115,6 +115,7 @@ const MyJobsNavigator = () => (
     <ActiveJobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل المهمة' }} />
     <ActiveJobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'نشر مهمة جديدة' }} />
     <ActiveJobsStack.Screen name="PosterReview" component={PosterReviewScreen} options={{ title: 'تقييم المحامي' }} />
+    <ActiveJobsStack.Screen name="Chat" component={NegotiationScreen} options={{ title: 'المفاوضات' }} />
   </ActiveJobsStack.Navigator>
 );
 

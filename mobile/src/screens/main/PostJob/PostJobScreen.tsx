@@ -390,7 +390,7 @@ export const PostJobScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={styles.primaryButton}
+                  style={[styles.primaryButton, isPending && styles.primaryButtonDisabled]}
                   onPress={() => handleSubmit(onSubmit)()}
                   disabled={isPending}
                   activeOpacity={0.8}
@@ -599,6 +599,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginStart: tokens.spacing.md,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonText: {
     color: tokens.colors.white,

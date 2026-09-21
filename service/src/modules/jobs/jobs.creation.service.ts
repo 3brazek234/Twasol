@@ -15,6 +15,19 @@ export class JobsCreationService {
     if (user?.verificationStatus !== "APPROVED") {
       throw AppError.forbidden("Account must be verified to post jobs");
     }
+
+    // Idempotency guard: reject a near-identical submission from the same user within 10 seconds
+    const recentDuplicate = await prisma.job.findFirst({
+      where: {
+        postedByUserId: userId,
+        title: data.title,
+        courtId: data.courtId,
+        createdAt: { gt: new Date(Date.now() - 10_000) },
+      },
+    });
+    if (recentDuplicate) {
+      throw AppError.conflict('تم استلام هذا الطلب بالفعل، يرجى الانتظار');
+    }
     
     const {
       title,

@@ -183,20 +183,13 @@ export const SettingsScreen = ({ navigation }: any) => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>الدعم والقانونية</Text>
+        <Text style={styles.sectionTitle}>المساعدة والدعم</Text>
         <View style={styles.card}>
-          <SettingsRow 
-            label="شروط الخدمة" 
-            onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'terms' } })} 
-          />
-          <SettingsRow 
-            label="سياسة الخصوصية" 
-            onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'privacy' } })} 
-          />
-          <SettingsRow 
-            label="التواصل مع الدعم" 
-            onPress={handleContactSupport} 
-          />
+          <SettingsRow label="كيف تعمل المنصة؟" onPress={() => navigation.navigate('OnboardingWalkthrough', { fromSettings: true })} />
+          <SettingsRow label="الدعم الفني" onPress={() => navigation.navigate('SettingsStack', { screen: 'SupportChat' })} />
+          <SettingsRow label="التواصل عبر واتساب" onPress={handleContactSupport} />
+          <SettingsRow label="شروط الخدمة" onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'terms' } })} />
+          <SettingsRow label="سياسة الخصوصية" onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'privacy' } })} />
         </View>
       </View>
 

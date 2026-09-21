@@ -102,7 +102,11 @@ console.log('statusFilter', statusFilter);
       onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
       onOpenChat={(job) => {
         if (job.conversationId) {
-          navigation.navigate('Chat', { conversationId: job.conversationId, jobStatus: job.status });
+          navigation.navigate('Chat', {
+            conversationId: job.conversationId,
+            jobStatus: job.status,
+            jobTitle: job.title,
+          });
         }
       }}
       onStartJob={handleStartActiveJob}

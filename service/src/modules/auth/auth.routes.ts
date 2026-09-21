@@ -12,5 +12,6 @@ router.post('/login',    authLimiter, validate(loginSchema),    AuthController.l
 router.post('/refresh',  validate(refreshSchema),               AuthController.refresh);
 router.post('/google',   authLimiter,                           AuthController.googleSignIn);
 router.patch('/complete-profile', authenticate,                 AuthController.completeProfile);
+router.get('/me',        authenticate,                          AuthController.me);
 
 export default router;

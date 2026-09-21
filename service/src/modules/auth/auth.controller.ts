@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { GoogleAuthService } from './google-auth.service';
 import { CompleteProfileService } from './complete-profile.service';
 import { AppError } from '../../common/errors/AppError';
+import { prisma } from '../../prisma';
+import { SAFE_USER_SELECT } from '../users/user-safe-fields';
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -82,6 +84,20 @@ export class AuthController {
         governorateId,
       });
 
+      res.json({ success: true, data: { user } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async me(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.userId;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: SAFE_USER_SELECT,
+      });
+      if (!user) throw AppError.notFound('User');
       res.json({ success: true, data: { user } });
     } catch (error) {
       next(error);

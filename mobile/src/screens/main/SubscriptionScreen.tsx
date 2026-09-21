@@ -10,7 +10,7 @@ import { uploadFileToR2 } from '../../utils/upload';
 import { tokens } from '../../theme/tokens';
 
 export const SubscriptionScreen = () => {
-  const { user, hydrate } = useAuthStore();
+  const { user, hydrate, refreshUserProfile } = useAuthStore();
   
   const { data: subscriptionData, isLoading, error } = useSubscriptionPlans();
   const getUrl = useGetReceiptUploadUrl();
@@ -31,6 +31,12 @@ export const SubscriptionScreen = () => {
       setSelectedPlanId(plans[0].id);
     }
   }, [plans]);
+
+  useEffect(() => {
+    // Always fetch the freshest subscription state when this screen opens —
+    // an admin may have just approved the payment while the app was running.
+    refreshUserProfile();
+  }, []);
 
   useEffect(() => {
     if (error) {
