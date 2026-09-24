@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { useNavigation } from '@react-navigation/native';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
@@ -59,12 +60,12 @@ console.log('postedJobsQuery', postedJobsQuery);
 console.log('statusFilter', statusFilter);
   const handleCancelJob = (jobId: string) => {
     Alert.alert(
-      'إلغاء الطلب',
-      'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟',
+      'إلغاء المهمة',
+      'هل أنت متأكد من رغبتك في إلغاء هذه المهمة؟',
       [
         { text: 'تراجع', style: 'cancel' },
         {
-          text: 'إلغاء الطلب',
+          text: 'إلغاء المهمة',
           style: 'destructive',
           onPress: () => {
             updateJobStatus.mutate({ jobId, status: 'CANCELLED' });
@@ -120,7 +121,7 @@ console.log('statusFilter', statusFilter);
   const activeCount = activeJobs.length;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <ScreenContainer scroll={false} paddingHorizontal={0} edges={['top']} bottomInset={80}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>مهامي</Text>
       </View>
@@ -132,7 +133,7 @@ console.log('statusFilter', statusFilter);
             onPress={() => setActiveTab('posted')}
           >
             <Text style={[styles.tabText, activeTab === 'posted' && styles.tabTextActive]}>
-              طلباتي المنشورة
+              مهامي المنشورة
             </Text>
             {postedCount > 0 && (
               <View style={styles.badge}>
@@ -173,7 +174,7 @@ console.log('statusFilter', statusFilter);
               style={styles.postJobBtn}
               onPress={() => navigation.navigate('PostJob')}
             >
-              <Text style={styles.postJobBtnText}>نشر طلب جديد +</Text>
+              <Text style={styles.postJobBtnText}>نشر مهمة جديدة +</Text>
             </TouchableOpacity>
           </View>
           
@@ -203,9 +204,9 @@ console.log('statusFilter', statusFilter);
               !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
                 <EmptyState
                   icon={<Briefcase size={48} color={tokens.colors.muted} />}
-                  headline="لا توجد طلبات منشورة"
-                  body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل الطلبات. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي طلبات حتى الآن."}
-                  ctaText="نشر طلب جديد +"
+                  headline="لا توجد مهام منشورة"
+                  body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل المهام. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي مهام حتى الآن."}
+                  ctaText="نشر مهمة جديدة +"
                   onCtaPress={() => navigation.navigate('PostJob')}
                 />
               ) : null
@@ -238,8 +239,8 @@ console.log('statusFilter', statusFilter);
                 <EmptyState
                   icon={<Activity size={48} color={tokens.colors.muted} />}
                   headline="لا توجد مهام نشطة حالياً"
-                  body="استعرض الطلبات المتاحة للبدء في تلقي العروض."
-                  ctaText="استعرض الطلبات"
+                  body="استعرض المهام المتاحة للبدء في تلقي العروض."
+                  ctaText="استعرض المهام"
                   onCtaPress={() => navigation.navigate('JobsTab')}
                 />
               ) : null
@@ -264,7 +265,7 @@ console.log('statusFilter', statusFilter);
           });
         }}
       />
-    </SafeAreaView>
+    </ScreenContainer>
   );
 };
 
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingTop: 0,
-    paddingBottom: 40,
+    
     gap: 12,
   },
 });

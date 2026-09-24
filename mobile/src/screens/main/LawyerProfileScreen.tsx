@@ -80,12 +80,14 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
                 {profile.fullName}
               </Text>
               
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
-                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.verdant, marginRight: 6 }}>
-                  موثق
-                </Text>
-                <ShieldCheck color={tokens.colors.verdant} size={18} />
-              </View>
+              {profile.verificationStatus === 'APPROVED' && (
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
+                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.verdant, marginRight: 6 }}>
+                    موثق
+                  </Text>
+                  <ShieldCheck color={tokens.colors.verdant} size={18} />
+                </View>
+              )}
 
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
                 <Text style={{ fontFamily: tokens.typography.fonts.mono, fontSize: 14, color: tokens.colors.muted, marginRight: 8 }}>

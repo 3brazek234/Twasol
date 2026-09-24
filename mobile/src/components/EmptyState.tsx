@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MotiView } from 'moti';
+import { tokens } from '../theme/tokens';
 import { ShieldCheck } from 'lucide-react-native';
 
 interface EmptyStateProps {
@@ -20,7 +21,7 @@ export const EmptyState = ({ icon, headline, body, ctaText, onCtaPress }: EmptyS
         transition={{ type: 'spring', damping: 12 }}
         className="w-30 h-30 rounded-full bg-signal/5 justify-center items-center mb-8"
       >
-        {icon || <ShieldCheck size={64} color="#2A8F85" className="opacity-10" />}
+        {icon || <ShieldCheck size={64} color={tokens.colors.muted} className="opacity-10" />}
       </MotiView>
       
       <MotiView

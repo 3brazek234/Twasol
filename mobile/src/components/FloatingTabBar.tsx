@@ -6,6 +6,9 @@ import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { tokens } from '../theme/tokens';
 import { MotiView } from 'moti';
 
+// Base height (paddingTop + icon + text) + standard margin offset for absolute positioned overlays
+export const FLOATING_TAB_BAR_HEIGHT = 80;
+
 export const FloatingTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
 

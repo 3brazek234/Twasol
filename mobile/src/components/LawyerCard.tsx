@@ -1,3 +1,4 @@
+import { tokens } from '../theme/tokens';
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ShieldCheck, ChevronRight, MapPin } from 'lucide-react-native';
@@ -32,7 +33,7 @@ export const LawyerCard = ({ lawyer, onPress }: LawyerCardProps) => {
               {lawyer.name}
             </Text>
             {lawyer.isVerified && (
-              <ShieldCheck size={18} color="#2A8F85" />
+              <ShieldCheck size={18} color={tokens.colors.verdant} />
             )}
           </View>
           <View className="flex-row items-center">

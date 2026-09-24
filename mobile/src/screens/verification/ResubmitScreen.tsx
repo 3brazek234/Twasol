@@ -16,9 +16,9 @@ export const ResubmitScreen = ({ navigation }: any) => {
             <AlertCircle size={48} color={tokens.colors.destructive} />
           </View>
           
-          <Text style={styles.title}>Verification Unsuccessful</Text>
+          <Text style={styles.title}>لم نتمكن من توثيق حسابك</Text>
           <Text style={styles.subtitle}>
-            We were unable to verify your credentials with the information provided. Please review the reasons and submit again.
+            تعذر التحقق من بياناتك باستخدام المعلومات المقدمة. يرجى مراجعة الأسباب والمحاولة مرة أخرى.
           </Text>
 
           <View style={styles.infoBox}>
@@ -34,14 +34,14 @@ export const ResubmitScreen = ({ navigation }: any) => {
             onPress={() => submitVerification('UNVERIFIED')} // Reset state to allow re-upload
             activeOpacity={0.8}
           >
-            <Text style={styles.primaryButtonText}>Try Again</Text>
+            <Text style={styles.primaryButtonText}>المحاولة مرة أخرى</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.secondaryButton}
             onPress={() => logout()}
             activeOpacity={0.8}
           >
-            <Text style={styles.secondaryButtonText}>Logout</Text>
+            <Text style={styles.secondaryButtonText}>تسجيل الخروج</Text>
           </TouchableOpacity>
         </View>
       </View>

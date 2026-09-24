@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   interpolateColor,
 } from "react-native-reanimated";
-import { MapPin, Users, Clock } from "lucide-react-native";
+import { Landmark, Users, Clock } from "lucide-react-native";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { Avatar } from "../Avatar";
@@ -99,7 +99,9 @@ export const JobCard: React.FC<JobCardProps> = ({
   const showStrikethrough = variant === "posted" && agreedFee > 0 && askingFee > 0 && Math.abs(agreedFee - askingFee) > 0.01;
 
   const clientName: string | null = job.poster_name ?? job.posterName ?? job.postedBy?.fullName ?? null;
+  const clientBarNumber: string | null = job.postedBy?.barNumber ?? job.posterBarNumber ?? null;
   const hiredLawyerName: string | null = job.assignedLawyer?.fullName ?? null;
+  const hiredLawyerBarNumber: string | null = job.assignedLawyer?.barNumber ?? null;
   
   // Applicant count can now be used by both posted and feed variants
   const applicantCount: number | undefined = job._count?.applications ?? (Array.isArray(job.applications) ? job.applications.length : undefined);
@@ -169,7 +171,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Second Row: Court & Freshness */}
         <View style={styles.feedSubRow}>
           <View style={styles.feedIconText}>
-            <MapPin size={12} color={tokens.colors.muted} />
+            <Landmark size={12} color={tokens.colors.muted} />
             <Text style={styles.feedSubText} numberOfLines={1}>
               {courtName}{govSuffix}
             </Text>
@@ -193,10 +195,17 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Footer Row: Poster Identity & Applicant Count */}
         <View style={styles.feedFooterRow}>
           <View style={styles.feedPosterIdentity}>
-            <Avatar name={clientName} size={22} />
-            <Text style={styles.feedPosterName} numberOfLines={1}>
-              {clientName ?? "غير معروف"}
-            </Text>
+            <Avatar name={clientName} size={26} />
+            <View>
+              <Text style={styles.feedPosterName} numberOfLines={1}>
+                {clientName ?? "غير معروف"}
+              </Text>
+              {clientBarNumber ? (
+                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 10, color: tokens.colors.muted, textAlign: 'right' }}>
+                  رقم القيد: {clientBarNumber}
+                </Text>
+              ) : null}
+            </View>
           </View>
 
           {applicantCount !== undefined && applicantCount > 0 ? (
@@ -266,14 +275,20 @@ export const JobCard: React.FC<JobCardProps> = ({
       {/* Active: show client/poster name with avatar */}
       {!isCompact && variant === "active" && (
         <View style={styles.personRow}>
-          {/* In RTL flexRow, Avatar (first) appears RIGHT of text (second) */}
           <Avatar name={clientName} size={26} />
-          <Text style={styles.personLabel} numberOfLines={1}>
-            الموكِّل:{" "}
-            <Text style={styles.personValue}>
-              {clientName ?? "غير معروف"}
+          <View>
+            <Text style={styles.personLabel} numberOfLines={1}>
+              الموكِّل:{" "}
+              <Text style={styles.personValue}>
+                {clientName ?? "غير معروف"}
+              </Text>
             </Text>
-          </Text>
+            {clientBarNumber ? (
+              <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 11, color: tokens.colors.muted, textAlign: 'right' }}>
+                رقم القيد: {clientBarNumber}
+              </Text>
+            ) : null}
+          </View>
         </View>
       )}
 
@@ -302,12 +317,19 @@ export const JobCard: React.FC<JobCardProps> = ({
               size={26}
               bgColor={tokens.colors.verdant}
             />
-            <Text style={styles.personLabel} numberOfLines={1}>
-              المحامي المُعيَّن:{" "}
-              <Text style={styles.personValue}>
-                {hiredLawyerName ?? "—"}
+            <View>
+              <Text style={styles.personLabel} numberOfLines={1}>
+                المحامي المُعيَّن:{" "}
+                <Text style={styles.personValue}>
+                  {hiredLawyerName ?? "—"}
+                </Text>
               </Text>
-            </Text>
+              {hiredLawyerBarNumber ? (
+                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 11, color: tokens.colors.muted, textAlign: 'right' }}>
+                  رقم القيد: {hiredLawyerBarNumber}
+                </Text>
+              ) : null}
+            </View>
           </View>
         )}
 

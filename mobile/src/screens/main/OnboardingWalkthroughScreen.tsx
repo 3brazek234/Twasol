@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, StatusBar, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, FlatList } from 'react-native';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { useAuthStore } from '../../stores/authStore';
 import { tokens } from '../../theme/tokens';
 import { ChevronLeft, Search, Users, Handshake, Briefcase, Star, PlusCircle, CheckCircle, FileText, Activity } from 'lucide-react-native';
@@ -188,9 +189,9 @@ export const OnboardingWalkthroughScreen = () => {
   };
 
   return (
-    <View style={styles.root}>
+    <ScreenContainer scroll={false} paddingHorizontal={0} style={styles.root}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         
         {/* Top Navigation Row */}
         <View style={styles.topBar}>
@@ -244,8 +245,8 @@ export const OnboardingWalkthroughScreen = () => {
           </TouchableOpacity>
         </View>
 
-      </SafeAreaView>
-    </View>
+      </View>
+    </ScreenContainer>
   );
 };
 

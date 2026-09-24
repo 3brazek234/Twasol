@@ -133,7 +133,7 @@ const linking = {
 //   3. Verified (APPROVED)       → MainTabNavigator
 
 export const RootNavigator = () => {
-  const { isAuthenticated, isLoading, hydrate, user } = useAuthStore();
+  const { isAuthenticated, isLoading, hydrate, user, hasSeenOnboarding } = useAuthStore();
   usePushNotifications();
 
   useEffect(() => {
@@ -208,7 +208,6 @@ export const RootNavigator = () => {
   }
 
   // ── State 3: Verified (APPROVED) — full app ────────────────────────────
-  const hasSeenOnboarding = useAuthStore(state => state.hasSeenOnboarding);
   return (
     <NavigationContainer linking={linking as any}>
       <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainAppFallback' : 'OnboardingWalkthrough'}>

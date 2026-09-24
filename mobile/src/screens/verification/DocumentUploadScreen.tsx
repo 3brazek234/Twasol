@@ -69,18 +69,18 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-paper">
+    <SafeAreaView className="flex-1  bg-paper">
       <View className="flex-row items-center p-6 gap-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
           <ChevronLeft size={24} color="#1A202C" />
         </TouchableOpacity>
-        <Text className="text-xl font-displayBold text-ink">Upload Credentials</Text>
+        <Text className="text-xl font-displayBold text-ink">رفع المستندات</Text>
       </View>
 
-      <View className="flex-1 p-8">
-        <Text className="text-[12px] font-bodySemibold text-muted tracking-[1.5px] mb-4 uppercase">GOVERNMENT ID / BAR CARD</Text>
-        <Text className="text-[15px] font-body text-ink leading-[22px] mb-8">
-          Please provide a clear scan or photo of your official bar association card or government-issued identification.
+      <View className="flex-1 p-8" style={{ direction: 'rtl' }}>
+        <Text className="text-[12px] font-bodySemibold text-muted tracking-[1px] mb-4 uppercase text-right">الهوية الوطنية / بطاقة النقابة</Text>
+        <Text className="text-[15px] font-body text-ink leading-[22px] mb-8 text-right">
+          يرجى إرفاق مسح ضوئي واضح أو صورة لبطاقة نقابة المحامين أو الهوية الوطنية الخاصة بك.
         </Text>
 
         <TouchableOpacity
@@ -102,8 +102,8 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
                 <View className="w-16 h-16 rounded-full bg-signal/10 justify-center items-center mb-4">
                   <Upload size={32} color="#2A8F85" />
                 </View>
-                <Text className="text-base font-bodySemibold text-ink mb-1">Tap to select file</Text>
-                <Text className="text-[13px] font-body text-muted">PDF, JPG or PNG (max 10MB)</Text>
+                <Text className="text-base font-bodySemibold text-ink mb-1">انقر لاختيار ملف</Text>
+                <Text className="text-[13px] font-body text-muted">PDF أو JPG أو PNG (الحد الأقصى ١٠ ميجابايت)</Text>
               </MotiView>
             ) : (
               <MotiView
@@ -118,17 +118,17 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
                 <Text className="text-base font-bodySemibold text-ink mb-4 text-center" numberOfLines={1}>{file.name}</Text>
                 <TouchableOpacity onPress={() => setFile(null)} className="flex-row items-center gap-1">
                   <X size={14} color="#E53E3E" />
-                  <Text className="text-sm font-bodyMedium text-destructive">Remove</Text>
+                  <Text className="text-sm font-bodyMedium text-destructive">إزالة</Text>
                 </TouchableOpacity>
               </MotiView>
             )}
           </AnimatePresence>
         </TouchableOpacity>
 
-        <View className="flex-row bg-info/10 p-4 rounded-xl mt-8 gap-3 items-start">
+        <View className="flex-row bg-info/10 p-4 rounded-xl mt-8 gap-3 items-start" style={{ direction: 'rtl' }}>
           <AlertCircle size={18} color="#3182CE" />
-          <Text className="flex-1 text-[13px] font-body text-info leading-[18px]">
-            Your data is encrypted and only accessible by the verification team.
+          <Text className="flex-1 text-[13px] font-body text-info leading-[18px] text-right">
+            بياناتك مشفرة ولا يمكن الوصول إليها إلا من قبل فريق التوثيق لمراجعة حسابك.
           </Text>
         </View>
       </View>
@@ -142,7 +142,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
           disabled={!file || isUploading}
         >
           <Text className="text-white text-base font-bodySemibold">
-            {isUploading ? 'Securing Files...' : 'Submit for Review'}
+            {isUploading ? 'جاري الرفع...' : 'تقديم للمراجعة'}
           </Text>
         </TouchableOpacity>
       </View>

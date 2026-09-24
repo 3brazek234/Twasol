@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
@@ -79,13 +80,13 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   }, [data]);
 
   const filterOptions = [
-    { label: 'القضايا النشطة', value: 'OPEN' },
+    { label: 'المهام النشطة', value: 'OPEN' },
     { label: 'قيد التفاوض', value: 'NEGOTIATING' },
-    { label: 'كل الطلبات', value: undefined },
+    { label: 'كل المهام', value: undefined },
   ];
 
   return (
-    <View className="flex-1 bg-paper">
+    <ScreenContainer scroll={false} paddingHorizontal={0} edges={['top']} bottomInset={80}>
       <VerificationStatusBanner />
 
       <AnimatePresence>
@@ -100,7 +101,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
               <Search color="#718096" size={18} />
               <TextInput
                 className="flex-1 ml-2 text-base font-bodyMedium text-ink h-full"
-                placeholder={'البحث عن الطلبات بالكلمات المفتاحية...'}
+                placeholder={'البحث عن المهام بالكلمات المفتاحية...'}
                 value={searchInput}
                 onChangeText={setSearchInput}
                 placeholderTextColor="#718096"
@@ -172,7 +173,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <View className="flex-1 justify-center items-center p-8">
           <Text className="text-ink text-lg font-displayBold mb-2">حدث خطأ</Text>
           <Text className="text-muted text-base font-body text-center mb-6">
-            {(error as any)?.message || 'تعذّر تحميل الطلبات. تحقّق من اتصالك بالإنترنت.'}
+            {(error as any)?.message || 'تعذّر تحميل المهام. تحقّق من اتصالك بالإنترنت.'}
           </Text>
           <TouchableOpacity
             onPress={() => refetch()}
@@ -192,7 +193,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}
-          contentContainerStyle={{ paddingBottom: 120, paddingTop: 16 }}
+          contentContainerStyle={{ paddingTop: 16 }}
           scrollEventThrottle={16}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) {
@@ -218,8 +219,8 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           ListEmptyComponent={
             <EmptyState
               icon={<Briefcase size={64} color="#E2E8F0" />}
-              headline={'لم يتم العثور على أي طلبات'}
-              body={'لا توجد طلبات مفتوحة في المحاكم المسجل بها حالياً. يمكنك إضافة محكمة أخرى لتوسيع نطاق بحثك.'}
+              headline={'لم يتم العثور على أي مهام'}
+              body={'لا توجد مهام مفتوحة في المحاكم المسجل بها حالياً. يمكنك إضافة محكمة أخرى لتوسيع نطاق بحثك.'}
               ctaText={'إدارة الاختصاصات القضائية'}
               onCtaPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
             />
@@ -233,6 +234,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         currentTaskType={taskType}
         onApply={(type) => setTaskType(type)}
       />
-    </View>
+    </ScreenContainer>
   );
 };

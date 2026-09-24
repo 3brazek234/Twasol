@@ -1,3 +1,4 @@
+import { tokens } from '../theme/tokens';
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Message } from '../schemas/message.schema';
@@ -37,7 +38,7 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
       <View className="px-8 pb-8 items-center">
         <Text className="text-[11px] font-bodySemibold text-muted mb-2 tracking-widest uppercase">المبلغ المقترح</Text>
         <View className="flex-row items-center mb-2">
-          <DollarSign size={24} color="#2A8F85" className="mr-0.5" />
+          <DollarSign size={24} color={tokens.colors.verdant} className="mr-0.5" />
           <Text className="text-3xl font-mono text-ink font-bold">{item.offerAmount ? item.offerAmount.toLocaleString() : '0'}</Text>
         </View>
         {item.content ? (
@@ -54,7 +55,7 @@ export const OfferCard = ({ item, isMe, onResponse }: OfferCardProps) => {
             onPress={() => onResponse?.(item.id!, 'reject')}
             className="flex-1 flex-row h-14 items-center justify-center gap-2 bg-white border-r border-line"
           >
-            <X size={18} color="#1A202C" />
+            <X size={18} color={tokens.colors.ink} />
             <Text className="text-ink font-bodySemibold text-sm">رفض</Text>
           </TouchableOpacity>
           <TouchableOpacity

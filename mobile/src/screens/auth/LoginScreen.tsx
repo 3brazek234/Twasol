@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Image, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -44,7 +45,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const isAnyPending = isPending || isGooglePending;
 
   return (
-    <View className="flex-1 bg-paper">
+    <ScreenContainer scroll={false} paddingHorizontal={0}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -61,7 +62,7 @@ export const LoginScreen = ({ navigation }: any) => {
             className="items-center mb-10"
           >
             <View className="w-20 h-20 rounded-full bg-white justify-center items-center mb-4 shadow-sm border border-line">
-              <Landmark size={36} color="#1B2A4A" />
+              <Landmark size={36} color={tokens.colors.navy} />
             </View>
             <MotiText
               from={{ opacity: 0, translateY: 5 }}
@@ -159,13 +160,13 @@ export const LoginScreen = ({ navigation }: any) => {
               className="h-14 rounded-xl bg-navy flex-row justify-center items-center shadow-md"
             >
               {isPending ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={tokens.colors.white} />
               ) : (
                 <>
                   <Text className="text-white font-bodySemiboldAr text-lg mr-2">
                     دخول
                   </Text>
-                  <ArrowLeft color="#FFFFFF" size={20} />
+                  <ArrowLeft color={tokens.colors.white} size={20} />
                 </>
               )}
             </TouchableOpacity>
@@ -192,7 +193,7 @@ export const LoginScreen = ({ navigation }: any) => {
               style={{
                 height: 52,
                 borderRadius: 12,
-                backgroundColor: '#FFFFFF',
+                backgroundColor: tokens.colors.white,
                 flexDirection: 'row-reverse',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -241,6 +242,6 @@ export const LoginScreen = ({ navigation }: any) => {
           </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </ScreenContainer>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useJob, useApplyToJob, useTranslateJob, useUpdateJobStatus } from '../../hooks/useJobs';
 import { useLawyersAtCourt } from '../../hooks/useCourts';
@@ -51,7 +52,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         setIsTranslated(true);
       },
       onError: (err: any) => {
-        Alert.alert('فشل الترجمة', err.message || 'تعذر ترجمة وصف القضية.');
+        Alert.alert('فشل الترجمة', err.message || 'تعذر ترجمة وصف المهمة.');
       }
     });
   };
@@ -95,7 +96,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const handleNegotiate = () => {
     Alert.alert(
       "بدء التفاوض",
-      "هل تريد تغيير حالة الطلب إلى قيد التفاوض؟ سيؤدي ذلك لإيقاف استقبال طلبات جديدة.",
+      "هل تريد تغيير حالة المهمة إلى قيد التفاوض؟ سيؤدي ذلك لإيقاف استقبال عروض جديدة.",
       [
         { text: "إلغاء", style: "cancel" },
         { 
@@ -103,7 +104,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           onPress: () => {
             updateStatus({ jobId, status: 'NEGOTIATING' }, {
               onSuccess: () => {
-                Alert.alert('نجاح', 'تم تحديث حالة الطلب إلى قيد التفاوض');
+                Alert.alert('نجاح', 'تم تحديث حالة المهمة إلى قيد التفاوض');
               },
               onError: (err: any) => {
                 Alert.alert('خطأ', err.message || 'لم نتمكن من تحديث الحالة');
@@ -154,7 +155,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   if (error || !job) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>لم يتم العثور على هذا الطلب.</Text>
+        <Text style={styles.errorText}>لم يتم العثور على هذه المهمة.</Text>
       </View>
     );
   }
@@ -172,7 +173,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const myReview = (job as any)?.reviews?.find((r: any) => r.reviewerId === user?.id);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenContainer scroll={true}>
       {/* 1. Job Title & Meta Date */}
       <View style={styles.headerSection}>
         <Text style={styles.jobTitle}>
@@ -249,7 +250,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
       {job.status !== 'OPEN' && !isOwnJob && !isParticipant && (
         <View style={{ marginHorizontal: 24, padding: 16, backgroundColor: tokens.colors.paper, borderRadius: 12, borderWidth: 1, borderColor: tokens.colors.line, marginBottom: 24 }}>
           <Text style={{ fontFamily: tokens.typography.fonts.bodyMedium, fontSize: 14, color: tokens.colors.muted, textAlign: 'center' }}>
-            عذراً، هذا الطلب لم يعد متاحاً وتم قبوله من محامٍ آخر.
+            عذراً، هذه المهمة لم يعد متاحاً وتم قبوله من محامٍ آخر.
           </Text>
         </View>
       )}
@@ -270,7 +271,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
               {isUpdatingStatus ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.applyButtonText}>إيقاف الطلبات (بدء التفاوض)</Text>
+                <Text style={styles.applyButtonText}>إيقاف العروض (بدء التفاوض)</Text>
               )}
             </TouchableOpacity>
           ) : (
@@ -301,8 +302,8 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
             style={[styles.applyButton, { backgroundColor: tokens.colors.amber }]} 
             onPress={() => {
               Alert.alert(
-                "إعادة فتح الطلب",
-                "هل تريد التراجع عن التفاوض وإعادة فتح الطلب لاستقبال عروض جديدة؟",
+                "إعادة فتح المهمة",
+                "هل تريد التراجع عن التفاوض وإعادة فتح المهمة لاستقبال عروض جديدة؟",
                 [
                   { text: "إلغاء", style: "cancel" },
                   { 
@@ -317,7 +318,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
             {isUpdatingStatus ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.applyButtonText}>إعادة فتح الطلب للعامة</Text>
+              <Text style={styles.applyButtonText}>إعادة فتح المهمة للعامة</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -376,7 +377,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           )}
         </View>
       )}
-    </ScrollView>
+    </ScreenContainer>
   );
 };
 

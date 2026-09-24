@@ -170,6 +170,17 @@ export const spacing = {
   xxxl: 64,
 } as const;
 
+// ─── Layout Constants ─────────────────────────────────────────────────────────
+// Use these constants to enforce structural consistency, not just spacing magnitude.
+export const layout = {
+  screenPaddingHorizontal: spacing.md, // 16px standard side padding
+  screenPaddingVertical: spacing.md,
+  cardPadding: spacing.md,
+  cardGap: spacing.sm,                 // 12px between stacked list items
+  sectionGap: spacing.lg,              // 24px between semantic sections
+  inputGap: spacing.md,                // 16px between form fields
+} as const;
+
 // ─── Border Radius ────────────────────────────────────────────────────────────
 // Reduced vs. Tawasol — formal design uses tighter radii.
 // Pill is preserved for status badges only.
@@ -270,6 +281,7 @@ export const tokens = {
   darkColors,
   fonts,
   spacing,
+  layout,
   radius,
   shadows,
   typeScale,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal, FlatList, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -51,7 +52,7 @@ export const CompleteProfileScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-paper">
+    <ScreenContainer scroll={false} paddingHorizontal={0}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -68,7 +69,7 @@ export const CompleteProfileScreen = () => {
             className="items-center mb-8"
           >
             <View className="w-16 h-16 rounded-full bg-white justify-center items-center mb-3 shadow-sm border border-line">
-              <Landmark size={28} color="#1B2A4A" />
+              <Landmark size={28} color={tokens.colors.navy} />
             </View>
             <MotiText
               from={{ opacity: 0, translateY: 5 }}
@@ -138,11 +139,11 @@ export const CompleteProfileScreen = () => {
               className="h-14 rounded-xl bg-navy flex-row justify-center items-center shadow-md"
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={tokens.colors.white} />
               ) : (
                 <>
                   <Text className="text-white text-lg font-bodySemiboldAr mr-2">إكمال الملف الشخصي</Text>
-                  <ArrowLeft color="#FFFFFF" size={20} />
+                  <ArrowLeft color={tokens.colors.white} size={20} />
                 </>
               )}
             </TouchableOpacity>
@@ -184,6 +185,6 @@ export const CompleteProfileScreen = () => {
           )}
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 };
