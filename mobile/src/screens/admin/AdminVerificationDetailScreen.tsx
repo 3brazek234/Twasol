@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput } from "react-native";
 import { useAdminVerificationDocuments, useApproveVerification, useRejectVerification } from "../../hooks/useAdminVerifications";
 import { tokens } from "../../theme/tokens";
@@ -53,7 +54,7 @@ export const AdminVerificationDetailScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ArrowRight size={24} color={tokens.colors.ink} />
@@ -62,7 +63,7 @@ export const AdminVerificationDetailScreen = ({ route, navigation }: any) => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScreenContainer scroll={true} style={styles.content}>
         <View style={styles.infoCard}>
           <Text style={styles.label}>الاسم</Text>
           <Text style={styles.value}>{user.fullName}</Text>
@@ -110,7 +111,7 @@ export const AdminVerificationDetailScreen = ({ route, navigation }: any) => {
           </View>
         )}
 
-      </ScrollView>
+      </ScreenContainer>
 
       <View style={styles.footer}>
         <TouchableOpacity 
@@ -126,9 +127,9 @@ export const AdminVerificationDetailScreen = ({ route, navigation }: any) => {
           onPress={handleApprove}
           disabled={isApproving || isRejecting || isLoadingDocs}
         >
-          {isApproving ? <ActivityIndicator size="small" color="#FFF" /> : (
+          {isApproving ? <ActivityIndicator size="small" color={tokens.colors.white} /> : (
             <>
-              <CheckCircle size={18} color="#FFF" />
+              <CheckCircle size={18} color={tokens.colors.white} />
               <Text style={styles.actionBtnText}>قبول ✓</Text>
             </>
           )}
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
   actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 8, gap: 8 },
   rejectBtn: { backgroundColor: "transparent", borderWidth: 1, borderColor: tokens.colors.crimson },
   approveBtn: { backgroundColor: tokens.colors.verdant },
-  actionBtnText: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: "#FFF" },
+  actionBtnText: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: tokens.colors.white },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 24 },
   modalContent: { backgroundColor: tokens.colors.white, padding: 24, borderRadius: 16, width: "100%" },
   modalTitle: { fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink, marginBottom: 8 },
@@ -201,5 +202,5 @@ const styles = StyleSheet.create({
   cancelBtn: { flex: 1, alignItems: "center", paddingVertical: 12 },
   cancelText: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: tokens.colors.muted },
   submitBtn: { flex: 1, backgroundColor: tokens.colors.crimson, alignItems: "center", justifyContent: "center", borderRadius: 8, paddingVertical: 12 },
-  submitText: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: "#FFF" }
+  submitText: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: tokens.colors.white }
 });

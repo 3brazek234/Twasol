@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, StyleSheet, ScrollView, Alert, Linking, I18nManager } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
@@ -87,7 +88,7 @@ export const SettingsScreen = ({ navigation }: any) => {
   const translateTheme = (t: string) => t === 'system' ? 'النظام' : t === 'light' ? 'فاتح' : 'داكن';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenContainer scroll={true}>
       
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الحساب</Text>
@@ -145,7 +146,7 @@ export const SettingsScreen = ({ navigation }: any) => {
         <Text style={styles.sectionTitle}>الإشعارات</Text>
         <View style={styles.card}>
           <SettingsRow 
-            label="تطابق الطلبات الجديدة" 
+            label="تطابق المهام الجديدة" 
             isSwitch 
             switchValue={matchNotifications} 
             onSwitchChange={setMatchNotifications} 
@@ -232,7 +233,7 @@ export const SettingsScreen = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </ScreenContainer>
   );
 };
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useAdminPendingSubscriptions } from "../../hooks/useAdminSubscriptions";
 import { tokens } from "../../theme/tokens";
@@ -48,12 +49,12 @@ export const AdminSubscriptionQueueScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScreenContainer scroll={false} >
       <FlatList
         data={data?.data?.items || []}
         keyExtractor={(item: any) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ paddingTop: 16 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -63,7 +64,7 @@ export const AdminSubscriptionQueueScreen = () => {
           </View>
         }
       />
-    </View>
+    </ScreenContainer>
   );
 };
 

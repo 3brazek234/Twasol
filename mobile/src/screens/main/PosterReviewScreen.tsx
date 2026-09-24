@@ -52,7 +52,7 @@ export const PosterReviewScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <ScreenContainer scroll={false} paddingHorizontal={0}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <ChevronRight color={tokens.colors.ink} size={24} />
@@ -118,7 +118,7 @@ export const PosterReviewScreen = () => {
           <Text style={styles.skipButtonText}>تخطي</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 };
 

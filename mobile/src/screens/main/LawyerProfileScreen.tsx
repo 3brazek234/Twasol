@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { ShieldCheck, MessageSquare } from "lucide-react-native";
 import { StarRating } from "../../components/StarRating";
 import { useLawyerProfile } from "../../hooks/useUsers";
@@ -69,8 +70,8 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
+    
+      <ScreenContainer scroll={true}>
         
         {/* Header */}
         <View style={{ marginBottom: 32 }}>
@@ -167,7 +168,7 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-      </ScrollView>
+      </ScreenContainer>
 
       {/* Floating Action Bar */}
       <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tokens.colors.white, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderTopColor: tokens.colors.line }}>
@@ -184,6 +185,5 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
           )}
         </TouchableOpacity>
       </View>
-    </View>
   );
 };

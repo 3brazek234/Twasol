@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
+import { tokens } from '../../theme/tokens';
 import { Upload, FileCheck, X, ChevronLeft, AlertCircle } from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import * as DocumentPicker from 'expo-document-picker';
@@ -69,10 +71,10 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView className="flex-1  bg-paper">
+    <ScreenContainer scroll={false} paddingHorizontal={0}>
       <View className="flex-row items-center p-6 gap-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="p-1">
-          <ChevronLeft size={24} color="#1A202C" />
+          <ChevronLeft size={24} color={tokens.colors.ink} />
         </TouchableOpacity>
         <Text className="text-xl font-displayBold text-ink">رفع المستندات</Text>
       </View>
@@ -100,7 +102,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
                 className="items-center w-full p-6"
               >
                 <View className="w-16 h-16 rounded-full bg-signal/10 justify-center items-center mb-4">
-                  <Upload size={32} color="#2A8F85" />
+                  <Upload size={32} color={tokens.colors.signal} />
                 </View>
                 <Text className="text-base font-bodySemibold text-ink mb-1">انقر لاختيار ملف</Text>
                 <Text className="text-[13px] font-body text-muted">PDF أو JPG أو PNG (الحد الأقصى ١٠ ميجابايت)</Text>
@@ -112,22 +114,22 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="items-center w-full p-6"
               >
-                <View className="w-16 h-16 rounded-full bg-success/20 justify-center items-center mb-4">
-                  <FileCheck size={32} color="#38A169" />
+                <View className="w-16 h-16 rounded-full bg-verdant/20 justify-center items-center mb-4">
+                  <FileCheck size={32} color={tokens.colors.verdant} />
                 </View>
                 <Text className="text-base font-bodySemibold text-ink mb-4 text-center" numberOfLines={1}>{file.name}</Text>
                 <TouchableOpacity onPress={() => setFile(null)} className="flex-row items-center gap-1">
-                  <X size={14} color="#E53E3E" />
-                  <Text className="text-sm font-bodyMedium text-destructive">إزالة</Text>
+                  <X size={14} color={tokens.colors.crimson} />
+                  <Text className="text-sm font-bodyMedium text-crimson">إزالة</Text>
                 </TouchableOpacity>
               </MotiView>
             )}
           </AnimatePresence>
         </TouchableOpacity>
 
-        <View className="flex-row bg-info/10 p-4 rounded-xl mt-8 gap-3 items-start" style={{ direction: 'rtl' }}>
-          <AlertCircle size={18} color="#3182CE" />
-          <Text className="flex-1 text-[13px] font-body text-info leading-[18px] text-right">
+        <View className="flex-row bg-slate/10 p-4 rounded-xl mt-8 gap-3 items-start" style={{ direction: 'rtl' }}>
+          <AlertCircle size={18} color={tokens.colors.slate} />
+          <Text className="flex-1 text-[13px] font-body text-slate leading-[18px] text-right">
             بياناتك مشفرة ولا يمكن الوصول إليها إلا من قبل فريق التوثيق لمراجعة حسابك.
           </Text>
         </View>
@@ -146,6 +148,6 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 };

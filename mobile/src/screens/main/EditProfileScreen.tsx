@@ -41,11 +41,11 @@ export const EditProfileScreen = ({ navigation }: any) => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView style={{flex:1}} 
+       
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScreenContainer scroll={true}>
         
         <View style={styles.formGroup}>
           <Text style={styles.label}>الاسم الكامل</Text>
@@ -96,7 +96,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
             {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </ScreenContainer>
     </KeyboardAvoidingView>
   );
 };

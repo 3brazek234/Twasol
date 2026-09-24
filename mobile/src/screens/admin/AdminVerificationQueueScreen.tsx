@@ -1,4 +1,5 @@
 import React from "react";
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useAdminPendingVerifications } from "../../hooks/useAdminVerifications";
 import { tokens } from "../../theme/tokens";
@@ -45,12 +46,12 @@ export const AdminVerificationQueueScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScreenContainer scroll={false} >
       <FlatList
         data={data?.data || []}
         keyExtractor={(item: any) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ paddingTop: 16 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -60,7 +61,7 @@ export const AdminVerificationQueueScreen = () => {
           </View>
         }
       />
-    </View>
+    </ScreenContainer>
   );
 };
 

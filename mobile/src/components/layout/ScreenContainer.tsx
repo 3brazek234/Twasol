@@ -26,6 +26,8 @@ interface ScreenContainerProps {
   paddingHorizontal?: number;
   /** Explicit numeric bottom inset to append to the safe area (e.g. for floating buttons or overlaid tab bars). Defaults to 0. */
   bottomInset?: number;
+  /** Optional RefreshControl component for ScrollView */
+  refreshControl?: React.ReactElement<any>;
 }
 
 export const ScreenContainer = ({
@@ -37,6 +39,7 @@ export const ScreenContainer = ({
   backgroundColor,
   paddingHorizontal = tokens.layout.screenPaddingHorizontal,
   bottomInset = 0,
+  refreshControl,
 }: ScreenContainerProps) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -58,16 +61,17 @@ export const ScreenContainer = ({
         <ScrollView
           style={[baseWrapperStyle, style]}
           contentContainerStyle={[
-            { paddingBottom: finalBottomPadding },
+            { paddingTop: tokens.layout.screenPaddingVertical, paddingBottom: finalBottomPadding },
             contentContainerStyle
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={refreshControl}
         >
           {children}
         </ScrollView>
       ) : (
-        <View style={[baseWrapperStyle, { paddingBottom: finalBottomPadding }, style]}>
+        <View style={[baseWrapperStyle, { paddingTop: tokens.layout.screenPaddingVertical, paddingBottom: finalBottomPadding }, style]}>
           {children}
         </View>
       )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
@@ -43,9 +44,9 @@ export const AdminAnalyticsScreen = () => {
   const { funnel, revenue, fillRate, throughput, queues } = data;
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      contentContainerStyle={styles.content}
+    <ScreenContainer scroll={true} 
+       
+      
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       
@@ -167,7 +168,7 @@ export const AdminAnalyticsScreen = () => {
       </View>
 
       <View style={{ height: 40 }} />
-    </ScrollView>
+    </ScreenContainer>
   );
 };
 
