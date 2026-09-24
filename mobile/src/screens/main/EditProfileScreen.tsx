@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';

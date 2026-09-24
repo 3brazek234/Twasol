@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { ShieldCheck, MessageSquare } from "lucide-react-native";
 import { StarRating } from "../../components/StarRating";
 import { useLawyerProfile } from "../../hooks/useUsers";
@@ -70,8 +70,8 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
   }
 
   return (
-    
-      <ScreenContainer scroll={true}>
+    <ScreenContainer scroll={false} paddingHorizontal={0}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
         
         {/* Header */}
         <View style={{ marginBottom: 32 }}>
@@ -168,10 +168,9 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-      </ScreenContainer>
+      </ScrollView>
 
-      {/* Floating Action Bar */}
-      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tokens.colors.white, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderTopColor: tokens.colors.line }}>
+      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tokens.colors.white, padding: 24, borderTopWidth: 1, borderTopColor: tokens.colors.line }}>
         <TouchableOpacity 
           style={{ backgroundColor: tokens.colors.navy, paddingVertical: 16, borderRadius: 12, flexDirection: "row", justifyContent: "center", alignItems: "center" }}
           onPress={handleMessage}
@@ -185,5 +184,6 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
           )}
         </TouchableOpacity>
       </View>
+    </ScreenContainer>
   );
 };
