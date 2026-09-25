@@ -47,7 +47,7 @@ export default function ReportsPage() {
               <TableHead>Target</TableHead>
               <TableHead>Reason</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -82,7 +82,7 @@ export default function ReportsPage() {
                       {report.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="">
                     <Dialog open={selectedReport?.id === report.id} onOpenChange={(isOpen) => !isOpen && setSelectedReport(null)}>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" onClick={() => setSelectedReport(report)}>Resolve</Button>

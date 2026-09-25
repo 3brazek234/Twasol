@@ -54,11 +54,11 @@ export const PendingReviewScreen = () => {
         <View className="w-full bg-white rounded-2xl p-8 border border-line gap-6">
           <View className="flex-row-reverse items-center gap-4">
             <CheckCircle2 size={20} color="#38A169" />
-            <Text className="text-sm font-bodyMedium text-ink text-right">تم رفع مستند الهوية</Text>
+            <Text className="text-sm font-bodyMedium text-ink ">تم رفع مستند الهوية</Text>
           </View>
           <View className="flex-row-reverse items-center gap-4">
             <Clock size={20} color="#E08A4F" />
-            <Text className="text-sm font-bodyMedium text-ink text-right">بانتظار فحص نقابة المحامين</Text>
+            <Text className="text-sm font-bodyMedium text-ink ">بانتظار فحص نقابة المحامين</Text>
           </View>
         </View>
 

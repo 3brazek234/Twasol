@@ -96,7 +96,7 @@ export default function SubscriptionsPage() {
                   <TableHead>المدة</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>تاريخ الطلب</TableHead>
-                  <TableHead className="text-right">الإجراءات</TableHead>
+                  <TableHead className="">الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

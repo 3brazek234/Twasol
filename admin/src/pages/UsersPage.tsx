@@ -65,7 +65,7 @@ export default function UsersPage() {
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Verification</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,7 +93,7 @@ export default function UsersPage() {
                       {user.verificationStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">

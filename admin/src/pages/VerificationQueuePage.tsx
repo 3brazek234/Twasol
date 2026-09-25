@@ -46,7 +46,7 @@ export default function VerificationQueuePage() {
               <TableHead>User</TableHead>
               <TableHead>Document Type</TableHead>
               <TableHead>Submitted At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,7 +65,7 @@ export default function VerificationQueuePage() {
                   </TableCell>
                   <TableCell><Badge variant="outline">{doc.documentType}</Badge></TableCell>
                   <TableCell>{new Date(doc.submittedAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className=" space-x-2">
                     <Dialog open={selectedDoc?.id === doc.id} onOpenChange={(isOpen) => !isOpen && setSelectedDoc(null)}>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" onClick={() => setSelectedDoc(doc)}>Review</Button>

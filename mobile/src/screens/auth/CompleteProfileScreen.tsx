@@ -97,7 +97,7 @@ export const CompleteProfileScreen = () => {
           >
             {/* Bar Number */}
             <View className="mb-4">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">رقم العضوية</Text>
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">رقم العضوية</Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-14 border ${errors.barNumber ? 'border-crimson bg-crimsonBg/50' : 'border-transparent'}`}>
                 <Award color="#6B7280" size={18} className="ml-3" />
                 <Controller
@@ -105,7 +105,7 @@ export const CompleteProfileScreen = () => {
                   name="barNumber"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-base h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-base h-full "
                       placeholder="١٢٣٤٥٦"
                       placeholderTextColor="#9CA3AF"
                       onChangeText={onChange}
@@ -114,22 +114,22 @@ export const CompleteProfileScreen = () => {
                   )}
                 />
               </View>
-              {errors.barNumber && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.barNumber.message}</Text>}
+              {errors.barNumber && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.barNumber.message}</Text>}
             </View>
 
             {/* Governorate */}
             <View className="mb-8">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">مقر المكتب</Text>
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">مقر المكتب</Text>
               <TouchableOpacity
                 onPress={() => setGovModalVisible(true)}
                 className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-14 border ${errors.governorateId ? 'border-crimson bg-crimsonBg/50' : 'border-transparent'}`}
               >
                 <MapPin color="#6B7280" size={18} className="ml-3" />
-                <Text className="flex-1 text-ink font-bodyAr text-base text-right" numberOfLines={1}>
+                <Text className="flex-1 text-ink font-bodyAr text-base " numberOfLines={1}>
                   {selectedGovName}
                 </Text>
               </TouchableOpacity>
-              {errors.governorateId && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.governorateId.message}</Text>}
+              {errors.governorateId && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.governorateId.message}</Text>}
             </View>
 
             <TouchableOpacity

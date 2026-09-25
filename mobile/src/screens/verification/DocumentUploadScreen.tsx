@@ -11,7 +11,7 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/authStore';
 
 export const DocumentUploadScreen = ({ navigation }: any) => {
-  const { user, submitVerification } = useAuthStore();
+  const { submitVerification } = useAuthStore();
   const [file, setFile] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -80,8 +80,8 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
       </View>
 
       <View className="flex-1 p-8" style={{ direction: 'rtl' }}>
-        <Text className="text-[12px] font-bodySemibold text-muted tracking-[1px] mb-4 uppercase text-right">الهوية الوطنية / بطاقة النقابة</Text>
-        <Text className="text-[15px] font-body text-ink leading-[22px] mb-8 text-right">
+        <Text className="text-[12px] font-bodySemibold text-muted tracking-[1px] mb-4 uppercase">الهوية الوطنية / كارنيه النقابة</Text>
+        <Text className="text-[15px] font-body text-ink leading-[22px] mb-8">
           يرجى إرفاق مسح ضوئي واضح أو صورة لبطاقة نقابة المحامين أو الهوية الوطنية الخاصة بك.
         </Text>
 
@@ -129,7 +129,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
 
         <View className="flex-row bg-slate/10 p-4 rounded-xl mt-8 gap-3 items-start" style={{ direction: 'rtl' }}>
           <AlertCircle size={18} color={tokens.colors.slate} />
-          <Text className="flex-1 text-[13px] font-body text-slate leading-[18px] text-right">
+          <Text className="flex-1 text-[13px] font-body text-slate leading-[18px]">
             بياناتك مشفرة ولا يمكن الوصول إليها إلا من قبل فريق التوثيق لمراجعة حسابك.
           </Text>
         </View>

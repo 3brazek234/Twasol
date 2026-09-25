@@ -98,14 +98,14 @@ export const LoginScreen = ({ navigation }: any) => {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="bg-crimsonBg p-4 rounded-xl mb-4 border-r-4 border-crimson"
               >
-                <Text className="text-crimson font-bodyMediumAr text-sm text-right">
+                <Text className="text-crimson font-bodyMediumAr text-sm ">
                   البريد الإلكتروني أو كلمة المرور غير صحيحة
                 </Text>
               </MotiView>
             )}
 
             <View className="mb-4">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">
                 البريد الإلكتروني
               </Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-14 border ${errors.email ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
@@ -115,7 +115,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   name="email"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-base h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-base h-full "
                       placeholder="name@example.com"
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="none"
@@ -126,11 +126,11 @@ export const LoginScreen = ({ navigation }: any) => {
                   )}
                 />
               </View>
-              {errors.email && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.email.message}</Text>}
+              {errors.email && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.email.message}</Text>}
             </View>
 
             <View className="mb-8">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">
                 كلمة المرور
               </Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-14 border ${errors.password ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
@@ -140,7 +140,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   name="password"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-base h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-base h-full "
                       placeholder="••••••••"
                       placeholderTextColor="#9CA3AF"
                       secureTextEntry
@@ -150,7 +150,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   )}
                 />
               </View>
-              {errors.password && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.password.message}</Text>}
+              {errors.password && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.password.message}</Text>}
             </View>
 
             <TouchableOpacity

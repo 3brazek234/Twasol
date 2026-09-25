@@ -62,7 +62,7 @@ export const VerificationIntroScreen = ({ navigation }: any) => {
               </View>
               <View className="flex-1 items-end">
                 <Text className="text-base font-bodySemibold text-ink mb-1">{step.title}</Text>
-                <Text className="text-sm font-body text-muted leading-5 text-right">{step.desc}</Text>
+                <Text className="text-sm font-body text-muted leading-5 ">{step.desc}</Text>
               </View>
             </MotiView>
           ))}

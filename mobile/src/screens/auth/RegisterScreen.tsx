@@ -1,6 +1,6 @@
 import { useRegister } from "../../hooks/useAuth";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal, FlatList, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -12,8 +12,6 @@ import { useOnboardingState } from '../../screens/Onboarding/useOnboardingState'
 import { useNavigation } from '@react-navigation/native';
 import { useGovernorates } from '../../hooks/useCourts';
 import { tokens } from '../../theme/tokens';
-import { useAuthStore } from '../../stores/authStore';
-import { apiClient } from '../../api/client';
 
 const registerSchema = z.object({
   email: z.string().email('عنوان البريد الإلكتروني غير صالح'),
@@ -87,16 +85,16 @@ export const RegisterScreen = () => {
               from={{ opacity: 0, translateY: 5 }}
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 200 }}
-              className="text-3xl font-displayBoldAr text-navy tracking-tight"
+              className="text-3xl font-displayBoldAr text-navy"
             >
-              إنشاء حساب جديد
+              تسجيل حساب 
             </MotiText>
           </MotiView>
 
           <MotiView from={{ opacity: 0, translateY: 15 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 100 }} className="p-6 rounded-2xl bg-white shadow-lg border border-line/50">
             {/* Full Name */}
             <View className="mb-4">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">الاسم الكامل</Text>
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">الاسم الكامل</Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-13 border ${errors.name ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
                 <User color="#6B7280" size={18} className="ml-3" />
                 <Controller
@@ -104,7 +102,7 @@ export const RegisterScreen = () => {
                   name="name"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-base h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-base h-full "
                       placeholder="أحمد سالم"
                       placeholderTextColor="#9CA3AF"
                       onChangeText={onChange}
@@ -113,12 +111,12 @@ export const RegisterScreen = () => {
                   )}
                 />
               </View>
-              {errors.name && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.name.message}</Text>}
+              {errors.name && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.name.message}</Text>}
             </View>
 
             {/* Email */}
             <View className="mb-4">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">البريد الإلكتروني</Text>
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">البريد الإلكتروني</Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-13 border ${errors.email ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
                 <Mail color="#6B7280" size={18} className="ml-3" />
                 <Controller
@@ -126,7 +124,7 @@ export const RegisterScreen = () => {
                   name="email"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-base h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-base h-full "
                       placeholder="name@example.com"
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="none"
@@ -137,13 +135,13 @@ export const RegisterScreen = () => {
                   )}
                 />
               </View>
-              {errors.email && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.email.message}</Text>}
+              {errors.email && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.email.message}</Text>}
             </View>
 
             {/* Bar Number & Governorate */}
             <View className="flex-row-reverse mb-4 gap-3">
               <View className="flex-1">
-                <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">رقم العضوية</Text>
+                <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">رقم العضوية</Text>
                 <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-13 border ${errors.barNumber ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
                   <Award color="#6B7280" size={18} className="ml-3" />
                   <Controller
@@ -151,7 +149,7 @@ export const RegisterScreen = () => {
                     name="barNumber"
                     render={({ field: { onChange, value } }) => (
                       <TextInput
-                        className="flex-1 text-ink font-bodyAr text-sm h-full text-right"
+                        className="flex-1 text-ink font-bodyAr text-sm h-full "
                         placeholder="١٢٣٤٥٦"
                         placeholderTextColor="#9CA3AF"
                         onChangeText={onChange}
@@ -160,27 +158,27 @@ export const RegisterScreen = () => {
                     )}
                   />
                 </View>
-                {errors.barNumber && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.barNumber.message}</Text>}
+                {errors.barNumber && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.barNumber.message}</Text>}
               </View>
 
               <View className="flex-1">
-                <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">مقر المكتب</Text>
+                <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">مقر المكتب</Text>
                 <TouchableOpacity 
                   onPress={() => setGovModalVisible(true)}
                   className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-13 border ${errors.governorateId ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}
                 >
                   <MapPin color="#6B7280" size={18} className="ml-3" />
-                  <Text className="flex-1 text-ink font-bodyAr text-sm text-right" numberOfLines={1}>
+                  <Text className="flex-1 text-ink font-bodyAr text-sm " numberOfLines={1}>
                     {selectedGovName}
                   </Text>
                 </TouchableOpacity>
-                {errors.governorateId && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.governorateId.message}</Text>}
+                {errors.governorateId && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.governorateId.message}</Text>}
               </View>
             </View>
 
             {/* Password */}
             <View className="mb-8">
-              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 text-right">كلمة المرور</Text>
+              <Text className="text-xs font-bodySemiboldAr text-navy mb-2 ">كلمة المرور</Text>
               <View className={`flex-row-reverse items-center bg-surface rounded-xl px-4 h-13 border ${errors.password ? 'border-crimson bg-crimsonBg/50' : 'border-transparent focus:border-gold'}`}>
                 <Lock color="#6B7280" size={18} className="ml-3" />
                 <Controller
@@ -188,7 +186,7 @@ export const RegisterScreen = () => {
                   name="password"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="flex-1 text-ink font-bodyAr text-sm h-full text-right"
+                      className="flex-1 text-ink font-bodyAr text-sm h-full "
                       placeholder="••••••••"
                       placeholderTextColor="#9CA3AF"
                       secureTextEntry
@@ -198,7 +196,7 @@ export const RegisterScreen = () => {
                   )}
                 />
               </View>
-              {errors.password && <Text className="text-crimson text-xs font-bodyAr mt-1 text-right">{errors.password.message}</Text>}
+              {errors.password && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.password.message}</Text>}
             </View>
 
             <TouchableOpacity

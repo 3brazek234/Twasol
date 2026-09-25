@@ -1,13 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 export default function CourtsPage() {
-  const queryClient = useQueryClient();
-
   const { data: courts, isLoading: isLoadingCourts } = useQuery({
     queryKey: ['courts'],
     queryFn: async () => {
@@ -33,7 +29,7 @@ export default function CourtsPage() {
                 <TableRow>
                   <TableHead>Court Name (EN)</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead className="text-right">Court Name (AR)</TableHead>
+                  <TableHead className="">Court Name (AR)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -46,7 +42,7 @@ export default function CourtsPage() {
                     <TableRow key={court.id}>
                       <TableCell className="font-medium">{court.nameEn}</TableCell>
                       <TableCell>{court.governorate?.nameEn}</TableCell>
-                      <TableCell className="text-right font-arabic" dir="rtl">{court.nameAr}</TableCell>
+                      <TableCell className=" font-arabic" dir="rtl">{court.nameAr}</TableCell>
                     </TableRow>
                   ))
                 )}
