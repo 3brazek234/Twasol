@@ -16,13 +16,13 @@ describe("JobsLifecycleService", () => {
 
   describe("startNegotiation", () => {
     it("transitions OPEN -> NEGOTIATING and sets negotiatingSince", async () => {
-      const mockJob = makeJob({ id: jobId, posterId, status: "OPEN" });
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });
       prismaMock.job.findUnique.mockResolvedValue(mockJob);
-      prismaMock.job.update.mockResolvedValue({ ...mockJob, status: "NEGOTIATING" });
+      prismaMock.job.updateMany.mockResolvedValue({ count: 1 } as any);
 
       await JobsLifecycleService.startNegotiation(jobId, posterId);
 
-      expect(prismaMock.job.update).toHaveBeenCalledWith(expect.objectContaining({
+      expect(prismaMock.job.updateMany).toHaveBeenCalledWith(expect.objectContaining({
         where: { id: jobId, version: mockJob.version },
         data: expect.objectContaining({
           status: "NEGOTIATING",
@@ -32,14 +32,14 @@ describe("JobsLifecycleService", () => {
     });
 
     it("throws FORBIDDEN if requester is not the poster", async () => {
-      const mockJob = makeJob({ id: jobId, posterId, status: "OPEN" });
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });
       prismaMock.job.findUnique.mockResolvedValue(mockJob);
 
       await expectAppError(() => JobsLifecycleService.startNegotiation(jobId, "wrong-user"), "FORBIDDEN");
     });
 
     it("throws BAD_REQUEST for invalid state transition", async () => {
-      const mockJob = makeJob({ id: jobId, posterId, status: "IN_PROGRESS" });
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "IN_PROGRESS" });
       prismaMock.job.findUnique.mockResolvedValue(mockJob);
 
       await expectAppError(() => JobsLifecycleService.startNegotiation(jobId, posterId), "BAD_REQUEST");
@@ -48,7 +48,7 @@ describe("JobsLifecycleService", () => {
 
   describe("acceptOffer", () => {
     it("sets assignedLawyerId, agreedSalary, and withdraws other pending offers", async () => {
-      const mockJob = makeJob({ id: jobId, posterId, status: "NEGOTIATING" });
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "NEGOTIATING" });
       const mockMessage = makeMessage({ id: "msg-1", type: "OFFER", status: "DELIVERED", senderId: lawyerId, amount: 2000 });
       
       prismaMock.job.findUnique.mockResolvedValue(mockJob);
@@ -64,3 +64,48 @@ describe("JobsLifecycleService", () => {
     });
   });
 });
+
+  describe("rejectOffer", () => {
+    it("transitions NEGOTIATING -> OPEN if rejected", async () => {
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "NEGOTIATING" });
+      prismaMock.job.findUnique.mockResolvedValue(mockJob);
+      prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
+      prismaMock.job.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      await JobsLifecycleService.rejectOffer(jobId, posterId);
+
+      expect(prismaMock.job.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ status: "OPEN" })
+      }));
+    });
+  });
+
+  describe("markCompleted", () => {
+    it("transitions IN_PROGRESS -> COMPLETED", async () => {
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "IN_PROGRESS", assignedLawyerId: lawyerId });
+      prismaMock.job.findUnique.mockResolvedValue(mockJob);
+      prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
+      prismaMock.job.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      await JobsLifecycleService.markCompleted(jobId, posterId);
+
+      expect(prismaMock.job.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ status: "COMPLETED" })
+      }));
+    });
+  });
+
+  describe("expireJob", () => {
+    it("transitions OPEN -> EXPIRED", async () => {
+      const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });
+      prismaMock.job.findUnique.mockResolvedValue(mockJob);
+      prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
+      prismaMock.job.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      await JobsLifecycleService.expireJob(jobId);
+
+      expect(prismaMock.job.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ status: "EXPIRED" })
+      }));
+    });
+  });

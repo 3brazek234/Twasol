@@ -5,7 +5,7 @@ export class AdminVerificationsController {
   static async listPending(req: Request, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
       
       const result = await AdminVerificationsService.listPending(page, limit);
       res.json({ success: true, ...result });

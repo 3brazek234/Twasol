@@ -15,7 +15,7 @@ export class ChatController {
   static async getMessages(req: Request, res: Response, next: NextFunction) {
     try {
       const cursor = req.query.cursor as string | undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const limit = Math.min(req.query.limit ? parseInt(req.query.limit as string, 10) : 50, 50);
       const data = await ChatService.getMessages(req.params.id, req.user!.userId, cursor, limit);
       res.json({ success: true, data: data.messages, meta: { nextCursor: data.nextCursor } });
     } catch (error) {

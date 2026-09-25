@@ -17,7 +17,7 @@ export class JobsController {
       const { page, limit, courtId, status, taskType, sortBy, q } = req.query as any;
       const result = await JobsService.list({ 
         page: Number(page) || 1, 
-        limit: Number(limit) || 25, 
+        limit: Math.min(Number(limit) || 25, 50), 
         courtId, 
         status, 
         taskType,

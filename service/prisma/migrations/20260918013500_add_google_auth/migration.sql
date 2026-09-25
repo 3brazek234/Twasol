@@ -1,3 +1,4 @@
+ALTER TABLE "verification_documents" ALTER COLUMN "status" SET DEFAULT 'PENDING_UPLOAD';
 -- AlterEnum
 ALTER TYPE "NotificationType" ADD VALUE 'GOOGLE_ACCOUNT_LINKED';
 

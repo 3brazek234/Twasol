@@ -46,7 +46,6 @@ ADD COLUMN     "file_key" TEXT NOT NULL;
 
 
 
-ALTER TABLE "verification_documents" ALTER COLUMN "status" SET DEFAULT 'PENDING_UPLOAD';
 
 
 

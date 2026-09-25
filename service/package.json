@@ -12,7 +12,7 @@
     "prisma:migrate:prod": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
-    "test:unit": "vitest run tests/unit",
+    "test:unit": "vitest run tests/unit -c vitest.unit.config.ts",
     "test:integration": "vitest run tests/integration --no-threads",
     "test:watch": "jest --watch",
     "test": "vitest run"
@@ -64,6 +64,7 @@
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "prisma": "^6.8.0",
     "supertest": "^7.0.0",
     "tsx": "^4.19.0",

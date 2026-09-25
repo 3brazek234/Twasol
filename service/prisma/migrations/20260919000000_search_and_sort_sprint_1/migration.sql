@@ -3,6 +3,10 @@ CREATE TYPE "JobTaskType" AS ENUM ('ATTEND_SESSION', 'OBTAIN_DOCUMENT', 'FILE_PL
 
 -- AlterTable
 ALTER TABLE "jobs" ADD COLUMN     "circuit_name" TEXT,
+ADD COLUMN     "expires_at" TIMESTAMP(3),
+ADD COLUMN     "expired_at" TIMESTAMP(3),
+ADD COLUMN     "negotiating_since" TIMESTAMP(3),
+ADD COLUMN     "court_id" TEXT,
 ADD COLUMN     "session_date" TIMESTAMP(3),
 ADD COLUMN     "task_type" "JobTaskType";
 
