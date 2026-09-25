@@ -1,4 +1,4 @@
-import { AppError } from "../common/errors/AppError";
+import { JobsLifecycleService } from "../modules/jobs/jobs.lifecycle.service";
 
 import { Worker, Job as BullJob, Queue } from 'bullmq';
 import { redisConnection } from '../common/utils/queue';
@@ -53,30 +53,7 @@ export const jobExpirationWorker = new Worker(
 
       const previousAssignedLawyerId = dbJob.assignedLawyerId || dbJob.invitedLawyerId;
       
-      const result = await prisma.$transaction(async (tx) => {
-        // Case A & B: Uncompleted jobs expire permanently
-        const updateResult = await tx.job.updateMany({
-          where: { 
-            id: jobId, 
-            status: dbJob.status,
-            version: dbJob.version 
-          },
-          data: { 
-            status: 'EXPIRED', 
-            expiredAt: new Date(),
-            version: { increment: 1 }
-          }
-        });
-
-        if (updateResult.count === 0) {
-          throw AppError.conflict('Concurrency conflict or state changed during expiration');
-        }
-        
-        return tx.job.findUnique({
-          where: { id: jobId },
-          include: { court: true }
-        });
-      });
+      const result = await JobsLifecycleService.expireJob(jobId);
 
       if (result) {
         // Broadcast via Socket.IO using fanout

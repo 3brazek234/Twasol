@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { JobsLifecycleService } from "../../src/modules/jobs/jobs.lifecycle.service";
 import { prismaMock } from "../mocks/prisma";
 import { expectAppError } from "../helpers/errors";
-import { makeJob, makeMessage } from "../factories/other.factory";
+import { makeMessage } from "../factories/other.factory";
+import { makeJob } from "../factories/job.factory";
 
 describe("JobsLifecycleService", () => {
   const jobId = "job-123";

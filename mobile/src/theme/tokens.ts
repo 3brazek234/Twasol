@@ -173,12 +173,12 @@ export const spacing = {
 // ─── Layout Constants ─────────────────────────────────────────────────────────
 // Use these constants to enforce structural consistency, not just spacing magnitude.
 export const layout = {
-  screenPaddingHorizontal: spacing.md, // 16px standard side padding
-  screenPaddingVertical: spacing.md,
-  cardPadding: spacing.md,
-  cardGap: spacing.sm,                 // 12px between stacked list items
-  sectionGap: spacing.lg,              // 24px between semantic sections
-  inputGap: spacing.md,                // 16px between form fields
+  screenPaddingHorizontal: spacing.xs, // 16px standard side padding
+  screenPaddingVertical: spacing.xs,
+  cardPadding: spacing.xs,
+  cardGap: spacing.xs,                 // 12px between stacked list items
+  sectionGap: spacing.xs,              // 24px between semantic sections
+  inputGap: spacing.xs,                // 16px between form fields
 } as const;
 
 // ─── Border Radius ────────────────────────────────────────────────────────────

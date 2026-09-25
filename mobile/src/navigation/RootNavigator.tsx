@@ -210,9 +210,10 @@ export const RootNavigator = () => {
   // ── State 3: Verified (APPROVED) — full app ────────────────────────────
   return (
     <NavigationContainer linking={linking as any}>
-      <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainAppFallback' : 'OnboardingWalkthrough'}>
+      <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainTabs' : 'OnboardingWalkthrough'}>
         <RootStack.Screen name="OnboardingWalkthrough" component={require('../screens/main/OnboardingWalkthroughScreen').OnboardingWalkthroughScreen} />
-        <RootStack.Screen name="MainAppFallback" component={MainNavigator} />
+        {/* Added screen for programmatic navigation to the tab navigator */}
+        <RootStack.Screen name="MainTabs" component={MainNavigator} />
         <RootStack.Screen name="SettingsStack" component={SettingsNavigator} />
       </RootStack.Navigator>
     </NavigationContainer>

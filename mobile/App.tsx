@@ -21,7 +21,6 @@ import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono';
 import { Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
 import { IBMPlexSansArabic_400Regular, IBMPlexSansArabic_500Medium, IBMPlexSansArabic_600SemiBold } from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { Cairo_400Regular, Cairo_500Medium, Cairo_600SemiBold, Cairo_700Bold } from '@expo-google-fonts/cairo';
-import { ThemeProvider } from './src/theme/ThemeContext';
 import { tokens } from './src/theme/tokens';
 
 const toastConfig = {
@@ -135,14 +134,12 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
             <RootNavigator />
             <Toast config={toastConfig} />
           </QueryClientProvider>
         </SafeAreaProvider>
-      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

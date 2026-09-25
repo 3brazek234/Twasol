@@ -236,6 +236,28 @@ export class JobsLifecycleService {
     });
   }
 
+  static async expireJob(jobId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw AppError.notFound("Job");
+
+    this.assertValidTransition(job.status, 'EXPIRED');
+
+    return prisma.$transaction(async (tx) => {
+      const updateResult = await tx.job.updateMany({
+        where: { id: jobId, status: job.status, version: job.version },
+        data: { status: 'EXPIRED', expiredAt: new Date(), version: { increment: 1 } }
+      });
+
+      if (updateResult.count === 0) {
+        throw AppError.conflict('Concurrency conflict during expiration');
+      }
+
+      await auditLog(tx as any, 'SYSTEM', "job.expired", "Job", jobId, { status: job.status }, { status: 'EXPIRED' });
+
+      return tx.job.findUnique({ where: { id: jobId }, include: { court: true } });
+    });
+  }
+
   static async acceptOffer(jobId: string, lawyerId: string, agreedSalary: Prisma.Decimal | number, txClient?: any) {
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job) throw AppError.notFound("Job");

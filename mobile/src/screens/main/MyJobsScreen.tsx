@@ -121,7 +121,7 @@ console.log('statusFilter', statusFilter);
   const activeCount = activeJobs.length;
 
   return (
-    <ScreenContainer scroll={false} paddingHorizontal={0} edges={['top']} bottomInset={80}>
+    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>مهامي</Text>
       </View>
@@ -265,7 +265,7 @@ console.log('statusFilter', statusFilter);
           });
         }}
       />
-    </ScreenContainer>
+    </View>
   );
 };
 
@@ -282,7 +282,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: tokens.typography.fonts.displayBold,
     color: tokens.colors.navy,
-    textAlign: 'right',
   },
   tabBar: {
     flexDirection: 'row',

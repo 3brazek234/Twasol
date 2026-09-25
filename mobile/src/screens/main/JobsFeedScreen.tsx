@@ -86,7 +86,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   ];
 
   return (
-    <ScreenContainer scroll={false} paddingHorizontal={0} edges={['top']} bottomInset={80}>
+    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <VerificationStatusBanner />
 
       <AnimatePresence>
@@ -234,6 +234,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         currentTaskType={taskType}
         onApply={(type) => setTaskType(type)}
       />
-    </ScreenContainer>
+    </View>
   );
 };

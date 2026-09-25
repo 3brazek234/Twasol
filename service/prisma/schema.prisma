@@ -222,6 +222,7 @@ model User {
   conflictDeclarations         ConflictDeclaration[]
   subscriptionPayments         SubscriptionPayment[] // سجل مدفوعات الاشتراك
 
+  @@index([verificationStatus])
   @@index([isActive, isOnline])
   savedSearches                SavedSearch[]
 
@@ -283,6 +284,8 @@ model Job {
   conflictDeclarations ConflictDeclaration[]
 
   @@index([status])
+  @@index([status, courtId])
+  @@index([taskType])
   @@index([postedByUserId])
   @@index([assignedLawyerId])
   @@index([courtId])

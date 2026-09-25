@@ -1,0 +1,68 @@
+# ─── Render Blueprint ──────────────────────────────────────────────────────────
+# https://docs.render.com/infrastructure-as-code
+#
+# Deploy:  Connect this repo to Render → it auto-detects render.yaml
+# ───────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: twasol-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./service/Dockerfile
+    dockerContext: ./service
+
+    # ── Health check ────────────────────────────────────────────────────────────
+    healthCheckPath: /health
+
+    # ── Environment variables ───────────────────────────────────────────────────
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: "10000"
+
+      # External PostgreSQL (Neon / Supabase) — set via Dashboard
+      - key: DATABASE_URL
+        sync: false
+
+      # External Redis (Upstash / Railway) — set via Dashboard
+      - key: REDIS_URL
+        sync: false
+
+      # Auto-generated secure secrets
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      # Cloudflare R2 — set via Dashboard
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+
+      # Cloudinary (optional) — set via Dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # Google OAuth Client IDs (optional) — set via Dashboard
+      - key: GOOGLE_WEB_CLIENT_ID
+        sync: false
+      - key: GOOGLE_IOS_CLIENT_ID
+        sync: false
+      - key: GOOGLE_ANDROID_CLIENT_ID
+        sync: false
