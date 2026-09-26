@@ -7,6 +7,7 @@ import { MotiView, AnimatePresence } from 'moti';
 import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
 import { uploadFileToR2 } from '../../utils/upload';
+import { getErrorMessage } from '../../utils/errorMessages';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -63,7 +64,7 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'error',
         text1: 'فشل الرفع',
-        text2: err.message || 'حدث خطأ غير متوقع',
+        text2: getErrorMessage(err),
       });
     } finally {
       setIsUploading(false);

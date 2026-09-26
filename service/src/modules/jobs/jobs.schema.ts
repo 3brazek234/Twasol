@@ -4,8 +4,8 @@ import { paginationQuerySchema } from '../../common/schemas/pagination.schema';
 const moneyRegex = /^\d+(\.\d{1,2})?$/;
 
 const createJobBody = z.object({
-  title: z.string().min(3),
-  description: z.string().min(10),
+  title: z.string().min(3).max(100),
+  description: z.string().min(10).max(5000),
   courtId: z.string().uuid('معرف المحكمة غير صالح'),
   invitedLawyerId: z.string().uuid().optional(),
   taskType: z.enum(['ATTEND_SESSION', 'OBTAIN_DOCUMENT', 'FILE_PLEADING', 'REGISTER_PROPERTY', 'REVIEW_DOCKET', 'OTHER']),
@@ -31,7 +31,7 @@ export const listJobsSchema = paginationQuerySchema.extend({
   status: z.string().optional(),
   taskType: z.string().optional(),
   sortBy: z.enum(['newest', 'fee_desc', 'deadline_asc']).optional(),
-  q: z.string().optional(),
+  q: z.string().max(100).optional(),
 });
 
 export const jobIdParamSchema = z.object({

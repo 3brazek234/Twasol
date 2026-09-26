@@ -48,7 +48,24 @@ export async function uploadFileToR2({ localUri, presignedUrl, contentType, onPr
         resolve();
       } else {
         console.error('Cloudinary upload failed:', xhr.responseText);
-        reject(new Error(`Upload failed with status: ${xhr.status}`));
+        
+        let errorMessage = 'حدث خطأ أثناء رفع الملف. حاول مرة أخرى'; // Generic fallback
+        
+        try {
+          // Cloudinary format: { "error": { "message": "File size too large..." } }
+          const response = JSON.parse(xhr.responseText);
+          const cloudMsg = response.error?.message?.toLowerCase() || '';
+
+          if (cloudMsg.includes('format') || cloudMsg.includes('not allowed') || cloudMsg.includes('invalid file')) {
+            errorMessage = 'صيغة الملف غير مدعومة. الصيغ المسموحة: JPG, PNG, PDF';
+          } else if (cloudMsg.includes('size') || cloudMsg.includes('too large')) {
+            errorMessage = 'حجم الملف كبير جدًا. الحد الأقصى 5 ميجابايت';
+          }
+        } catch (e) {
+          // JSON parsing failed, use the fallback message
+        }
+
+        reject(new Error(errorMessage));
       }
     };
 

@@ -34,23 +34,34 @@ export async function deleteFromR2(key: string): Promise<void> {
 }
 
 export async function generateUploadUrl(key: string, contentType: string, expiresIn = 300): Promise<string> {
+  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+  if (!ALLOWED_MIME_TYPES.includes(contentType)) {
+    throw AppError.badRequest(`File type not allowed. Allowed types: image/jpeg, image/png, application/pdf`);
+  }
+
   const timestamp = Math.round((new Date).getTime() / 1000);
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_FORMATS = 'jpg,jpeg,png,pdf'; // Server-side enforced by Cloudinary
   
-  const signature = cloudinary.utils.api_sign_request({
+  const signParams = {
     timestamp: timestamp,
     public_id: key,
-  }, process.env.CLOUDINARY_API_SECRET!);
+    max_file_size: MAX_FILE_SIZE, // Embed directly into the signed payload
+    allowed_formats: ALLOWED_FORMATS, // Cloudinary validates file bytes against this list
+  };
+  
+  const signature = cloudinary.utils.api_sign_request(signParams, process.env.CLOUDINARY_API_SECRET!);
 
   const payload = {
     url: `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/auto/upload`,
     signature,
     timestamp,
     api_key: process.env.CLOUDINARY_API_KEY,
-    public_id: key
+    public_id: key,
+    max_file_size: MAX_FILE_SIZE,
+    allowed_formats: ALLOWED_FORMATS,
   };
 
-  // We return a JSON string so the mobile app can parse it. 
-  // It acts as a drop-in replacement for the presigned URL string.
   return JSON.stringify(payload);
 }
 

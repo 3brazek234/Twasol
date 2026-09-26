@@ -53,15 +53,33 @@ export class LawyersService {
       prisma.user.count({ where })
     ]);
 
-    const lawyersWithStats = await Promise.all(
-      lawyers.map(async (lawyer) => {
-        const stats = await ReviewsService.getUserStats(lawyer.id);
-        return {
-          ...lawyer,
-          ...stats
-        };
-      })
+    const lawyerIds = lawyers.map(l => l.id);
+
+    // Fetch review stats in a single query
+    const reviewsAgg = await prisma.review.groupBy({
+      by: ['revieweeId'],
+      where: { revieweeId: { in: lawyerIds } },
+      _avg: { rating: true },
+      _count: { rating: true }
+    });
+
+    const statsMap = new Map(
+      reviewsAgg.map(agg => [
+        agg.revieweeId,
+        {
+          averageRating: agg._avg.rating,
+          reviewCount: agg._count.rating
+        }
+      ])
     );
+
+    const lawyersWithStats = lawyers.map(lawyer => {
+      const stats = statsMap.get(lawyer.id) || { averageRating: null, reviewCount: 0 };
+      return {
+        ...lawyer,
+        ...stats
+      };
+    });
 
     // Filter by minRating if provided (done in-memory since Prisma aggregate filtering is complex)
     let filteredLawyers = lawyersWithStats;
