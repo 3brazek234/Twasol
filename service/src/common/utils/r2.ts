@@ -46,7 +46,6 @@ export async function generateUploadUrl(key: string, contentType: string, expire
   const signParams = {
     timestamp: timestamp,
     public_id: key,
-    max_file_size: MAX_FILE_SIZE, // Embed directly into the signed payload
     allowed_formats: ALLOWED_FORMATS, // Cloudinary validates file bytes against this list
   };
   
@@ -58,7 +57,6 @@ export async function generateUploadUrl(key: string, contentType: string, expire
     timestamp,
     api_key: process.env.CLOUDINARY_API_KEY,
     public_id: key,
-    max_file_size: MAX_FILE_SIZE,
     allowed_formats: ALLOWED_FORMATS,
   };
 

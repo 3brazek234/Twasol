@@ -33,6 +33,10 @@ export async function uploadFileToR2({ localUri, presignedUrl, contentType, onPr
     formData.append('timestamp', cloudinaryPayload.timestamp);
     formData.append('signature', cloudinaryPayload.signature);
     formData.append('public_id', cloudinaryPayload.public_id);
+    
+    if (cloudinaryPayload.allowed_formats) {
+      formData.append('allowed_formats', cloudinaryPayload.allowed_formats);
+    }
 
     const xhr = new XMLHttpRequest();
 
