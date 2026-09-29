@@ -25,6 +25,9 @@ import * as Sentry from '@sentry/node';
 
 const app = express();
 
+// Trust Railway's reverse proxy to correctly resolve client IPs for rate-limiting
+app.set('trust proxy', 1);
+
 app.use(requestId);
 app.use(cors({ origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000', 'http://localhost:5173'], credentials: true }));
 app.use(express.json());
