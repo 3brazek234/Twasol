@@ -67,6 +67,14 @@ app.get("/debug-sentry", function mainHandler(_req, _res) {
   throw new Error("My first Sentry error!");
 });
 
+app.get("/debug-env", (_req, res) => {
+  res.json({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "MISSING",
+    has_api_key: !!process.env.CLOUDINARY_API_KEY,
+    has_api_secret: !!process.env.CLOUDINARY_API_SECRET
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courts', courtsRoutes);
