@@ -7,11 +7,21 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://twasol-api-production.up.railway.app/api",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "742406497157-qhpaaeddaetoc71r5i08a54njgtfj414.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "742406497157-baub1dqavv0r97uv7ehdltstfag0nofo.apps.googleusercontent.com"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://twasol-api-production.up.railway.app/api",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "742406497157-qhpaaeddaetoc71r5i08a54njgtfj414.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "742406497157-baub1dqavv0r97uv7ehdltstfag0nofo.apps.googleusercontent.com"
       }
     }
   }
