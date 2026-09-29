@@ -43,9 +43,12 @@ export async function generateUploadUrl(key: string, contentType: string, expire
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_FORMATS = 'jpg,jpeg,png,pdf'; // Server-side enforced by Cloudinary
   
+  const UPLOAD_PRESET = 'secure_5mb_preset'; // Must be created in Cloudinary Dashboard
+
   const signParams = {
     timestamp: timestamp,
     public_id: key,
+    upload_preset: UPLOAD_PRESET, // Enforces settings (like max_file_size) server-side
     allowed_formats: ALLOWED_FORMATS, // Cloudinary validates file bytes against this list
   };
   
@@ -57,6 +60,7 @@ export async function generateUploadUrl(key: string, contentType: string, expire
     timestamp,
     api_key: process.env.CLOUDINARY_API_KEY,
     public_id: key,
+    upload_preset: UPLOAD_PRESET,
     allowed_formats: ALLOWED_FORMATS,
   };
 

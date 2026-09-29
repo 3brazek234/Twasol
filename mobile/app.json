@@ -8,16 +8,12 @@
     "scheme": "wakeel",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images-2.jpeg",
+    "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/nellie-adamyan-I2Ge7bLAhV4-unsplash.jpg",
-      "resizeMode": "cover",
-      "backgroundColor": "#F9FAFB",
-      "dark": {
-        "image": "./assets/nellie-adamyan-I2Ge7bLAhV4-unsplash.jpg",
-        "backgroundColor": "#14181F"
-      }
+      "image": "./assets/images-2.jpeg",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9FAFB"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -34,7 +30,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
+          "icon": "./assets/images-2.jpeg",
           "color": "#1B3B36"
         }
       ],
@@ -59,7 +55,7 @@
       "package": "com.rebuy.wakeel"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images-2.jpeg"
     }
   }
 }

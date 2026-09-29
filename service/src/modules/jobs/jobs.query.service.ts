@@ -144,14 +144,7 @@ export class JobsQueryService {
         }
       }),
       prisma.job.findMany({
-        where: {
-          applications: {
-            some: {
-              lawyerId: userId,
-              status: "ACCEPTED",
-            },
-          },
-        },
+        where: { assignedLawyerId: userId },
       }),
     ]);
     return { posted, assigned };
@@ -176,11 +169,6 @@ export class JobsQueryService {
         OR: [
           { postedByUserId: userId },
           { assignedLawyerId: userId },
-          {
-            applications: {
-              some: { lawyerId: userId, status: 'ACCEPTED' }
-            }
-          }
         ]
       },
       include: {

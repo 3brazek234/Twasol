@@ -10,6 +10,7 @@ export interface LawyerData {
   isVerified: boolean;
   averageRating: number;
   reviewCount: number;
+  completionRate: number | null;
   isActive: boolean;
   courts: string[];
 }

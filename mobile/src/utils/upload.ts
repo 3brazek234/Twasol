@@ -34,6 +34,9 @@ export async function uploadFileToR2({ localUri, presignedUrl, contentType, onPr
     formData.append('signature', cloudinaryPayload.signature);
     formData.append('public_id', cloudinaryPayload.public_id);
     
+    if (cloudinaryPayload.upload_preset) {
+      formData.append('upload_preset', cloudinaryPayload.upload_preset);
+    }
     if (cloudinaryPayload.allowed_formats) {
       formData.append('allowed_formats', cloudinaryPayload.allowed_formats);
     }

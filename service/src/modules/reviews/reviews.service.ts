@@ -85,9 +85,33 @@ export class ReviewsService {
       _count: { rating: true }
     });
 
+    const jobStats = await prisma.job.groupBy({
+      by: ['status'],
+      where: {
+        assignedLawyerId: userId,
+        status: { in: ['COMPLETED', 'EXPIRED'] }
+      },
+      _count: true
+    });
+
+    let completedJobs = 0;
+    let totalResolvedJobs = 0;
+
+    for (const stat of jobStats) {
+      totalResolvedJobs += stat._count;
+      if (stat.status === 'COMPLETED') {
+        completedJobs = stat._count;
+      }
+    }
+
+    const completionRate = totalResolvedJobs > 0 
+      ? (completedJobs / totalResolvedJobs) * 100 
+      : null;
+
     return {
       averageRating: agg._avg.rating,
-      reviewCount: agg._count.rating
+      reviewCount: agg._count.rating,
+      completionRate
     };
   }
 }

@@ -34,6 +34,14 @@ export const DocumentUploadScreen = ({ navigation }: any) => {
 
   const handleUpload = async () => {
     if (!file) return;
+
+    // INTERIM CLIENT-SIDE MITIGATION: Check size before requesting URL
+    // (Note: This is bypassable by a malicious client. True enforcement requires the Cloudinary Upload Preset)
+    if (file.size && file.size > 5 * 1024 * 1024) {
+      Toast.show({ type: 'error', text1: 'خطأ', text2: 'حجم الملف كبير جدًا. الحد الأقصى 5 ميجابايت' });
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
 

@@ -33,3 +33,28 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMIT', message: 'Too many requests, try again later' } },
 });
+
+/**
+ * Rate limiter for writing reviews — 20 requests per minute per USER.
+ */
+export const reviewLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => req.user!.userId,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { code: 'RATE_LIMIT', message: 'أنت ترسل التقييمات بسرعة كبيرة، يرجى الانتظار قليلاً' } },
+});
+
+/**
+ * Rate limiter for sending chat messages — 60 requests per minute per USER.
+ * Higher threshold accommodates fast, bursty typing during negotiations.
+ */
+export const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  keyGenerator: (req) => req.user!.userId,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { code: 'RATE_LIMIT', message: 'أنت ترسل الرسائل بسرعة كبيرة، يرجى الانتظار قليلاً' } },
+});
