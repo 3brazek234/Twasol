@@ -4,12 +4,13 @@ import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
+import { useAuthStore } from '../../stores/authStore';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, Search, X, Filter } from 'lucide-react-native';
+import { Briefcase, Search, X, Filter, Info } from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
@@ -32,6 +33,7 @@ const SkeletonJobCard = () => {
 };
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
+  const { user } = useAuthStore();
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -186,6 +188,26 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <Animated.FlatList
           data={jobs}
           keyExtractor={(item: any, index) => item?.id || String(index)}
+          ListHeaderComponent={
+            user?.role === 'LAWYER' && !selectedCourtId && jobs.length > 0 ? (
+              <View style={{ backgroundColor: tokens.colors.navy + '10', padding: 12, marginHorizontal: 24, marginBottom: 16, borderRadius: tokens.radius.md, flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
+                <Info size={20} color={tokens.colors.navy} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: tokens.typography.sizes.xs, color: tokens.colors.ink, textAlign: 'right', lineHeight: 18 }}>
+                    هذه المهام خاصة بمحاكمك المسجلة. يمكنك توسيع نطاق عملك بإضافة محاكم أخرى.
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: tokens.colors.navy, borderRadius: tokens.radius.sm }}
+                  onPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
+                >
+                  <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, fontSize: tokens.typography.sizes.xs, color: tokens.colors.white }}>
+                    إضافة محاكم
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null
+          }
           renderItem={({ item }: any) => (
             <JobCard
               job={item}
