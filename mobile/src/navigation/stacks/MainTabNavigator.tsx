@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { I18nManager, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
 import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase, Bookmark } from 'lucide-react-native';
 
@@ -50,39 +50,39 @@ const JobsNavigator = () => {
           const canHire = user?.accountMode === 'HIRING' || user?.accountMode === 'BOTH';
           
           return {
-            title: 'القائمة العامة',
-            headerTitleAlign: 'center',
-            headerRight: () => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {canHire && (
-                  <>
+            header: () => (
+              <View style={styles.jobsFeedHeader}>
+                <View style={styles.jobsFeedHeaderActions}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
+                    style={styles.jobsFeedHeaderAction}
+                  >
+                    <Settings size={22} color={tokens.colors.ink} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => navigation.setParams({ isSearchVisible: true })}
+                    style={styles.jobsFeedHeaderAction}
+                  >
+                    <Search size={22} color={tokens.colors.ink} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('SavedSearches')}
+                    style={styles.jobsFeedHeaderAction}
+                  >
+                    <Bookmark size={22} color={tokens.colors.ink} />
+                  </TouchableOpacity>
+                  {canHire && (
                     <TouchableOpacity
                       onPress={() => navigation.navigate('PostJob')}
-                      style={{ marginEnd: 16 }}
+                      style={styles.jobsFeedHeaderAction}
                     >
                       <Plus size={22} color={tokens.colors.signal} />
                     </TouchableOpacity>
-                  </>
-                )}
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('SavedSearches')}
-                  style={{ marginEnd: 16 }}
-                >
-                  <Bookmark size={22} color={tokens.colors.ink} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => navigation.setParams({ isSearchVisible: true })}
-                  style={{ marginEnd: 16 }}
-                >
-                  <Search size={22} color={tokens.colors.ink} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
-                >
-                  <Settings size={22} color={tokens.colors.ink} />
-                </TouchableOpacity>
+                  )}
+                </View>
+                <Text style={styles.jobsFeedHeaderTitle}>القائمة العامة</Text>
               </View>
-            )
+            ),
           };
         }} 
       />
@@ -144,3 +144,33 @@ export const MainNavigator = () => (
     <MainTabs.Screen name="ProfileTab" component={ProfileNavigator} options={{ title: 'حسابي' }} />
   </MainTabs.Navigator>
 );
+
+const styles = StyleSheet.create({
+  jobsFeedHeader: {
+    alignItems: 'center',
+    backgroundColor: tokens.colors.paper,
+    flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
+    height: 56,
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing.md,
+    width: '100%',
+  },
+  jobsFeedHeaderActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: tokens.spacing.xs,
+  },
+  jobsFeedHeaderAction: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  jobsFeedHeaderTitle: {
+    color: tokens.colors.ink,
+    flexShrink: 1,
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: 18,
+    textAlign: 'right',
+  },
+});
