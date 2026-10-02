@@ -36,7 +36,7 @@ export function useAuth() {
         localStorage.removeItem('adminAccessToken');
         localStorage.removeItem('adminRefreshToken');
       }
-    } catch (e) {
+    } catch {
       console.error('Invalid token format');
     }
     setLoading(false);

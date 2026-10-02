@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminVerificationsService } from '../../src/modules/admin/verifications/admin-verifications.service';
 import { prismaMock } from '../mocks/prisma';
-import { AppError } from '../../src/common/errors/AppError';
 
 describe('AdminVerificationsService', () => {
   beforeEach(() => {
@@ -34,7 +33,9 @@ describe('AdminVerificationsService', () => {
       await AdminVerificationsService.reject('user-1', 'admin-1', 'Blurry image');
       
       expect(prismaMock.verificationDocument.updateMany).toHaveBeenCalled(expect.objectContaining({ data: { status: 'REJECTED', rejectionReason: 'Blurry image' } }));
-      expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { verificationStatus: 'REJECTED' } }));
+      expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({
+        data: { verificationStatus: 'REJECTED', verificationRejectionReason: 'Blurry image' },
+      }));
     });
   });
 });

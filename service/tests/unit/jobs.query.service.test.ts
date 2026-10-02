@@ -12,7 +12,7 @@ describe('JobsQueryService', () => {
       prismaMock.job.findMany.mockResolvedValue([{ id: 'job-1' }] as any);
       prismaMock.job.count.mockResolvedValue(1);
       
-      const result = await JobsQueryService.search({ page: 1, limit: 10 });
+      const result = await JobsQueryService.list({ page: 1, limit: 10 });
       
       expect(prismaMock.job.findMany).toHaveBeenCalled();
       expect(prismaMock.job.count).toHaveBeenCalled();

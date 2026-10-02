@@ -67,6 +67,7 @@
     "web": "expo start --web",
     "postinstall": "rm -rf node_modules/moti/node_modules/react node_modules/moti/node_modules/react-dom",
     "i18n:check": "npx tsx scripts/i18n-check.ts",
+    "typecheck": "tsc --noEmit",
     "test": "jest"
   },
   "private": true
