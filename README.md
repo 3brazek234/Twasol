@@ -17,3 +17,11 @@ npm install
 npm run build
 npm start
 ```
+
+## Pre-commit Checks
+
+Install the repository-level dependencies once with `npm install` from the repository root. Husky then runs `npm run precommit` before each commit. The gate runs the configured Admin linter, TypeScript checks for Service, Mobile, and Admin, and the Service unit tests. Run the same checks manually with:
+
+```bash
+npm run precommit
+```

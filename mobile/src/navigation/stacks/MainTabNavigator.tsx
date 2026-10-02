@@ -48,6 +48,7 @@ const JobsNavigator = () => {
           
           return {
             title: 'القائمة العامة',
+            headerTitleAlign: 'center',
             headerRight: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {canHire && (
