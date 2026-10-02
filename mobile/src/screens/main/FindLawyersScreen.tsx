@@ -14,6 +14,7 @@ const MOCK_LAWYERS: LawyerData[] = [
     isVerified: true,
     averageRating: 4.9,
     reviewCount: 42,
+    completionRate: 0.98,
     isActive: true,
     courts: ['NY Supreme', 'SDNY'],
   },
@@ -23,6 +24,7 @@ const MOCK_LAWYERS: LawyerData[] = [
     isVerified: false,
     averageRating: 4.5,
     reviewCount: 15,
+    completionRate: null,
     isActive: false,
     courts: ['NY Supreme'],
   }

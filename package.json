@@ -1,0 +1,14 @@
+{
+  "name": "twasol",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix admin run lint",
+    "typecheck": "npm --prefix service run typecheck && npm --prefix mobile run typecheck && npm --prefix admin run typecheck",
+    "test:unit": "npm --prefix service run test:unit",
+    "precommit": "npm run lint && npm run typecheck && npm run test:unit"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

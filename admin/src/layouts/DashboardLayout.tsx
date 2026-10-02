@@ -11,7 +11,6 @@ import {
   FileText, 
   ClipboardList, 
   Scale, 
-  Languages, 
   LogOut,
   MessageSquare,
   CreditCard
