@@ -58,8 +58,6 @@ export const PosterReviewScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <ChevronRight color={tokens.colors.ink} size={24} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>تقييم المحامي</Text>
-        <View style={styles.headerRight} />
       </View>
       
       <ScrollView contentContainerStyle={styles.scrollContent}>

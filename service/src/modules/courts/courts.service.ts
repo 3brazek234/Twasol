@@ -78,7 +78,7 @@ export class CourtsService {
         nameEn: c.nameEn,
         type: c.type,
         governorateId: c.governorateId,
-        governorateName: c.governorate?.nameAr,
+        governorate: c.governorate ? { id: c.governorate.id, nameAr: c.governorate.nameAr, nameEn: c.governorate.nameEn } : null,
         lawyerCount: c._count?.lawyers || 0,
       }));
       
@@ -143,6 +143,19 @@ export class CourtsService {
     const total = Number(totalResult[0]?.count || 0);
 
     return paginate(lawyers as any[], total, page, limit);
+  }
+
+  static async getMyCourts(userId: string) {
+    const records = await prisma.lawyerCourt.findMany({
+      where: { userId },
+      include: {
+        court: {
+          include: { governorate: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return records;
   }
 
   static async registerLawyer(userId: string, courtId: string) {

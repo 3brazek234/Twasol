@@ -9,6 +9,7 @@ const router = Router();
 
 router.get('/governorates', CourtsController.getGovernorates);
 router.get('/search', authenticate, validate(searchCourtsSchema, 'query'), CourtsController.search);
+router.get('/my', authenticate, CourtsController.getMyCourts);
 router.get('/', authenticate, validate(listCourtsSchema, 'query'), CourtsController.list);
 router.get('/:id', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.getById);
 router.get('/:id/lawyers', authenticate, validate(courtIdParamSchema, 'params'), CourtsController.getLawyers);

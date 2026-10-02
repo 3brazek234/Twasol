@@ -1,0 +1,28 @@
+name: Admin Lint & Type Check
+
+on:
+  pull_request:
+    paths: ['admin/**']
+  push:
+    branches: [main]
+    paths: ['admin/**']
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+      - name: Install dependencies
+        working-directory: admin
+        run: npm ci
+      - name: Type check
+        working-directory: admin
+        run: npx tsc -b
+      - name: Lint
+        working-directory: admin
+        run: npm run lint

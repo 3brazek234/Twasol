@@ -13,6 +13,8 @@ export class JobsQueryService {
     taskType,
     sortBy = 'newest',
     search,
+    userId,
+    role,
   }: {
     page: number;
     limit: number;
@@ -21,7 +23,26 @@ export class JobsQueryService {
     taskType?: string;
     sortBy?: 'newest' | 'fee_desc' | 'deadline_asc';
     search?: string;
+    userId: string;
+    role: string;
   }) {
+    let isLawyerWithRestrictedCourts = false;
+    let userCourtIds: string[] = [];
+
+    // If no specific courtId is requested, and the user is a lawyer, restrict to their registered courts
+    if (!courtId && role === 'LAWYER') {
+      isLawyerWithRestrictedCourts = true;
+      const userCourts = await prisma.lawyerCourt.findMany({
+        where: { userId, isActive: true },
+        select: { courtId: true }
+      });
+      userCourtIds = userCourts.map(c => c.courtId);
+      
+      // If a lawyer has no registered courts, they shouldn't see any jobs
+      if (userCourtIds.length === 0) {
+        return paginate([], 0, page, limit);
+      }
+    }
     const SORT_MAP: Record<string, Prisma.JobOrderByWithRelationInput> = {
       newest: { createdAt: 'desc' },
       fee_desc: { salaryMax: 'desc' },
@@ -42,7 +63,7 @@ export class JobsQueryService {
         SELECT id, similarity(title, ${search}) AS sim
         FROM "jobs"
         WHERE status = ${status || 'OPEN'}
-          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : Prisma.empty}
+          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : (isLawyerWithRestrictedCourts ? Prisma.sql`AND court_id IN (${Prisma.join(userCourtIds)})` : Prisma.empty)}
           ${taskType ? Prisma.sql`AND task_type = ${taskType}::"JobTaskType"` : Prisma.empty}
           AND similarity(title, ${search}) > ${threshold}
         ORDER BY sim DESC
@@ -59,7 +80,7 @@ export class JobsQueryService {
         SELECT COUNT(*) as count
         FROM "jobs"
         WHERE status = ${status || 'OPEN'}
-          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : Prisma.empty}
+          ${courtId ? Prisma.sql`AND court_id = ${courtId}` : (isLawyerWithRestrictedCourts ? Prisma.sql`AND court_id IN (${Prisma.join(userCourtIds)})` : Prisma.empty)}
           ${taskType ? Prisma.sql`AND task_type = ${taskType}::"JobTaskType"` : Prisma.empty}
           AND similarity(title, ${search}) > ${threshold}
       `;
@@ -84,7 +105,11 @@ export class JobsQueryService {
         ...(status ? { status: status as any } : { status: "OPEN" }),
       };
 
-      if (courtId) where.courtId = courtId;
+      if (courtId) {
+        where.courtId = courtId;
+      } else if (isLawyerWithRestrictedCourts) {
+        where.courtId = { in: userCourtIds };
+      }
       if (taskType) where.taskType = taskType as any;
 
       const orderBy = SORT_MAP[sortBy] || SORT_MAP['newest'];
