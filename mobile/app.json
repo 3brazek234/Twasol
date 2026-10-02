@@ -1,7 +1,10 @@
 {
   "expo": {
     "extra": {
-      "supportsRTL": true
+      "supportsRTL": true,
+      "eas": {
+        "projectId": "669df6fd-a6bd-4d82-9564-0e9a6b7e8b3d"
+      }
     },
     "name": "وكيل",
     "slug": "wakeel-mobile",
@@ -52,7 +55,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "backgroundColor": "#F9FAFB"
       },
-      "package": "com.rebuy.wakeel"
+      "package": "com.rebuy.wakeel",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/images-2.jpeg"

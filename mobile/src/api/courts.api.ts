@@ -60,9 +60,9 @@ export const getAllCourts = async (filters?: {
 // ─── My Courts ────────────────────────────────────────────────────────────────
 
 export const getMyCourts = async (): Promise<LawyerCourt[]> => {
-  const res = await apiClient.get<any>('/users/me');
-  const courts = res.data.courts ?? [];
-  return courts.map(mapLawyerCourt);
+  const res = await apiClient.get<any>('/courts/my');
+  const raw = res.data?.data ?? (Array.isArray(res.data) ? res.data : []);
+  return raw.map(mapLawyerCourt);
 };
 
 // ─── Search ───────────────────────────────────────────────────────────────────

@@ -2,7 +2,6 @@ import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminSocket } from '../api/socket';
 import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
@@ -33,57 +32,17 @@ export default function DashboardLayout() {
     refetchInterval: 30000,
   });
 
-  const badges = badgesData || { verification: 0, reports: 0, support: 0 };
+  const badges = badgesData || { verification: 0, reports: 0, support: 0, subscriptions: 0 };
 
   useEffect(() => {
     if (!user) return;
-
-    adminSocket.connect();
     
-    const handleNewSignup = (payload: any) => {
-      const id = Date.now();
-      setToasts(prev => [...prev, { id, title: 'New Signup', message: `${payload.fullName} (${payload.email})`, link: '/users' }]);
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
-
-      queryClient.setQueryData(['admin-overview'], (oldData: any) => {
-        if (!oldData || !oldData.funnel) return oldData;
-        return {
-          ...oldData,
-          funnel: { ...oldData.funnel, totalRegistered: oldData.funnel.totalRegistered + 1 }
-        };
-      });
-    };
-
-    const handleNewSupportMessage = (payload: any) => {
-      const id = Date.now();
-      setToasts(prev => [...prev, { 
-        id, 
-        title: 'New Support Message', 
-        message: payload.message?.sender?.fullName ? `From ${payload.message.sender.fullName}` : 'New message in support', 
-        link: '/support' 
-      }]);
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
-
-      queryClient.setQueryData(['admin-badges'], (oldData: any) => {
-        if (!oldData) return { verification: 0, reports: 0, support: 1 };
-        return { ...oldData, support: oldData.support + 1 };
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-support'] });
-    };
-
-    adminSocket.on('admin:new_signup', handleNewSignup);
-    adminSocket.on('admin:new_support_message', handleNewSupportMessage);
-
-    const cleanupReconnect = adminSocket.onReconnect(() => {
-      queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
-    });
-
-    return () => {
-      adminSocket.off('admin:new_signup', handleNewSignup);
-      adminSocket.off('admin:new_support_message', handleNewSupportMessage);
-      cleanupReconnect();
-    };
-  }, [user, queryClient]);
+    // The previous socket implementation listened for 'admin:new_signup' and 'admin:new_support_message'
+    // to show toasts and update badges. The badges are now natively polled every 30s.
+    // If real-time toasts are heavily desired in the future, a dedicated REST-polling toast queue
+    // could be implemented, but for an admin dashboard, a 30s badge update is sufficient.
+    
+  }, [user]);
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;

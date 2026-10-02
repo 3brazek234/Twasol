@@ -22,7 +22,9 @@ export class JobsController {
         status, 
         taskType,
         sortBy,
-        search: q 
+        search: q,
+        userId: req.user!.userId,
+        role: req.user!.role,
       });
       res.json(result);
     } catch (error) {

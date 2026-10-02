@@ -1,11 +1,9 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
 import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase, Bookmark } from 'lucide-react-native';
 
-import { HiringHomeScreen } from '../../screens/main/HiringHomeScreen';
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
 import { JobDetailScreen } from '../../screens/main/JobDetailScreen';
 import { JobCompletionScreen } from '../../screens/main/JobCompletionScreen';
@@ -35,7 +33,6 @@ const defaultScreenOptions = {
 };
 
 const JobsNavigator = () => {
-  const { selectedMode } = require('../../stores/authStore').useAuthStore();
   
   return (
     <JobsStack.Navigator 
@@ -106,7 +103,7 @@ const ChatsNavigator = () => (
 const ProfileNavigator = () => (
   <ProfileStack.Navigator screenOptions={defaultScreenOptions}>
     <ProfileStack.Screen name="ProfileHome" component={SettingsScreen} options={{ title: 'الاعدادات' }} />
-    <ProfileStack.Screen name="MyCourts" component={MyCourtsScreen} options={{ title: 'Jurisdictions' }} />
+    <ProfileStack.Screen name="MyCourts" component={MyCourtsScreen} options={{ title: 'المحاكم المسجلة لدي حسابي' }} />
   </ProfileStack.Navigator>
 );
 

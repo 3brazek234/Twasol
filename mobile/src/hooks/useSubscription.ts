@@ -8,6 +8,11 @@ export const fetchSubscriptionPlans = async () => {
   return res.data;
 };
 
+export const fetchSubscriptionStatus = async () => {
+  const res = await apiClient.get('/subscription/status');
+  return res.data;
+};
+
 export const getReceiptUploadUrl = async (variables: { contentType: string }) => {
   const { data } = await apiClient.post('/subscription/receipt-upload-url', variables);
   return data;
@@ -45,9 +50,17 @@ export const useSubmitSubscription = () => {
     mutationFn: submitSubscription,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', 'status'] });
     },
     onError: (err) => {
       Alert.alert('خطأ', getErrorMessage(err));
     },
+  });
+};
+
+export const useSubscriptionStatus = () => {
+  return useQuery({
+    queryKey: ['subscription', 'status'],
+    queryFn: fetchSubscriptionStatus,
   });
 };
