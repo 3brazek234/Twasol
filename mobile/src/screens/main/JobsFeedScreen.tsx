@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, RefreshControl, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
 import { useAuthStore } from '../../stores/authStore';
-import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, Search, X, Filter, Info } from 'lucide-react-native';
-import { MotiView, AnimatePresence } from 'moti';
+import { Briefcase, Info } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
 
@@ -34,14 +33,12 @@ const SkeletonJobCard = () => {
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
   const { user } = useAuthStore();
-  const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(undefined);
+  const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(route.params?.courtId ?? undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
-  const [taskType, setTaskType] = useState<string | undefined>(undefined);
+  const [taskType, setTaskType] = useState<string | undefined>(route.params?.taskType ?? undefined);
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
 
-  const isSearchVisible = route.params?.isSearchVisible ?? false;
-  const [searchInput, setSearchInput] = useState('');
 
   const {
     data,
@@ -52,7 +49,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useJobs(selectedCourtId, selectedStatus, searchInput, taskType, sortBy);
+  } = useJobs(selectedCourtId, selectedStatus, taskType, sortBy);
 
   // ── Refetch when the screen comes back into focus ──────────────────────────
   // This handles: navigating back from JobDetail, returning from PostJob, etc.
@@ -91,31 +88,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <VerificationStatusBanner />
 
-      <AnimatePresence>
-        {isSearchVisible && (
-          <MotiView
-            from={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 64 }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-6 justify-center bg-white border-b border-line"
-          >
-            <View className="flex-row items-center bg-paper rounded-xl px-4 h-11">
-              <Search color="#718096" size={18} />
-              <TextInput
-                className="flex-1 ml-2 text-base font-bodyMedium text-ink h-full"
-                placeholder={'البحث عن المهام بالكلمات المفتاحية...'}
-                value={searchInput}
-                onChangeText={setSearchInput}
-                placeholderTextColor="#718096"
-                autoFocus
-              />
-              <TouchableOpacity onPress={() => navigation.setParams({ isSearchVisible: false })}>
-                <X size={20} color="#718096" />
-              </TouchableOpacity>
-            </View>
-          </MotiView>
-        )}
-      </AnimatePresence>
 
       <View className="bg-white border-b border-line py-2">
         <ScrollView
@@ -128,7 +100,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             selectedValue={selectedStatus}
             onSelect={setSelectedStatus}
           />
-          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus !== 'OPEN' ? selectedStatus : undefined, taskType, q: searchInput }} />
+          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus !== 'OPEN' ? selectedStatus : undefined, taskType }} />
         </ScrollView>
         <ScrollView
           horizontal

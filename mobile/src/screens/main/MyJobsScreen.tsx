@@ -9,8 +9,6 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { useNavigation } from '@react-navigation/native';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';

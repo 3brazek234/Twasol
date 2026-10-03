@@ -14,7 +14,7 @@ export class JobsController {
 
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const { page, limit, courtId, status, taskType, sortBy, q } = req.query as any;
+      const { page, limit, courtId, status, taskType, sortBy } = req.query as any;
       const result = await JobsService.list({ 
         page: Number(page) || 1, 
         limit: Math.min(Number(limit) || 25, 50), 
@@ -22,7 +22,6 @@ export class JobsController {
         status, 
         taskType,
         sortBy,
-        search: q,
         userId: req.user!.userId,
         role: req.user!.role,
       });
