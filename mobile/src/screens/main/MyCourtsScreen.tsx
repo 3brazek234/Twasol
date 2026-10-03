@@ -5,6 +5,8 @@ import { LawyerCourt, CourtTypeLabelAr } from '../../schemas/court.schema';
 import { tokens } from '../../theme/tokens';
 import { Plus, Trash2, MapPin, X } from 'lucide-react-native';
 import { CourtPicker } from '../../components/CourtPicker';
+import { EmptyState } from '../../components/EmptyState';
+import { EmptyStateIllustration } from '../../components/EmptyStateIllustration';
 
 export const MyCourtsScreen = () => {
   const { data: myCourts, isLoading: isLoadingMyCourts } = useMyCourts();
@@ -77,9 +79,13 @@ export const MyCourtsScreen = () => {
           data={myCourts}
           keyExtractor={(item) => item.id}
           renderItem={renderMyCourtItem}
-          contentContainerStyle={{ padding: tokens.spacing.md, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: tokens.spacing.md, paddingBottom: 100, flexGrow: myCourts?.length ? 0 : 1 }}
           ListEmptyComponent={
-            <Text style={styles.empty}>لم يتم إضافة محاكم بعد.</Text>
+            <EmptyState
+              illustration={<EmptyStateIllustration kind="courts" />}
+              headline="أضف المحاكم التي تعمل بها"
+              body="أضف محاكمك لتظهر لك فرص حصرية في نطاقها."
+            />
           }
         />
       )}

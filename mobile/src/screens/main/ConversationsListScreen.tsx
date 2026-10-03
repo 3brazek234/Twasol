@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
 import { useConversations } from '../../hooks/useConversations';
 import { tokens } from '../../theme/tokens';
-import { MessageSquare, User, ChevronRight } from 'lucide-react-native';
-import { fetchConversations, ConversationSummary } from '../../api/conversations.api';
+import { User } from 'lucide-react-native';
+import { ConversationSummary } from '../../api/conversations.api';
+import { EmptyState } from '../../components/EmptyState';
+import { EmptyStateIllustration } from '../../components/EmptyStateIllustration';
 
 export const ConversationsListScreen = ({ navigation }: any) => {
-  const queryClient = useQueryClient();
   const { data: conversations = [], isLoading, error } = useConversations();
 
 
@@ -69,12 +69,13 @@ export const ConversationsListScreen = ({ navigation }: any) => {
         data={conversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: tokens.spacing.md }}
+        contentContainerStyle={{ padding: tokens.spacing.md, flexGrow: conversations.length === 0 ? 1 : 0 }}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <MessageSquare size={40} color={tokens.colors.line} style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyText}>لا توجد محادثات بعد</Text>
-          </View>
+          <EmptyState
+            illustration={<EmptyStateIllustration kind="chat" />}
+            headline="ستظهر محادثاتك هنا"
+            body="قدّم على مهمة لبدء محادثة والتفاوض مباشرة."
+          />
         }
       />
     </View>
@@ -119,7 +120,4 @@ const styles = StyleSheet.create({
   time: { fontSize: tokens.typography.sizes.xs, color: tokens.colors.muted, fontFamily: tokens.typography.fonts.body },
   jobTitle: { fontSize: tokens.typography.sizes.xs, color: tokens.colors.muted, fontFamily: tokens.typography.fonts.body, marginBottom: 2 },
   lastMessage: { color: tokens.colors.muted, fontSize: tokens.typography.sizes.sm, fontFamily: tokens.typography.fonts.body },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100 },
-  emptyText: { color: tokens.colors.muted, fontSize: tokens.typography.sizes.base, fontFamily: tokens.typography.fonts.body },
 });
-

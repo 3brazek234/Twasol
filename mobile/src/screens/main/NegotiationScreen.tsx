@@ -18,12 +18,16 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useNegotiationTimeline, useNegotiationActions } from "../../hooks/useNegotiation";
 import { useJob } from "../../hooks/useJobs";
 import { useAuthStore } from "../../stores/authStore";
-import { FileText, DollarSign, MessageSquare, X, CheckCircle, Clock, XCircle, Download, Camera, Image as ImageIcon, Handshake, ChevronRight } from "lucide-react-native";
-import { safeFormatTime, formatCurrency } from "../../utils/dateUtils";
-import { colors, fonts, spacing, radius, shadows } from "../../theme/tokens";
+import { FileText, DollarSign, MessageSquare, X, CheckCircle, Clock, XCircle, Download, Camera, Image as ImageIcon, ChevronRight } from "lucide-react-native";
+import { safeFormatTime } from "../../utils/dateUtils";
+import { colors, fonts, spacing, radius } from "../../theme/tokens";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { apiClient } from "../../api/client";
+import { EmptyState } from "../../components/EmptyState";
+import { EmptyStateIllustration } from "../../components/EmptyStateIllustration";
+import { ContextualTooltip } from "../../components/ContextualTooltip";
+import { OfferCard } from "../../components/OfferCard";
 
 const isSameDay = (d1: string | Date, d2: string | Date) => {
   const date1 = new Date(d1);
@@ -171,46 +175,18 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
     const opacity = item.status === "pending" ? 0.6 : 1;
 
     if (item.type === "OFFER") {
-      const isPending = item.offerStatus === "PENDING";
-      const isAccepted = item.offerStatus === "ACCEPTED";
-      const isRejected = item.offerStatus === "REJECTED";
-      const isWithdrawn = item.offerStatus === "WITHDRAWN";
-
-      const statusBg = isAccepted ? "#E8F5E9" : isRejected ? "#FFEBEE" : isWithdrawn ? "#F5F5F5" : colors.amberBg;
-      const statusText = isAccepted ? colors.success : isRejected ? colors.destructive : isWithdrawn ? colors.muted : colors.amber;
-      const statusLabel = isAccepted ? "تم القبول ✓" : isRejected ? "تم الرفض" : isWithdrawn ? "مسحوب" : "قيد الانتظار";
-
       return (
-        <View style={[styles.offerCardWrapper, { opacity }]}>
-          <View style={styles.offerCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.offerBadgeContainer}>
-                <DollarSign size={14} color={colors.gold} />
-                <Text style={styles.offerLabelText}>عرض مالي</Text>
-              </View>
-              <Text style={styles.cardTime}>{timeStr}</Text>
-            </View>
-
-            <Text style={styles.offerAmount}>{formatCurrency(Number(item.offerAmount))}</Text>
-            <Text style={styles.offerSender}>من: {isMe ? "أنت" : otherPartyName}</Text>
-
-            {isPending && !isMe ? (
-              <View style={styles.offerActionRow}>
-                <TouchableOpacity style={[styles.btn, styles.acceptBtn]} onPress={() => actions.acceptOffer(item.id)}>
-                  <Text style={styles.btnText}>قبول العرض</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.btn, styles.rejectBtn]} onPress={() => actions.rejectOffer(item.id)}>
-                  <Text style={styles.btnText}>رفض</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-                <Text style={[styles.statusBadgeText, { color: statusText }]}>{statusLabel}</Text>
-              </View>
-            )}
-
-            {item.status === "pending" && <Text style={styles.pendingText}>جاري الإرسال...</Text>}
-          </View>
+        <View style={{ opacity }}>
+          <OfferCard
+            item={item}
+            isMe={isMe}
+            otherPartyName={otherPartyName}
+            timeLabel={timeStr}
+            onResponse={(messageId, action) => {
+              if (action === "accept") actions.acceptOffer(messageId);
+              else actions.rejectOffer(messageId);
+            }}
+          />
         </View>
       );
     }
@@ -283,11 +259,11 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
       </View>
 
       {timeline.length === 0 && !isFetching ? (
-        <View style={styles.emptyState}>
-          <Handshake size={48} color={colors.muted} style={{ marginBottom: 12 }} />
-          <Text style={styles.emptyTitle}>ابدأ التفاوض</Text>
-          <Text style={styles.emptySub}>أرسل عرضاً مالياً أو ملاحظة لبدء التفاوض</Text>
-        </View>
+        <EmptyState
+          illustration={<EmptyStateIllustration kind="chat" />}
+          headline="ستظهر مفاوضاتك هنا"
+          body="قدّم على مهمة لبدء محادثة والتفاوض مباشرة."
+        />
       ) : (
         <FlatList
           data={timelineWithDates}
@@ -303,14 +279,23 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
 
       {/* Bottom Action Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={[styles.actionButton, !canOffer && { opacity: 0.5 }]} 
-          disabled={!canOffer}
-          onPress={() => setModalType("OFFER")}
-        >
-          <DollarSign size={18} color={colors.white} />
-          <Text style={styles.actionButtonText}>إرسال عرض</Text>
-        </TouchableOpacity>
+        {canOffer ? (
+          <ContextualTooltip
+            storageKey="@wakeel_tip_chat_offer_v1"
+            illustration="offer"
+            message="اقترح أتعابك مباشرة من هنا."
+          >
+            <TouchableOpacity style={styles.actionButton} onPress={() => setModalType("OFFER")}>
+              <DollarSign size={18} color={colors.white} />
+              <Text style={styles.actionButtonText}>إرسال عرض</Text>
+            </TouchableOpacity>
+          </ContextualTooltip>
+        ) : (
+          <View style={[styles.actionButton, { opacity: 0.5 }]}>
+            <DollarSign size={18} color={colors.white} />
+            <Text style={styles.actionButtonText}>إرسال عرض</Text>
+          </View>
+        )}
         
         <TouchableOpacity style={styles.actionButton} onPress={() => setModalType("DOCUMENT")}>
           <FileText size={18} color={colors.white} />
@@ -452,31 +437,6 @@ const styles = StyleSheet.create({
   cardSender: { fontFamily: fonts.bodySemibold, fontSize: 12, color: colors.navy },
   cardTime: { fontFamily: fonts.body, fontSize: 11, color: colors.muted },
 
-  offerCardWrapper: { marginBottom: spacing.md },
-  offerCard: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderTopWidth: 3,
-    borderTopColor: colors.gold,
-    borderWidth: 1,
-    borderColor: colors.line,
-    ...shadows.sm,
-  },
-  offerBadgeContainer: { flexDirection: "row", alignItems: "center", gap: 4 },
-  offerLabelText: { fontFamily: fonts.bodySemibold, fontSize: 12, color: colors.gold },
-  offerAmount: { fontFamily: fonts.mono, fontSize: 24, color: colors.navy, marginVertical: spacing.sm, textAlign: "center" },
-  offerSender: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, textAlign: "center", marginBottom: spacing.sm },
-
-  offerActionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
-  btn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.sm, alignItems: "center" },
-  acceptBtn: { backgroundColor: colors.signal },
-  rejectBtn: { backgroundColor: colors.destructive },
-  btnText: { color: colors.white, fontFamily: fonts.bodySemibold, fontSize: 14 },
-
-  statusBadge: { alignSelf: "center", paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: radius.pill, marginTop: spacing.xs },
-  statusBadgeText: { fontFamily: fonts.bodySemibold, fontSize: 12 },
-
   noteCard: { backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line },
   noteCardMe: { backgroundColor: "#F0F4F8", borderColor: "#D9E2EC" },
   noteCardOther: { backgroundColor: colors.white, borderColor: colors.line },
@@ -511,9 +471,6 @@ const styles = StyleSheet.create({
   },
   actionButtonText: { color: colors.white, fontFamily: fonts.bodySemibold, fontSize: 12 },
 
-  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
-  emptyTitle: { fontFamily: fonts.bodySemibold, fontSize: 16, color: colors.ink, marginBottom: 4 },
-  emptySub: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, textAlign: "center" },
 
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
   modalContent: { backgroundColor: colors.white, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: spacing.lg },

@@ -5,6 +5,14 @@ import { AppNotification } from "../../schemas/notification.schema";
 import { useQueryClient } from "@tanstack/react-query";
 import { tokens } from "../../theme/tokens";
 import { Bell, Briefcase, Landmark, MessageSquare, ShieldAlert } from "lucide-react-native";
+import { StatusPill } from "../../components/StatusPill";
+
+const RELATED_JOB_STATUS: Record<string, string> = {
+  OFFER_ACCEPTED: "AGREED",
+  JOB_COMPLETED: "COMPLETED",
+  JOB_CANCELLED: "CANCELLED",
+  JOB_EXPIRED_WITHDRAWN: "EXPIRED",
+};
 
 export const NotificationsScreen = ({ navigation }: any) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useNotifications();
@@ -94,7 +102,10 @@ export const NotificationsScreen = ({ navigation }: any) => {
         </View>
         
         <View style={styles.content}>
-          <Text style={[styles.title, !item.isRead && styles.unreadText]}>{item.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, !item.isRead && styles.unreadText]} numberOfLines={1}>{item.title}</Text>
+            {RELATED_JOB_STATUS[item.type] && <StatusPill status={RELATED_JOB_STATUS[item.type]} />}
+          </View>
           <Text style={styles.body} numberOfLines={2}>{item.body}</Text>
           <Text style={styles.date}>{new Date(item.createdAt).toLocaleString()}</Text>
         </View>
@@ -169,7 +180,9 @@ const styles = StyleSheet.create({
     marginEnd: tokens.spacing.md,
   },
   content: { flex: 1 },
+  titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: tokens.spacing.xs },
   title: { 
+    flex: 1,
     fontSize: tokens.typography.sizes.base - 1, 
     fontWeight: tokens.typography.weights.semibold, 
     color: tokens.colors.ink, 

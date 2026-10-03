@@ -3,31 +3,38 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MotiView } from 'moti';
 import { tokens } from '../theme/tokens';
 import { ShieldCheck } from 'lucide-react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
+  illustration?: React.ReactNode;
   headline: string;
   body: string;
   ctaText?: string;
   onCtaPress?: () => void;
 }
 
-export const EmptyState = ({ icon, headline, body, ctaText, onCtaPress }: EmptyStateProps) => {
+export const EmptyState = ({ icon, illustration, headline, body, ctaText, onCtaPress }: EmptyStateProps) => {
+  const reducedMotion = useReducedMotion();
+  const visual = illustration ?? icon ?? (
+    <ShieldCheck size={64} color={tokens.colors.muted} className="opacity-10" />
+  );
+
   return (
     <View className="flex-1 p-12 justify-center items-center">
       <MotiView
-        from={{ opacity: 0, scale: 0.8 }}
+        from={reducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', damping: 12 }}
-        className="w-30 h-30 rounded-full bg-signal/5 justify-center items-center mb-8"
+        transition={reducedMotion ? { type: 'timing', duration: 0 } : { type: 'spring', damping: 12 }}
+        className={illustration ? 'justify-center items-center mb-6' : 'w-30 h-30 rounded-full bg-signal/5 justify-center items-center mb-8'}
       >
-        {icon || <ShieldCheck size={64} color={tokens.colors.muted} className="opacity-10" />}
+        {visual}
       </MotiView>
       
       <MotiView
-        from={{ opacity: 0, translateY: 10 }}
+        from={reducedMotion ? { opacity: 1, translateY: 0 } : { opacity: 0, translateY: 10 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ delay: 200 }}
+        transition={reducedMotion ? { type: 'timing', duration: 0 } : { delay: 200 }}
         className="items-center mb-8"
       >
         <Text className="text-xl font-displayBold text-ink mb-2 text-center">{headline}</Text>
@@ -36,9 +43,9 @@ export const EmptyState = ({ icon, headline, body, ctaText, onCtaPress }: EmptyS
 
       {ctaText && onCtaPress && (
         <MotiView
-          from={{ opacity: 0, translateY: 10 }}
+          from={reducedMotion ? { opacity: 1, translateY: 0 } : { opacity: 0, translateY: 10 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 400 }}
+          transition={reducedMotion ? { type: 'timing', duration: 0 } : { delay: 400 }}
         >
           <TouchableOpacity
             className="px-8 py-4 bg-white rounded-xl border border-line shadow-sm"

@@ -9,12 +9,13 @@ import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, Search, X, Filter } from 'lucide-react-native';
+import { Search, X, Filter } from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
 
 import { SaveSearchButton } from '../../components/jobs/SaveSearchButton';
+import { EmptyStateIllustration } from '../../components/EmptyStateIllustration';
 
 const SkeletonJobCard = () => {
   return (
@@ -126,7 +127,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             selectedValue={selectedStatus}
             onSelect={setSelectedStatus}
           />
-          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus !== 'OPEN' ? selectedStatus : undefined, taskType, q: searchInput }} />
+          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus, taskType, q: searchInput }} />
         </ScrollView>
         <ScrollView
           horizontal
@@ -191,9 +192,10 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
               job={item}
               variant="feed"
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
+              onApply={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}
-          contentContainerStyle={{ paddingTop: 16 }}
+          contentContainerStyle={{ paddingTop: 16, flexGrow: jobs.length === 0 ? 1 : 0 }}
           scrollEventThrottle={16}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) {
@@ -218,10 +220,10 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           }
           ListEmptyComponent={
             <EmptyState
-              icon={<Briefcase size={64} color="#E2E8F0" />}
-              headline={'لم يتم العثور على أي مهام'}
-              body={'لا توجد مهام مفتوحة في المحاكم المسجل بها حالياً. يمكنك إضافة محكمة أخرى لتوسيع نطاق بحثك.'}
-              ctaText={'إدارة الاختصاصات القضائية'}
+              illustration={<EmptyStateIllustration kind="jobs" />}
+              headline="لا توجد مهام تطابق هذه التصفية"
+              body="وسّع نطاق البحث أو احفظ التصفية لتصلك تنبيهات عند ظهور مهام مناسبة."
+              ctaText="إدارة المحاكم"
               onCtaPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
             />
           }
