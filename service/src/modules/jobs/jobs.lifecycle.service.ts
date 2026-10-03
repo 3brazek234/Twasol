@@ -22,13 +22,15 @@ export class JobsLifecycleService {
     }
   }
 
-  static async apply(jobId: string, lawyerId: string) {
-    const user = await prisma.user.findUnique({ where: { id: lawyerId } });
+  private static async assertCanApply(jobId: string, lawyerId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: lawyerId },
+      select: { isActive: true, verificationStatus: true, subscriptionExpiresAt: true },
+    });
 
     if (!user?.isActive) throw AppError.forbidden("Account is not active");
     if (user?.verificationStatus !== "APPROVED") throw AppError.forbidden("Account must be verified to apply for jobs");
 
-    // SUBSCRIPTION GATE (Live date check)
     const isActiveSub = user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date();
     if (!isActiveSub) {
       throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.");
@@ -44,11 +46,47 @@ export class JobsLifecycleService {
       throw AppError.badRequest("Cannot apply to your own job");
     }
 
+    return job;
+  }
+
+  static async declareConflict(jobId: string, lawyerId: string, ipAddress?: string) {
+    const job = await this.assertCanApply(jobId, lawyerId);
+
+    return prisma.$transaction(async (tx) => {
+      const declaration = await tx.conflictDeclaration.upsert({
+        where: { jobId_lawyerId: { jobId, lawyerId } },
+        update: { hasConflict: true, ipAddress: ipAddress || null, declaredAt: new Date() },
+        create: { jobId, lawyerId, hasConflict: true, ipAddress: ipAddress || null },
+      });
+
+      await auditLog(
+        tx as any,
+        lawyerId,
+        "job.conflict.declared",
+        "ConflictDeclaration",
+        declaration.id,
+        null,
+        { jobId, hasConflict: true },
+      );
+
+      return declaration;
+    });
+  }
+
+  static async apply(jobId: string, lawyerId: string, ipAddress: string | undefined, conflictsCheckPassed: boolean) {
+    const job = await this.assertCanApply(jobId, lawyerId);
+    if (!conflictsCheckPassed) throw AppError.badRequest("A conflicts check confirmation is required");
+
     const existingApplication = await prisma.jobApplication.findUnique({
       where: { jobId_lawyerId: { jobId, lawyerId } },
     });
 
     if (existingApplication) {
+      const declaration = await prisma.conflictDeclaration.findUnique({
+        where: { jobId_lawyerId: { jobId, lawyerId } },
+      });
+      if (declaration?.hasConflict) throw AppError.forbidden("A declared conflict prevents applying to this job");
+
       const existingConversation = await prisma.conversation.findFirst({
         where: {
           jobId,
@@ -62,9 +100,30 @@ export class JobsLifecycleService {
     }
 
     return prisma.$transaction(async (tx) => {
+      const existingDeclaration = await tx.conflictDeclaration.findUnique({
+        where: { jobId_lawyerId: { jobId, lawyerId } },
+      });
+      if (existingDeclaration?.hasConflict) {
+        throw AppError.forbidden("A declared conflict prevents applying to this job");
+      }
+
+      const declaration = await tx.conflictDeclaration.upsert({
+        where: { jobId_lawyerId: { jobId, lawyerId } },
+        update: { hasConflict: false, ipAddress: ipAddress || null, declaredAt: new Date() },
+        create: { jobId, lawyerId, hasConflict: false, ipAddress: ipAddress || null },
+      });
       const application = await tx.jobApplication.create({
         data: { jobId, lawyerId, status: "PENDING" },
       });
+      await auditLog(
+        tx as any,
+        lawyerId,
+        "job.conflict_check.passed",
+        "ConflictDeclaration",
+        declaration.id,
+        null,
+        { jobId, hasConflict: false },
+      );
 
       const existingConversation = await tx.conversation.findFirst({
         where: {

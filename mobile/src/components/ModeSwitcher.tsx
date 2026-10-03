@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
-import { colors, fonts, radius, shadows, spacing } from '../theme/tokens';
-import { MotiView } from 'moti';
+import { tokens } from '../theme/tokens';
 
 export const ModeSwitcher = () => {
   const { user, selectedMode, setSelectedMode } = useAuthStore();
@@ -13,65 +12,77 @@ export const ModeSwitcher = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.track}
-        activeOpacity={1}
-        onPress={() => setSelectedMode(isHiring ? 'GIG' : 'HIRING')}
-      >
-        <MotiView
-          animate={{
-            translateX: isHiring ? 70 : 0,
-          }}
-          transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-          style={styles.thumb}
-        />
-        <View style={styles.labels}>
-          <Text style={[styles.label, !isHiring && styles.labelActive]}>Represent</Text>
-          <Text style={[styles.label, isHiring && styles.labelActive]}>Hiring</Text>
-        </View>
-      </TouchableOpacity>
+      <View style={styles.track}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityState={{ selected: !isHiring }}
+          style={[styles.option, !isHiring && styles.optionActive]}
+          onPress={() => setSelectedMode('GIG')}
+        >
+          <Text style={[styles.label, !isHiring && styles.labelActive]}>البحث عن عمل</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityState={{ selected: isHiring }}
+          style={[styles.option, isHiring && styles.optionActive]}
+          onPress={() => setSelectedMode('HIRING')}
+        >
+          <Text style={[styles.label, isHiring && styles.labelActive]}>توظيف محامٍ</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.description}>
+        {isHiring
+          ? 'انشر مهامك وتابع المحامين المكلّفين بها.'
+          : 'استعرض الفرص في محاكمك وأدر المحاكم المسجلة.'}
+      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginStart: spacing.md,
+    backgroundColor: tokens.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.line,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.sm,
   },
   track: {
-    width: 140,
-    height: 32,
-    backgroundColor: 'rgba(226, 232, 240, 0.5)',
-    borderRadius: radius.pill,
+    flexDirection: 'row',
+    backgroundColor: tokens.colors.paper,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    padding: tokens.spacing.xxs,
+    gap: tokens.spacing.xxs,
+  },
+  option: {
+    flex: 1,
+    minHeight: tokens.spacing.xxl,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 2,
-    position: 'relative',
+    justifyContent: 'center',
+    paddingHorizontal: tokens.spacing.xs,
+    borderRadius: tokens.radius.sm,
   },
-  thumb: {
-    position: 'absolute',
-    width: 68,
-    height: 28,
-    backgroundColor: colors.white,
-    borderRadius: radius.pill,
-    start: 2,
-    ...shadows.sm,
-  },
-  labels: {
-    flex: 1,
-    flexDirection: 'row',
-    zIndex: 1,
+  optionActive: {
+    backgroundColor: tokens.colors.white,
+    ...tokens.shadows.sm,
   },
   label: {
-    flex: 1,
     textAlign: 'center',
-    fontSize: 10,
-    fontFamily: fonts.bodySemibold,
-    color: colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: tokens.typography.sizes.xs,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    color: tokens.colors.muted,
   },
   labelActive: {
-    color: colors.signal,
+    color: tokens.colors.navy,
+  },
+  description: {
+    marginTop: tokens.spacing.xs,
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
   },
 });

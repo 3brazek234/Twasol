@@ -36,8 +36,8 @@ export const PAYMENT_INSTRUCTIONS = {
     iban: 'EG123456789012345678901234',
   },
   MANUAL_VODAFONE_CASH: {
-    phoneNumber: '01001234567',
-    accountName: 'وكيل للخدمات القانونية',
+    phoneNumber: '01065750357',
+    accountName: 'ahmedhamdy',
   },
   MANUAL_CASH: {
     address: 'القاهرة، مصر الجديدة، شارع عبد العزيز فهمي',

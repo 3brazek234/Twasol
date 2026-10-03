@@ -12,6 +12,7 @@ export class JobsService {
   static getJobsByLawyerId = JobsQueryService.getJobsByLawyerId;
   
   static apply = JobsLifecycleService.apply;
+  static declareConflict = JobsLifecycleService.declareConflict;
   static updateStatus = JobsLifecycleService.updateStatus;
   static complete = JobsLifecycleService.complete;
   static delete = JobsLifecycleService.delete;

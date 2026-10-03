@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { ShieldCheck, MessageSquare } from "lucide-react-native";
+import { MessageSquare } from "lucide-react-native";
 import { StarRating } from "../../components/StarRating";
+import { UserTrustSummary } from "../../components/UserTrustSummary";
 import { useLawyerProfile } from "../../hooks/useUsers";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../../api/client";
@@ -75,40 +76,16 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
         
         {/* Header */}
         <View style={{ marginBottom: 32 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 24, color: tokens.colors.ink, textAlign: "right", marginBottom: 8 }}>
-                {profile.fullName}
-              </Text>
-              
-              {profile.verificationStatus === 'APPROVED' && (
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
-                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 14, color: tokens.colors.verdant, marginRight: 6 }}>
-                    موثق
-                  </Text>
-                  <ShieldCheck color={tokens.colors.verdant} size={18} />
-                </View>
-              )}
-
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
-                <Text style={{ fontFamily: tokens.typography.fonts.mono, fontSize: 14, color: tokens.colors.muted, marginRight: 8 }}>
-                  رقم القيد: {profile.barNumber || "غير متوفر"}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Stats Row */}
-          <View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: tokens.colors.white, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.line }}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 20, color: tokens.colors.ink }}>{profile.averageRating?.toFixed(1) || "0.0"}</Text>
-              <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 12, color: tokens.colors.muted, marginTop: 4 }}>التقييم</Text>
-            </View>
-            <View style={{ width: 1, backgroundColor: tokens.colors.line }} />
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontFamily: tokens.typography.fonts.displayBold, fontSize: 20, color: tokens.colors.ink }}>{profile.reviewCount || 0}</Text>
-              <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 12, color: tokens.colors.muted, marginTop: 4 }}>المراجعات</Text>
-            </View>
+          <View style={{ backgroundColor: tokens.colors.white, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.line }}>
+            <UserTrustSummary
+              name={profile.fullName || "محامٍ"}
+              verificationStatus={profile.verificationStatus}
+              averageRating={profile.averageRating}
+              reviewCount={profile.reviewCount}
+            />
+            <Text style={{ fontFamily: tokens.typography.fonts.mono, fontSize: 14, color: tokens.colors.muted, textAlign: "right", marginTop: 12 }}>
+              رقم القيد: {profile.barNumber || "غير متوفر"}
+            </Text>
           </View>
         </View>
 

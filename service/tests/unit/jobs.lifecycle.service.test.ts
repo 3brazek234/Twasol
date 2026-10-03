@@ -3,6 +3,7 @@ import { JobsLifecycleService } from "../../src/modules/jobs/jobs.lifecycle.serv
 import { prismaMock } from "../mocks/prisma";
 import { expectAppError } from "../helpers/errors";
 import { makeJob } from "../factories/job.factory";
+import { makeUser } from "../factories/user.factory";
 
 describe("JobsLifecycleService", () => {
   const jobId = "job-123";
@@ -12,6 +13,54 @@ describe("JobsLifecycleService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
+  });
+
+  describe("conflict declarations", () => {
+    it("records a declared conflict without creating an application", async () => {
+      const job = makeJob({ id: jobId, postedByUserId: posterId });
+      prismaMock.user.findUnique.mockResolvedValue(makeUser({
+        isActive: true,
+        verificationStatus: "APPROVED",
+        subscriptionExpiresAt: new Date(Date.now() + 60_000),
+      }) as any);
+      prismaMock.job.findUnique.mockResolvedValue(job);
+      prismaMock.conflictDeclaration.upsert.mockResolvedValue({
+        id: "declaration-1",
+        jobId,
+        lawyerId,
+        hasConflict: true,
+      } as any);
+
+      await JobsLifecycleService.declareConflict(jobId, lawyerId, "127.0.0.1");
+
+      expect(prismaMock.conflictDeclaration.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        create: expect.objectContaining({ jobId, lawyerId, hasConflict: true }),
+      }));
+      expect(prismaMock.jobApplication.create).not.toHaveBeenCalled();
+    });
+
+    it("prevents applying after a conflict has been declared", async () => {
+      const job = makeJob({ id: jobId, postedByUserId: posterId });
+      prismaMock.user.findUnique.mockResolvedValue(makeUser({
+        isActive: true,
+        verificationStatus: "APPROVED",
+        subscriptionExpiresAt: new Date(Date.now() + 60_000),
+      }) as any);
+      prismaMock.job.findUnique.mockResolvedValue(job);
+      prismaMock.jobApplication.findUnique.mockResolvedValue(null);
+      prismaMock.conflictDeclaration.findUnique.mockResolvedValue({
+        id: "declaration-1",
+        jobId,
+        lawyerId,
+        hasConflict: true,
+      } as any);
+
+      await expectAppError(
+        () => JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true),
+        "FORBIDDEN",
+      );
+      expect(prismaMock.jobApplication.create).not.toHaveBeenCalled();
+    });
   });
 
   describe("startNegotiation", () => {

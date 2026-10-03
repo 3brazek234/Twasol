@@ -105,6 +105,18 @@ export class ChatMessagesService {
     if (!(message.conversation.jobId as string) || message.conversation.type !== 'JOB') throw AppError.badRequest('Cannot accept an offer in a direct inquiry');
 
     const result = await prisma.$transaction(async (tx) => {
+      const conflictDeclaration = await tx.conflictDeclaration.findUnique({
+        where: {
+          jobId_lawyerId: {
+            jobId: message.conversation.jobId as string,
+            lawyerId: message.senderId,
+          },
+        },
+      });
+      if (conflictDeclaration?.hasConflict) {
+        throw AppError.forbidden('A declared conflict prevents accepting this offer');
+      }
+
       const { count } = await tx.message.updateMany({
         where: { id: messageId, offerStatus: OfferStatus.PENDING },
         data: { offerStatus: OfferStatus.ACCEPTED }
@@ -120,8 +132,8 @@ export class ChatMessagesService {
 
       await tx.conflictDeclaration.upsert({
         where: { jobId_lawyerId: { jobId: (message.conversation.jobId as string), lawyerId: message.senderId } },
-        update: { ipAddress: ipAddress || null, declaredAt: new Date() },
-        create: { jobId: (message.conversation.jobId as string), lawyerId: message.senderId, ipAddress: ipAddress || null }
+        update: { hasConflict: false, ipAddress: ipAddress || null, declaredAt: new Date() },
+        create: { jobId: (message.conversation.jobId as string), lawyerId: message.senderId, hasConflict: false, ipAddress: ipAddress || null }
       });
 
       await auditLog(tx as any, userId, 'offer.accepted', 'Message', messageId, { offerStatus: OfferStatus.PENDING }, { offerStatus: OfferStatus.ACCEPTED, amount: message.offerAmount });

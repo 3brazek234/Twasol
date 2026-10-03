@@ -1,44 +1,330 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
-import { MotiView, AnimatePresence } from 'moti';
-import { CreditCard, Upload, FileCheck, X, AlertCircle, CheckCircle } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Check, CheckCircle2, Clock3, CreditCard, FileCheck2, Upload } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../../stores/authStore';
-import { useSubscriptionPlans, useGetReceiptUploadUrl, useSubmitSubscription, useSubscriptionStatus } from '../../hooks/useSubscription';
+import {
+  useSubscriptionPlans,
+  useGetReceiptUploadUrl,
+  useSubmitSubscription,
+  useSubscriptionStatus,
+} from '../../hooks/useSubscription';
 import { uploadFileToR2 } from '../../utils/upload';
 import { tokens } from '../../theme/tokens';
 
+type SubscriptionPlan = {
+  id: string;
+  nameAr: string;
+  durationMonths: number;
+  amountPiasters: number;
+  badge?: string | null;
+};
+
+type PaymentInstructions = {
+  MANUAL_VODAFONE_CASH?: { phoneNumber?: string; accountName?: string };
+  MANUAL_BANK_TRANSFER?: {
+    bankName?: string;
+    accountName?: string;
+    accountNumber?: string;
+    iban?: string;
+  };
+};
+
+const formatDuration = (months: number) => {
+  if (months === 1) return 'شهر واحد';
+  if (months === 12) return 'سنة واحدة';
+  return `${months} شهراً`;
+};
+
+const formatDate = (value?: string | Date | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+const ActiveSubscriptionView = ({ expiresAt }: { expiresAt?: string | Date | null }) => {
+  const expires = formatDate(expiresAt);
+
+  return (
+    <SafeAreaView style={styles.stateContainer}>
+      <View style={[styles.stateIcon, styles.activeIcon]}>
+        <CheckCircle2 size={34} color={tokens.colors.signal} />
+      </View>
+      <Text style={styles.stateTitle}>اشتراكك فعال</Text>
+      <Text style={styles.stateBody}>
+        يمكنك الآن استعراض فرص العمل المحلية والتواصل مع شبكة المحامين الموثقين.
+      </Text>
+      {expires ? (
+        <View style={styles.expiryCard}>
+          <Text style={styles.expiryLabel}>تاريخ انتهاء الاشتراك</Text>
+          <Text style={styles.expiryDate}>{expires}</Text>
+        </View>
+      ) : null}
+    </SafeAreaView>
+  );
+};
+
+const PendingSubscriptionView = () => (
+  <SafeAreaView style={styles.stateContainer}>
+    <View style={[styles.stateIcon, styles.pendingIcon]}>
+      <Clock3 size={34} color={tokens.colors.docket} />
+    </View>
+    <Text style={styles.stateTitle}>طلبك قيد المراجعة</Text>
+    <Text style={styles.stateBody}>
+      إيصالك قيد المراجعة. يتحقق فريقنا من تحويل فودافون كاش، وعادةً ما تستغرق المراجعة حتى 24 ساعة.
+      سنرسل إليك إشعاراً فور تفعيل حسابك.
+    </Text>
+    <View style={styles.pendingCard}>
+      <FileCheck2 size={20} color={tokens.colors.docket} />
+      <Text style={styles.pendingCardText}>تم استلام الإيصال، ولا يلزمك إرسال طلب آخر.</Text>
+    </View>
+  </SafeAreaView>
+);
+
+interface PaywallViewProps {
+  plans: SubscriptionPlan[];
+  selectedPlanId: string | null;
+  onSelectPlan: (planId: string) => void;
+  paymentMethod: 'MANUAL_BANK_TRANSFER' | 'MANUAL_VODAFONE_CASH';
+  onSelectPaymentMethod: (method: 'MANUAL_BANK_TRANSFER' | 'MANUAL_VODAFONE_CASH') => void;
+  instructions: PaymentInstructions | null;
+  file: ImagePicker.ImagePickerAsset | null;
+  onPickReceipt: () => void;
+  isUploading: boolean;
+  uploadProgress: number;
+  canSubmit: boolean;
+  onSubmit: () => void;
+}
+
+const PaywallView = ({
+  plans,
+  selectedPlanId,
+  onSelectPlan,
+  paymentMethod,
+  onSelectPaymentMethod,
+  instructions,
+  file,
+  onPickReceipt,
+  isUploading,
+  uploadProgress,
+  canSubmit,
+  onSubmit,
+}: PaywallViewProps) => {
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.pitchHeader}>
+          <View style={styles.pitchIcon}>
+            <CreditCard size={28} color={tokens.colors.navy} />
+          </View>
+          <Text style={styles.pitchTitle}>افتح فرصاً أكثر مع وكيل</Text>
+          <Text style={styles.pitchDescription}>
+            اشتراكك يمنحك وصولاً كاملاً إلى فرص العمل في محاكمك، وإمكانية التقديم على المهام، والتواصل ضمن شبكة المحامين الموثقين.
+          </Text>
+        </View>
+
+        <View style={styles.benefitList}>
+          {[
+            'تصفّح المهام المحلية حسب المحاكم المسجلة',
+            'قدّم على المهام وتفاوض مباشرةً داخل التطبيق',
+            'تواصل مع شبكة محامين موثقة',
+          ].map((benefit) => (
+            <View key={benefit} style={styles.benefitRow}>
+              <Check size={16} color={tokens.colors.signal} />
+              <Text style={styles.benefitText}>{benefit}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={styles.sectionTitle}>اختر مدة الاشتراك</Text>
+        <View style={styles.planList}>
+          {plans.map((plan) => {
+            const isSelected = selectedPlanId === plan.id;
+            return (
+              <TouchableOpacity
+                key={plan.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                style={[styles.planOption, isSelected && styles.selectedPlanOption]}
+                onPress={() => onSelectPlan(plan.id)}
+                disabled={isUploading}
+              >
+                <View style={styles.planOptionHeader}>
+                  <Text style={styles.planName}>{plan.nameAr}</Text>
+                  {plan.badge ? <Text style={styles.planBadge}>{plan.badge}</Text> : null}
+                </View>
+                <Text style={styles.planDuration}>{formatDuration(plan.durationMonths)}</Text>
+                <Text style={styles.planPrice}>
+                  {(plan.amountPiasters / 100).toLocaleString('ar-EG')} ج.م
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Text style={styles.sectionTitle}>طريقة الدفع</Text>
+        <View style={styles.methodRow}>
+          <PaymentMethodOption
+            label="فودافون كاش"
+            selected={paymentMethod === 'MANUAL_VODAFONE_CASH'}
+            disabled={isUploading}
+            onPress={() => onSelectPaymentMethod('MANUAL_VODAFONE_CASH')}
+          />
+          <PaymentMethodOption
+            label="تحويل بنكي"
+            selected={paymentMethod === 'MANUAL_BANK_TRANSFER'}
+            disabled={isUploading}
+            onPress={() => onSelectPaymentMethod('MANUAL_BANK_TRANSFER')}
+          />
+        </View>
+
+        <View style={styles.paymentCard}>
+          {paymentMethod === 'MANUAL_VODAFONE_CASH' ? (
+            <>
+              <Text style={styles.paymentCardTitle}>حوّل قيمة الباقة إلى رقم فودافون كاش</Text>
+              <Text selectable style={styles.paymentNumber}>
+                {instructions?.MANUAL_VODAFONE_CASH?.phoneNumber || 'رقم الدفع غير متاح حالياً'}
+              </Text>
+              <Text style={styles.paymentAccountName}>
+                باسم {instructions?.MANUAL_VODAFONE_CASH?.accountName || 'وكيل'}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.paymentCardTitle}>
+                التحويل البنكي · {instructions?.MANUAL_BANK_TRANSFER?.bankName}
+              </Text>
+              <Text selectable style={styles.bankDetail}>
+                رقم الحساب: {instructions?.MANUAL_BANK_TRANSFER?.accountNumber || 'غير متاح'}
+              </Text>
+              <Text selectable style={styles.bankDetail}>
+                IBAN: {instructions?.MANUAL_BANK_TRANSFER?.iban || 'غير متاح'}
+              </Text>
+              <Text style={styles.paymentAccountName}>
+                باسم {instructions?.MANUAL_BANK_TRANSFER?.accountName || 'وكيل'}
+              </Text>
+            </>
+          )}
+          <Text style={styles.paymentHint}>بعد التحويل، أرفق صورة الإيصال لإرسالها للمراجعة.</Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>إيصال التحويل</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={[styles.receiptPicker, file && styles.receiptSelected]}
+          onPress={onPickReceipt}
+          disabled={isUploading}
+        >
+          {file ? (
+            <>
+              <FileCheck2 size={22} color={tokens.colors.signal} />
+              <Text style={styles.receiptSelectedText}>تم اختيار الإيصال</Text>
+              <Text style={styles.receiptHint}>اضغط لاختيار صورة أخرى</Text>
+            </>
+          ) : (
+            <>
+              <Upload size={22} color={tokens.colors.navy} />
+              <Text style={styles.receiptPickerText}>اختر صورة الإيصال</Text>
+              <Text style={styles.receiptHint}>JPG أو PNG</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <View style={styles.progressSlot} accessibilityLiveRegion="polite">
+          {isUploading ? (
+            <>
+              <Text style={styles.progressLabel}>جارٍ إرسال الإيصال · {uploadProgress}%</Text>
+              <View
+                accessibilityRole="progressbar"
+                accessibilityValue={{ min: 0, max: 100, now: uploadProgress }}
+                style={styles.progressTrack}
+              >
+                <View style={[styles.progressFill, { width: `${uploadProgress}%` }]} />
+              </View>
+            </>
+          ) : null}
+        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={[styles.submitButton, (!canSubmit || isUploading) && styles.submitButtonDisabled]}
+          onPress={onSubmit}
+          disabled={!canSubmit || isUploading}
+        >
+          {isUploading ? (
+            <ActivityIndicator size="small" color={tokens.colors.white} />
+          ) : (
+            <Text style={styles.submitButtonText}>إرسال الإيصال للمراجعة</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const PaymentMethodOption = ({
+  label,
+  selected,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    accessibilityRole="button"
+    accessibilityState={{ selected }}
+    style={[styles.methodOption, selected && styles.selectedMethodOption]}
+    onPress={onPress}
+    disabled={disabled}
+  >
+    <Text style={[styles.methodText, selected && styles.selectedMethodText]}>{label}</Text>
+  </TouchableOpacity>
+);
+
 export const SubscriptionScreen = () => {
   const { user, hydrate, refreshUserProfile } = useAuthStore();
-  
   const { data: subscriptionData, isLoading: plansLoading, error } = useSubscriptionPlans();
-  const { data: statusData, isLoading: statusLoading } = useSubscriptionStatus();
-  const isLoading = plansLoading || statusLoading;
+  const {
+    data: statusData,
+    isLoading: statusLoading,
+    refetch: refetchStatus,
+  } = useSubscriptionStatus();
   const getUrl = useGetReceiptUploadUrl();
   const submit = useSubmitSubscription();
 
-  const plans = subscriptionData?.plans || [];
-  const instructions = subscriptionData?.paymentInstructions || null;
-  
+  const plans: SubscriptionPlan[] = subscriptionData?.plans || [];
+  const instructions: PaymentInstructions | null = subscriptionData?.paymentInstructions || null;
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'MANUAL_BANK_TRANSFER' | 'MANUAL_VODAFONE_CASH'>('MANUAL_VODAFONE_CASH');
-  
-  const [file, setFile] = useState<any>(null);
+  const [file, setFile] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (plans.length > 0 && !selectedPlanId) {
-      setSelectedPlanId(plans[0].id);
-    }
-  }, [plans]);
+    if (plans.length > 0 && !selectedPlanId) setSelectedPlanId(plans[0].id);
+  }, [plans, selectedPlanId]);
 
   useEffect(() => {
-    // Always fetch the freshest subscription state when this screen opens —
-    // an admin may have just approved the payment while the app was running.
     refreshUserProfile();
-  }, []);
+  }, [refreshUserProfile]);
 
   useEffect(() => {
     if (error) {
@@ -48,227 +334,441 @@ export const SubscriptionScreen = () => {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.8,
     });
-
-    if (!result.canceled) {
-      setFile(result.assets[0]);
-    }
+    if (!result.canceled) setFile(result.assets[0]);
   };
 
   const proceedSubmit = async () => {
+    if (!file || !selectedPlanId) return;
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
-      // 1. Get presigned URL
-      const urlData = await getUrl.mutateAsync({
-        contentType: file!.mimeType || 'image/jpeg',
-      });
-
-      // 2. Upload to R2
+      const contentType = file.mimeType || 'image/jpeg';
+      const urlData = await getUrl.mutateAsync({ contentType });
       await uploadFileToR2({
-        localUri: file!.uri,
+        localUri: file.uri,
         presignedUrl: urlData.uploadUrl,
-        contentType: file!.mimeType || 'image/jpeg',
-        onProgress: (progress) => setUploadProgress(progress),
+        contentType,
+        onProgress: (progress) => setUploadProgress(Math.max(0, Math.min(progress, 100))),
       });
-
-      // 3. Submit Subscription
       await submit.mutateAsync({
-        planId: selectedPlanId!,
+        planId: selectedPlanId,
         paymentMethod,
         receiptKey: urlData.fileKey,
       });
 
       Toast.show({
         type: 'success',
-        text1: 'تم استلام طلبك',
-        text2: 'جاري مراجعة الإيصال من الإدارة',
+        text1: 'تم استلام الإيصال',
+        text2: 'سنرسل إليك إشعاراً بعد مراجعة التحويل.',
       });
-
-      await hydrate();
-
-    } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'حدث خطأ', text2: err.message });
+      await Promise.all([refetchStatus(), hydrate()]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'تعذر إرسال الإيصال. حاول مرة أخرى.';
+      Toast.show({ type: 'error', text1: 'تعذر إرسال الإيصال', text2: message });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!file) {
-      Toast.show({ type: 'error', text1: 'مطلوب إيصال', text2: 'يرجى إرفاق صورة إيصال التحويل' });
+      Toast.show({ type: 'error', text1: 'اختر الإيصال', text2: 'أرفق صورة إيصال التحويل للمتابعة.' });
       return;
     }
-
-
-
-    if (user?.subscriptionStatus === 'ACTIVE') {
-      const expires = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString('ar-EG') : '';
-      Alert.alert(
-        'تجديد الاشتراك',
-        `لديك اشتراك نشط بالفعل${expires ? ` ينتهي في ${expires}` : ''}. هل أنت متأكد أنك تريد تقديم طلب اشتراك جديد؟ سيتم إضافة المدة الجديدة إلى اشتراكك الحالي.`,
-        [
-          { text: 'إلغاء', style: 'cancel' },
-          { text: 'متابعة التجديد', onPress: proceedSubmit }
-        ]
-      );
+    if (!selectedPlanId) {
+      Toast.show({ type: 'error', text1: 'اختر الباقة', text2: 'اختر مدة الاشتراك للمتابعة.' });
       return;
     }
-
     proceedSubmit();
   };
 
+  const isLoading = plansLoading || statusLoading;
+  const subscriptionStatus = statusData?.subscriptionStatus ?? user?.subscriptionStatus;
+  const isHiringOnly = user?.accountMode === 'HIRING';
+  const isActive = subscriptionStatus === 'ACTIVE';
+  const hasPendingPayment = statusData?.pendingPayment?.status === 'PENDING'
+    || statusData?.status === 'PENDING';
+  const expiresAt = statusData?.subscriptionExpiresAt ?? user?.subscriptionExpiresAt;
+
   if (isLoading) {
-    return <View className="flex-1 justify-center items-center bg-paper"><ActivityIndicator size="large" color="#1B2A4A" /></View>;
-  }
-
-  // Pure POSTER/HIRING accounts should never see this
-  if (user?.accountMode === 'HIRING') {
     return (
-      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
-        <Text className="text-xl font-displayBold text-ink mb-2">غير مصرح</Text>
-        <Text className="text-center font-body text-muted">أصحاب حسابات التوظيف غير مطالبين باشتراك.</Text>
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={tokens.colors.navy} />
       </SafeAreaView>
     );
   }
 
-  const hasPendingPayment = !!statusData?.pendingPayment;
-  const isSubscriptionActive = user?.subscriptionStatus === 'ACTIVE';
-
-  if (isSubscriptionActive) {
-    const expires = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString('ar-EG') : '';
+  if (isHiringOnly) {
     return (
-      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
-        <View className="w-16 h-16 rounded-full bg-green-100 justify-center items-center mb-4">
-          <CheckCircle size={32} color="#38A169" />
-        </View>
-        <Text className="text-2xl font-displayBold text-ink mb-2">اشتراكك فعال</Text>
-        <Text className="text-center font-body text-muted mb-4">أنت الآن تتمتع بكافة ميزات المحامي وتقرأ القضايا المتاحة بكل حرية.</Text>
-        {expires ? (
-          <View className="bg-white p-4 rounded-xl border border-line w-full shadow-sm">
-            <Text className="text-center font-bodySemibold text-ink mb-1">تاريخ انتهاء الاشتراك</Text>
-            <Text className="text-center font-displayBold text-signal text-xl">{expires}</Text>
-          </View>
-        ) : null}
+      <SafeAreaView style={styles.stateContainer}>
+        <Text style={styles.stateTitle}>الاشتراك غير مطلوب</Text>
+        <Text style={styles.stateBody}>حسابات التوظيف لا تحتاج إلى اشتراك للوصول إلى خدماتها.</Text>
       </SafeAreaView>
     );
   }
 
-  if (hasPendingPayment) {
-    return (
-      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
-        <View className="w-16 h-16 rounded-full bg-orange-100 justify-center items-center mb-4">
-          <FileCheck size={32} color="#DD6B20" />
-        </View>
-        <Text className="text-2xl font-displayBold text-ink mb-2">طلب قيد المراجعة</Text>
-        <Text className="text-center font-body text-muted">لقد قمت بإرسال إيصال الدفع مسبقاً وهو الآن قيد المراجعة من قبل الإدارة. يرجى الانتظار، سيتم إشعارك فور التفعيل.</Text>
-      </SafeAreaView>
-    );
-  }
+  if (isActive) return <ActiveSubscriptionView expiresAt={expiresAt} />;
+  if (hasPendingPayment) return <PendingSubscriptionView />;
 
   return (
-    <SafeAreaView className="flex-1 bg-paper">
-      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 100 }}>
-        
-        <View className="items-center mb-8">
-          <View className="w-16 h-16 rounded-full bg-signal/10 justify-center items-center mb-4">
-            <CreditCard size={32} color={tokens.colors.signal} />
-          </View>
-          <Text className="text-2xl font-displayBold text-ink text-center mb-2">تفعيل الاشتراك</Text>
-          <Text className="text-base text-muted text-center font-body">
-            حسابك موثق بنجاح. يرجى اختيار الباقة ورفع إيصال الدفع للبدء.
-          </Text>
-        </View>
-
-        {/* Plans Selection */}
-        <Text className="text-sm font-bodySemibold text-muted mb-3">اختر الباقة المناسبة</Text>
-        <View className="flex-row flex-wrap gap-4 mb-8">
-          {plans.map((plan: any) => (
-            <TouchableOpacity
-              key={plan.id}
-              className={`flex-1 p-4 rounded-xl border-2 ${selectedPlanId === plan.id ? 'border-signal bg-signal/5' : 'border-line bg-white'}`}
-              onPress={() => setSelectedPlanId(plan.id)}
-            >
-              <Text className="text-lg font-bodySemibold text-ink mb-1">{plan.nameAr}</Text>
-              <Text className="text-xl font-displayBold text-signal">{(plan.amountPiasters / 100).toFixed(0)} ج.م</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Payment Methods */}
-        <Text className="text-sm font-bodySemibold text-muted mb-3">طريقة الدفع (تحويل يدوي)</Text>
-        <View className="flex-row gap-4 mb-6">
-          <TouchableOpacity 
-            className={`px-4 py-2 rounded-full border ${paymentMethod === 'MANUAL_VODAFONE_CASH' ? 'border-signal bg-signal/10' : 'border-line'}`}
-            onPress={() => setPaymentMethod('MANUAL_VODAFONE_CASH')}
-          >
-            <Text className={`font-bodySemibold ${paymentMethod === 'MANUAL_VODAFONE_CASH' ? 'text-signal' : 'text-muted'}`}>فودافون كاش</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            className={`px-4 py-2 rounded-full border ${paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'border-signal bg-signal/10' : 'border-line'}`}
-            onPress={() => setPaymentMethod('MANUAL_BANK_TRANSFER')}
-          >
-            <Text className={`font-bodySemibold ${paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'text-signal' : 'text-muted'}`}>تحويل بنكي</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Instructions */}
-        <View className="bg-white p-4 rounded-xl border border-line mb-8">
-          {paymentMethod === 'MANUAL_VODAFONE_CASH' && (
-            <>
-              <Text className="font-body text-ink mb-2">يرجى تحويل المبلغ إلى الرقم التالي:</Text>
-              <Text className="text-xl font-monoLarge text-signal text-center my-2 select-all">{instructions?.MANUAL_VODAFONE_CASH?.phoneNumber}</Text>
-              <Text className="font-body text-muted text-center text-sm">باسم: {instructions?.MANUAL_VODAFONE_CASH?.accountName}</Text>
-            </>
-          )}
-          {paymentMethod === 'MANUAL_BANK_TRANSFER' && (
-            <>
-              <Text className="font-body text-ink mb-2">يرجى التحويل إلى الحساب التالي ({instructions?.MANUAL_BANK_TRANSFER?.bankName}):</Text>
-              <Text className="font-mono text-signal mt-2">رقم الحساب: {instructions?.MANUAL_BANK_TRANSFER?.accountNumber}</Text>
-              <Text className="font-mono text-signal text-xs mt-1">IBAN: {instructions?.MANUAL_BANK_TRANSFER?.iban}</Text>
-              <Text className="font-body text-muted text-sm mt-2">باسم: {instructions?.MANUAL_BANK_TRANSFER?.accountName}</Text>
-            </>
-          )}
-        </View>
-
-        {/* Upload Receipt */}
-        <Text className="text-sm font-bodySemibold text-muted mb-3">إرفاق إيصال التحويل (سكرين شوت)</Text>
-        <TouchableOpacity
-          className={`h-40 border-2 rounded-2xl bg-white justify-center items-center mb-8 ${file ? 'border-signal bg-signal/5' : 'border-line border-dashed'}`}
-          onPress={pickImage}
-        >
-          {!file ? (
-            <View className="items-center">
-              <Upload size={24} color={tokens.colors.signal} className="mb-2" />
-              <Text className="font-body text-ink">اضغط لاختيار صورة الإيصال</Text>
-            </View>
-          ) : (
-            <View className="items-center">
-              <FileCheck size={28} color="#38A169" className="mb-2" />
-              <Text className="font-body text-success">تم اختيار الملف بنجاح</Text>
-              <Text className="font-body text-muted text-xs mt-1">اضغط للتغيير</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-      </ScrollView>
-
-      {/* Footer Action */}
-      <View className="absolute bottom-0 w-full p-6 bg-paper border-t border-line">
-        <TouchableOpacity
-          className={`h-14 rounded-xl justify-center items-center ${!file || isUploading ? 'bg-line opacity-60' : 'bg-signal'}`}
-          onPress={handleSubmit}
-          disabled={!file || isUploading}
-        >
-          <Text className="text-white text-base font-bodySemibold">
-            {isUploading ? `جاري الإرسال (${uploadProgress}%)...` : 'إرسال طلب التفعيل'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <PaywallView
+      plans={plans}
+      selectedPlanId={selectedPlanId}
+      onSelectPlan={setSelectedPlanId}
+      paymentMethod={paymentMethod}
+      onSelectPaymentMethod={setPaymentMethod}
+      instructions={instructions}
+      file={file}
+      onPickReceipt={pickImage}
+      isUploading={isUploading}
+      uploadProgress={uploadProgress}
+      canSubmit={!!file && !!selectedPlanId}
+      onSubmit={handleSubmit}
+    />
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: tokens.colors.paper,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.paper,
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.paper,
+    padding: tokens.spacing.lg,
+  },
+  stateIcon: {
+    width: tokens.spacing.xxxl,
+    height: tokens.spacing.xxxl,
+    borderRadius: tokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: tokens.spacing.md,
+  },
+  activeIcon: {
+    backgroundColor: tokens.colors.verdantBg,
+  },
+  pendingIcon: {
+    backgroundColor: tokens.colors.amberBg,
+  },
+  stateTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.xxl,
+    textAlign: 'center',
+    marginBottom: tokens.spacing.xs,
+  },
+  stateBody: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.base,
+    lineHeight: tokens.typeScale.body.lineHeight,
+    textAlign: 'center',
+    maxWidth: 440,
+  },
+  expiryCard: {
+    width: '100%',
+    maxWidth: 440,
+    alignItems: 'center',
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.md,
+    marginTop: tokens.spacing.lg,
+  },
+  expiryLabel: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  expiryDate: {
+    color: tokens.colors.signal,
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.xl,
+    marginTop: tokens.spacing.xs,
+  },
+  pendingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.sm,
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: tokens.colors.amberBg,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.md,
+    marginTop: tokens.spacing.lg,
+  },
+  pendingCardText: {
+    flex: 1,
+    color: tokens.colors.docket,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'right',
+  },
+  scrollContent: {
+    padding: tokens.spacing.md,
+    paddingBottom: tokens.spacing.sm,
+  },
+  pitchHeader: {
+    alignItems: 'center',
+    marginBottom: tokens.spacing.md,
+  },
+  pitchIcon: {
+    width: tokens.spacing.xxxl,
+    height: tokens.spacing.xxxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.surface,
+    borderRadius: tokens.radius.pill,
+    marginBottom: tokens.spacing.sm,
+  },
+  pitchTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: tokens.typography.sizes.xl,
+    textAlign: 'center',
+    marginBottom: tokens.spacing.xs,
+  },
+  pitchDescription: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    lineHeight: tokens.typeScale.body.lineHeight,
+    textAlign: 'center',
+  },
+  benefitList: {
+    gap: tokens.spacing.xs,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.sm,
+    marginBottom: tokens.spacing.md,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.xs,
+  },
+  benefitText: {
+    flex: 1,
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
+  },
+  sectionTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'right',
+    marginBottom: tokens.spacing.xs,
+  },
+  planList: {
+    flexDirection: 'row',
+    gap: tokens.spacing.sm,
+    marginBottom: tokens.spacing.sm,
+  },
+  planOption: {
+    flex: 1,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.sm,
+  },
+  selectedPlanOption: {
+    borderColor: tokens.colors.signal,
+    backgroundColor: tokens.colors.verdantBg,
+  },
+  planOptionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: tokens.spacing.xxs,
+  },
+  planName: {
+    flex: 1,
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
+  },
+  planBadge: {
+    color: tokens.colors.verdant,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 10,
+  },
+  planDuration: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 10,
+    marginTop: tokens.spacing.xxs,
+  },
+  planPrice: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.mono,
+    fontSize: tokens.typography.sizes.base,
+    marginTop: tokens.spacing.xs,
+  },
+  methodRow: {
+    flexDirection: 'row',
+    gap: tokens.spacing.xs,
+    marginBottom: tokens.spacing.sm,
+  },
+  methodOption: {
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.pill,
+    paddingHorizontal: tokens.spacing.sm,
+    paddingVertical: tokens.spacing.xs,
+  },
+  selectedMethodOption: {
+    borderColor: tokens.colors.signal,
+    backgroundColor: tokens.colors.verdantBg,
+  },
+  methodText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+  },
+  selectedMethodText: {
+    color: tokens.colors.signal,
+  },
+  paymentCard: {
+    backgroundColor: tokens.colors.paper,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.md,
+    marginBottom: tokens.spacing.md,
+  },
+  paymentCardTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'right',
+  },
+  paymentNumber: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.mono,
+    fontSize: tokens.typography.sizes.xl,
+    textAlign: 'center',
+    marginVertical: tokens.spacing.sm,
+  },
+  bankDetail: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.mono,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
+    marginTop: tokens.spacing.xs,
+  },
+  paymentAccountName: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
+    marginTop: tokens.spacing.xs,
+  },
+  paymentHint: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right',
+    marginTop: tokens.spacing.sm,
+  },
+  receiptPicker: {
+    minHeight: tokens.spacing.xxxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    gap: tokens.spacing.xxs,
+    marginBottom: tokens.spacing.md,
+  },
+  receiptSelected: {
+    borderStyle: 'solid',
+    borderColor: tokens.colors.signal,
+    backgroundColor: tokens.colors.verdantBg,
+  },
+  receiptPickerText: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  receiptSelectedText: {
+    color: tokens.colors.signal,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  receiptHint: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 10,
+  },
+  footer: {
+    backgroundColor: tokens.colors.paper,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.line,
+    paddingHorizontal: tokens.spacing.md,
+    paddingTop: tokens.spacing.xs,
+    paddingBottom: tokens.spacing.sm,
+  },
+  progressSlot: {
+    height: tokens.spacing.lg,
+    justifyContent: 'center',
+    marginBottom: tokens.spacing.xs,
+  },
+  progressLabel: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: 10,
+    textAlign: 'right',
+    marginBottom: tokens.spacing.xxs,
+  },
+  progressTrack: {
+    height: tokens.spacing.xxs,
+    overflow: 'hidden',
+    backgroundColor: tokens.colors.line,
+    borderRadius: tokens.radius.pill,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: tokens.colors.signal,
+  },
+  submitButton: {
+    height: tokens.spacing.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.signal,
+    borderRadius: tokens.radius.lg,
+  },
+  submitButtonDisabled: {
+    backgroundColor: tokens.colors.muted,
+  },
+  submitButtonText: {
+    color: tokens.colors.white,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.base,
+  },
+});

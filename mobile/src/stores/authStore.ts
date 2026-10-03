@@ -36,21 +36,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       else if (user.accountMode === 'HIRING') initialSelectedMode = 'HIRING';
       // If BOTH, we will try to load from SecureStore in hydrate, otherwise default to GIG later
     }
-    set({ user, isAuthenticated: !!user, selectedMode: initialSelectedMode || get().selectedMode });
+    set({
+      user,
+      isAuthenticated: !!user,
+      selectedMode: user ? initialSelectedMode || get().selectedMode : null,
+    });
   },
 
   login: async (accessToken, refreshToken, user) => {
     await SecureStore.setItemAsync('accessToken', accessToken);
     await SecureStore.setItemAsync('refreshToken', refreshToken);
     await SecureStore.setItemAsync('userProfile', JSON.stringify(user));
-    set({ user, isAuthenticated: true });
+    const selectedMode = user.accountMode === 'HIRING' ? 'HIRING' : 'GIG';
+    await SecureStore.setItemAsync('selectedMode', selectedMode);
+    set({ user, isAuthenticated: true, selectedMode });
   },
 
   logout: async () => {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
     await SecureStore.deleteItemAsync('userProfile');
-    set({ user: null, isAuthenticated: false });
+    await SecureStore.deleteItemAsync('selectedMode');
+    set({ user: null, isAuthenticated: false, selectedMode: null });
   },
 
   submitVerification: async (status) => {
@@ -76,6 +83,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const initialSelected = mode === 'BOTH' ? (state.selectedMode || 'GIG') : mode;
       const updatedUser = { ...state.user, accountMode: mode };
       SecureStore.setItemAsync('userProfile', JSON.stringify(updatedUser)).catch(console.error);
+      SecureStore.setItemAsync('selectedMode', initialSelected).catch(console.error);
       return {
         user: updatedUser,
         selectedMode: initialSelected,
@@ -124,12 +132,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         const savedMode = await SecureStore.getItemAsync('selectedMode');
-        if (savedMode === 'GIG' || savedMode === 'HIRING') {
-          set({ selectedMode: savedMode });
-        } else if (currentUser?.accountMode === 'GIG') {
+        if (currentUser?.accountMode === 'GIG') {
           set({ selectedMode: 'GIG' });
         } else if (currentUser?.accountMode === 'HIRING') {
           set({ selectedMode: 'HIRING' });
+        } else if (savedMode === 'GIG' || savedMode === 'HIRING') {
+          set({ selectedMode: savedMode });
         } else {
           set({ selectedMode: 'GIG' });
         }
