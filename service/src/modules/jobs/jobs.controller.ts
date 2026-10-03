@@ -42,8 +42,22 @@ export class JobsController {
 
   static async apply(req: Request, res: Response, next: NextFunction) {
     try {
-      const { application, conversationId } = await JobsService.apply(req.params.id, req.user!.userId);
+      const { application, conversationId } = await JobsService.apply(
+        req.params.id,
+        req.user!.userId,
+        req.ip,
+        req.body.conflictsCheckPassed,
+      );
       res.json({ success: true, data: { ...application, conversationId } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async declareConflict(req: Request, res: Response, next: NextFunction) {
+    try {
+      const declaration = await JobsService.declareConflict(req.params.id, req.user!.userId, req.ip);
+      res.status(201).json({ success: true, data: declaration });
     } catch (error) {
       next(error);
     }

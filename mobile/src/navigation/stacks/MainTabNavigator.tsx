@@ -2,9 +2,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
-import { Gavel, Scale, Bell, Award, Settings, Plus, Briefcase } from 'lucide-react-native';
+import { Gavel, Scale, Bell, Award, Settings, Briefcase } from 'lucide-react-native';
+import { useAuthStore } from '../../stores/authStore';
 
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
+import { HiringHomeScreen } from '../../screens/main/HiringHomeScreen';
 import { JobDetailScreen } from '../../screens/main/JobDetailScreen';
 import { JobCompletionScreen } from '../../screens/main/JobCompletionScreen';
 import { PostJobScreen } from '../../screens/main/PostJob/PostJobScreen';
@@ -18,6 +20,7 @@ import { MyCourtsScreen } from '../../screens/main/MyCourtsScreen';
 import { FindLawyersScreen } from '../../screens/main/FindLawyersScreen';
 import { LawyerProfileScreen } from '../../screens/main/LawyerProfileScreen';
 import { FloatingTabBar } from '../../components/FloatingTabBar';
+import { ModeSwitcher } from '../../components/ModeSwitcher';
 
 const MainTabs = createBottomTabNavigator();
 const JobsStack = createNativeStackNavigator();
@@ -32,6 +35,52 @@ const defaultScreenOptions = {
   headerShadowVisible: false,
 };
 
+const getSelectedRole = (
+  accountMode: 'GIG' | 'HIRING' | 'BOTH' | undefined,
+  selectedMode: 'GIG' | 'HIRING' | null,
+) => accountMode === 'BOTH' ? selectedMode ?? 'GIG' : accountMode ?? 'GIG';
+
+const JobsHomeHeaderTitle = () => {
+  const { user, selectedMode } = useAuthStore();
+  const isHiring = getSelectedRole(user?.accountMode, selectedMode) === 'HIRING';
+
+  return (
+    <Text style={{ fontSize: 18, fontWeight: '600', color: tokens.colors.ink, fontFamily: tokens.typography.fonts.displayBold }}>
+      {isHiring ? 'إدارة مهامي' : 'فرص عمل محلية'}
+    </Text>
+  );
+};
+
+const JobsHomeHeaderActions = ({ navigation }: { navigation: any }) => {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="الإعدادات"
+        onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
+      >
+        <Settings size={22} color={tokens.colors.ink} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const RoleFocusedHomeScreen = ({ navigation, route }: any) => {
+  const { user, selectedMode } = useAuthStore();
+  const selectedRole = getSelectedRole(user?.accountMode, selectedMode);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
+      <ModeSwitcher />
+      <View style={{ flex: 1 }}>
+        {selectedRole === 'HIRING'
+          ? <HiringHomeScreen navigation={navigation} route={route} />
+          : <JobsFeedScreen navigation={navigation} route={route} />}
+      </View>
+    </View>
+  );
+};
+
 const JobsNavigator = () => {
   
   return (
@@ -40,38 +89,12 @@ const JobsNavigator = () => {
     >
       <JobsStack.Screen 
         name="JobsFeed" 
-        component={JobsFeedScreen} 
+        component={RoleFocusedHomeScreen}
         options={({ navigation }) => {
-          const { user } = require('../../stores/authStore').useAuthStore.getState();
-          const canHire = user?.accountMode === 'HIRING' || user?.accountMode === 'BOTH';
-          
           return {
             title: '',
-            headerLeft: () => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {canHire && (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('PostJob')}
-                    style={{ marginEnd: 12 }}
-                  >
-                    <Plus size={22} color={tokens.colors.signal} />
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
-                >
-                  <Settings size={22} color={tokens.colors.ink} />
-                </TouchableOpacity>
-              </View>
-            ),
-            headerRight: () => (
-              <View style={{ paddingRight: 12 }}>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: tokens.colors.ink, fontFamily: tokens.typography.fonts.displayBold }}>
-                  القائمة العامة
-                </Text>
-              </View>
-            ),
+            headerLeft: () => <JobsHomeHeaderActions navigation={navigation} />,
+            headerRight: () => <JobsHomeHeaderTitle />,
           };
         }} 
       />
@@ -102,6 +125,7 @@ const MyJobsNavigator = () => (
   <ActiveJobsStack.Navigator screenOptions={defaultScreenOptions}>
     <ActiveJobsStack.Screen name="MyJobs" component={MyJobsScreen} options={{ headerShown: false }} />
     <ActiveJobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل المهمة' }} />
+    <ActiveJobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'الملف المهني' }} />
     <ActiveJobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'نشر مهمة جديدة' }} />
     <ActiveJobsStack.Screen name="PosterReview" component={PosterReviewScreen} options={{ title: 'تقييم المحامي' }} />
     <ActiveJobsStack.Screen name="Chat" component={NegotiationScreen} options={{ title: 'المفاوضات' }} />

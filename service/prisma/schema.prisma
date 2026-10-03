@@ -432,6 +432,7 @@ model ConflictDeclaration {
   id         String   @id @default(uuid())
   jobId      String   @map("job_id")
   lawyerId   String   @map("lawyer_id")
+  hasConflict Boolean @default(false) @map("has_conflict")
   ipAddress  String?  @map("ip_address")
   declaredAt DateTime @default(now()) @map("declared_at")
 

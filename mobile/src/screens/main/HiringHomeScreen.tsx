@@ -1,235 +1,262 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
   ActivityIndicator,
+  FlatList,
   RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Briefcase, Plus, Search } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
-import { Search, Plus, Briefcase } from 'lucide-react-native';
-import { useQuery } from '@tanstack/react-query';
-import { fetchJobs } from '../../api/jobs.api';
-import { useAuthStore } from '../../stores/authStore';
+import { useMyPostedJobs } from '../../hooks/useJobs';
 import { JobCard } from '../../components/jobs/JobCard';
-import { Job } from '../../schemas/job.schema';
+import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
+import { EmptyState } from '../../components/EmptyState';
 
-// ─── Empty State ─────────────────────────────────────────────────────────────
-const EmptyPostedJobs = ({ onPost }: { onPost: () => void }) => (
-  <View style={styles.emptyState}>
-    <Briefcase size={64} color={tokens.colors.line} style={{ marginBottom: tokens.spacing.md }} />
-    <Text style={styles.emptyTitle}>لا توجد طلبات نشطة حالياً</Text>
-    <Text style={styles.emptyDesc}>
-      انشر طلباً أو ابحث عن محامين مباشرةً لتغطية جلسة قضائية.
-    </Text>
-    <TouchableOpacity style={styles.postBtn} onPress={onPost}>
-      <Plus size={20} color={tokens.colors.white} style={{ marginEnd: 8 }} />
-      <Text style={styles.postBtnText}>انشر طلباً جديداً</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-// ─── Main Screen ─────────────────────────────────────────────────────────────
 export const HiringHomeScreen = ({ navigation }: any) => {
-  const { user } = useAuthStore();
-
-  // Fetch jobs posted by this user
   const {
     data,
     isLoading,
     isError,
     error,
     refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ['myPostedJobs', user?.id],
-    queryFn: () => fetchJobs(undefined, undefined, undefined, undefined, 1, 20),
-    enabled: !!user?.id,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-  });
+    isFetching,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useMyPostedJobs();
 
-  // Filter to only jobs the current user posted
-  const myJobs: Job[] = (data?.data ?? []).filter(
-    (job: Job) => job.posterId === user?.id
+  const jobs = useMemo(
+    () => data?.pages.flatMap((page: any) => page.data || page) ?? [],
+    [data],
   );
+  const openJobsCount = jobs.filter((job: any) => job.status === 'OPEN' || job.status === 'NEGOTIATING').length;
+  const activeAssignmentsCount = jobs.filter((job: any) => job.status === 'AGREED' || job.status === 'IN_PROGRESS').length;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>طلباتي المنشورة</Text>
-        <TouchableOpacity
-          style={styles.findBtn}
-          onPress={() => navigation.navigate('FindLawyers')}
-        >
-          <Search size={16} color={tokens.colors.navy} style={{ marginEnd: 6 }} />
-          <Text style={styles.findBtnText}>ابحث عن محامين</Text>
-        </TouchableOpacity>
+  const listHeader = (
+    <View style={styles.listHeader}>
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryCount}>{openJobsCount}</Text>
+          <Text style={styles.summaryLabel}>طلبات مفتوحة</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryCount}>{activeAssignmentsCount}</Text>
+          <Text style={styles.summaryLabel}>تكليفات جارية</Text>
+        </View>
       </View>
 
-      {/* Content */}
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={tokens.colors.navy} />
-        </View>
-      ) : isError ? (
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>حدث خطأ في تحميل الطلبات</Text>
-          <Text style={styles.errorSubText}>
-            {(error as any)?.message || 'تحقّق من اتصالك بالإنترنت.'}
-          </Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-            <Text style={styles.retryBtnText}>إعادة المحاولة</Text>
-          </TouchableOpacity>
-        </View>
-      ) : myJobs.length === 0 ? (
-        <EmptyPostedJobs onPost={() => navigation.navigate('PostJob')} />
-      ) : (
-        <FlatList
-          data={myJobs}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <JobCard variant="feed"
-              job={item}
-              onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
-            />
-          )}
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor={tokens.colors.navy}
-              colors={[tokens.colors.navy]}
-            />
-          }
-          ListFooterComponent={() => (
-            <TouchableOpacity
-              style={styles.postBtnInline}
-              onPress={() => navigation.navigate('PostJob')}
-            >
-              <Plus size={18} color={tokens.colors.white} style={{ marginEnd: 8 }} />
-              <Text style={styles.postBtnText}>انشر طلباً جديداً</Text>
-            </TouchableOpacity>
-          )}
+      <TouchableOpacity
+        accessibilityRole="button"
+        style={styles.postButton}
+        onPress={() => navigation.navigate('PostJob')}
+      >
+        <Plus size={18} color={tokens.colors.white} />
+        <Text style={styles.postButtonText}>نشر مهمة جديدة</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        accessibilityRole="button"
+        style={styles.findButton}
+        onPress={() => navigation.navigate('FindLawyers')}
+      >
+        <Search size={16} color={tokens.colors.navy} />
+        <Text style={styles.findButtonText}>ابحث عن محامٍ</Text>
+      </TouchableOpacity>
+
+      <View style={styles.sectionHeading}>
+        <Briefcase size={18} color={tokens.colors.navy} />
+        <Text style={styles.sectionTitle}>متابعة مهامي المنشورة</Text>
+      </View>
+    </View>
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        {[1, 2, 3].map((item) => <JobCardSkeleton key={item} variant="compact" />)}
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorTitle}>تعذّر تحميل مهامك</Text>
+        <Text style={styles.errorMessage}>
+          {(error as Error)?.message || 'تحقّق من اتصالك بالإنترنت ثم حاول مجدداً.'}
+        </Text>
+        <TouchableOpacity accessibilityRole="button" style={styles.retryButton} onPress={() => refetch()}>
+          <Text style={styles.retryButtonText}>إعادة المحاولة</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={jobs}
+      keyExtractor={(item: any) => item.id}
+      renderItem={({ item }: any) => (
+        <JobCard
+          job={item}
+          variant="compact"
+          onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
         />
       )}
-    </SafeAreaView>
+      ListHeaderComponent={listHeader}
+      ListEmptyComponent={
+        !isFetching ? (
+          <EmptyState
+            icon={<Briefcase size={48} color={tokens.colors.muted} />}
+            headline="ابدأ بإسناد مهامك"
+            body="انشر مهمة لتتابع الطلبات والتكليفات من مكان واحد."
+            ctaText="نشر مهمة جديدة"
+            onCtaPress={() => navigation.navigate('PostJob')}
+          />
+        ) : null
+      }
+      ListFooterComponent={
+        isFetchingNextPage
+          ? <ActivityIndicator style={styles.paginationLoader} color={tokens.colors.navy} />
+          : null
+      }
+      contentContainerStyle={styles.listContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={isFetching && !isFetchingNextPage}
+          onRefresh={() => refetch()}
+          tintColor={tokens.colors.navy}
+          colors={[tokens.colors.navy]}
+        />
+      }
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+      }}
+      onEndReachedThreshold={0.5}
+    />
   );
 };
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: {
+const styles = {
+  listContent: {
+    paddingHorizontal: tokens.spacing.md,
+    paddingBottom: tokens.spacing.xxl,
+    flexGrow: 1,
+  },
+  listHeader: {
+    paddingTop: tokens.spacing.md,
+    paddingBottom: tokens.spacing.sm,
+  },
+  summaryRow: {
+    flexDirection: 'row' as const,
+    gap: tokens.spacing.sm,
+    marginBottom: tokens.spacing.sm,
+  },
+  summaryCard: {
     flex: 1,
-    backgroundColor: tokens.colors.paper,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: tokens.spacing.xl,
-    paddingVertical: tokens.spacing.md,
+    padding: tokens.spacing.sm,
     backgroundColor: tokens.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.line,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
   },
-  title: {
-    fontSize: tokens.typography.sizes.xl,
-    fontFamily: tokens.typography.fonts.display,
-    fontWeight: tokens.typography.weights.bold,
+  summaryCount: {
     color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.mono,
+    fontSize: tokens.typography.sizes.xl,
+    textAlign: 'right' as const,
   },
-  findBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tokens.colors.slateBg,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+  summaryLabel: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right' as const,
+    marginTop: tokens.spacing.xxs,
   },
-  findBtnText: {
+  postButton: {
+    minHeight: tokens.spacing.xxl,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: tokens.spacing.xs,
+    backgroundColor: tokens.colors.navy,
+    borderRadius: tokens.radius.lg,
+    paddingHorizontal: tokens.spacing.md,
+    marginBottom: tokens.spacing.xs,
+  },
+  postButtonText: {
+    color: tokens.colors.white,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  findButton: {
+    minHeight: tokens.spacing.xxl,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: tokens.spacing.xs,
+    backgroundColor: tokens.colors.white,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    marginBottom: tokens.spacing.md,
+  },
+  findButtonText: {
     color: tokens.colors.navy,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.sm,
   },
-  centered: {
+  sectionHeading: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: tokens.spacing.xs,
+    paddingVertical: tokens.spacing.xs,
+  },
+  sectionTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.base,
+  },
+  loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: tokens.spacing.md,
+    paddingTop: tokens.spacing.lg,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     padding: tokens.spacing.xl,
   },
-  errorText: {
-    fontSize: tokens.typography.sizes.lg,
-    fontFamily: tokens.typography.fonts.bodySemibold,
+  errorTitle: {
     color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.lg,
+    textAlign: 'center' as const,
     marginBottom: tokens.spacing.xs,
-    textAlign: 'center',
   },
-  errorSubText: {
-    fontSize: tokens.typography.sizes.base,
-    fontFamily: tokens.typography.fonts.body,
+  errorMessage: {
     color: tokens.colors.muted,
-    textAlign: 'center',
-    marginBottom: tokens.spacing.lg,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    lineHeight: tokens.typeScale.body.lineHeight,
+    textAlign: 'center' as const,
+    marginBottom: tokens.spacing.md,
   },
-  retryBtn: {
+  retryButton: {
     backgroundColor: tokens.colors.navy,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: tokens.radius.md,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.sm,
   },
-  retryBtnText: {
+  retryButtonText: {
     color: tokens.colors.white,
     fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: tokens.typography.sizes.base,
+    fontSize: tokens.typography.sizes.sm,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: tokens.spacing.xl,
-  },
-  emptyTitle: {
-    fontSize: tokens.typography.sizes.lg,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    color: tokens.colors.ink,
-    marginBottom: tokens.spacing.sm,
-    textAlign: 'center',
-  },
-  emptyDesc: {
-    fontSize: tokens.typography.sizes.base,
-    fontFamily: tokens.typography.fonts.body,
-    color: tokens.colors.muted,
-    textAlign: 'center',
-    marginBottom: tokens.spacing.xl,
-    lineHeight: 24,
-  },
-  postBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tokens.colors.navy,
+  paginationLoader: {
     paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.lg,
-    borderRadius: 8,
   },
-  postBtnInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.colors.navy,
-    marginHorizontal: tokens.spacing.xl,
-    marginBottom: tokens.spacing.xl,
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.lg,
-    borderRadius: 8,
-  },
-  postBtnText: {
-    color: tokens.colors.white,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: tokens.typography.sizes.base,
-  },
-});
+};

@@ -62,5 +62,11 @@ export const useSubscriptionStatus = () => {
   return useQuery({
     queryKey: ['subscription', 'status'],
     queryFn: fetchSubscriptionStatus,
+    refetchInterval: (query) => {
+      const status = query.state.data;
+      return status?.pendingPayment?.status === 'PENDING' || status?.status === 'PENDING'
+        ? 30_000
+        : false;
+    },
   });
 };

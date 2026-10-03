@@ -7,6 +7,8 @@ import {
   createJobSchema, 
   listJobsSchema, 
   jobIdParamSchema, 
+  applyToJobSchema,
+  conflictDeclarationSchema,
   updateJobStatusSchema 
 } from './jobs.schema';
 
@@ -17,7 +19,8 @@ router.get('/', authenticate, validate(listJobsSchema, 'query'), JobsController.
 router.get('/mine', authenticate, JobsController.getMyJobs);
 router.get('/my-active', authenticate, JobsController.getMyActiveJobs);
 router.get('/:id', authenticate, validate(jobIdParamSchema, 'params'), JobsController.getById);
-router.post('/:id/apply', authenticate, validate(jobIdParamSchema, 'params'), JobsController.apply);
+router.post('/:id/apply', authenticate, validate(jobIdParamSchema, 'params'), validate(applyToJobSchema, 'body'), JobsController.apply);
+router.post('/:id/conflict-declaration', authenticate, validate(jobIdParamSchema, 'params'), validate(conflictDeclarationSchema, 'body'), JobsController.declareConflict);
 router.patch('/:id/complete', authenticate, validate(jobIdParamSchema, 'params'), JobsController.complete);
 router.patch('/:id/status', authenticate, validate(jobIdParamSchema, 'params'), validate(updateJobStatusSchema, 'body'), JobsController.updateStatus);
 router.post('/:id/translate', authenticate, validate(jobIdParamSchema, 'params'), JobsController.translate);

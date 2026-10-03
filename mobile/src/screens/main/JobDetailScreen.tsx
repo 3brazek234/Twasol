@@ -1,23 +1,28 @@
 import React from 'react';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useJob, useApplyToJob, useTranslateJob, useUpdateJobStatus } from '../../hooks/useJobs';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, I18nManager, Modal, Pressable } from 'react-native';
+import { useJob, useApplyToJob, useDeclareJobConflict, useTranslateJob, useUpdateJobStatus } from '../../hooks/useJobs';
 import { useLawyersAtCourt } from '../../hooks/useCourts';
+import { useLawyerProfile } from '../../hooks/useUsers';
 import { useAuthStore } from '../../stores/authStore';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
+import { UserTrustSummary } from '../../components/UserTrustSummary';
 import { tokens } from '../../theme/tokens';
-import { Landmark, Users, Calendar, Gavel, CheckCircle, AlertTriangle } from 'lucide-react-native';
+import { Landmark, Users, Calendar, Gavel, CheckCircle, AlertTriangle, ChevronRight } from 'lucide-react-native';
 import { useCompleteJob } from '../../hooks/useJobs';
 import { safeFormatDate } from '../../utils/dateUtils';
+import JobLifecycleStepper from '../../components/JobLifecycleStepper';
 
 export const JobDetailScreen = ({ route, navigation }: any) => {
   const { jobId } = route.params || {};
 
   const { data: job, isLoading, error } = useJob(jobId);
+  const { data: posterProfile } = useLawyerProfile(job?.posterId ?? '');
   // Only fetch active lawyers once we have a real courtId — avoids firing with empty string
   const { data: lawyersResponse, isLoading: isLoadingLawyers } = useLawyersAtCourt(job?.courtId ?? '', !!job?.courtId);
   const activeLawyers = lawyersResponse?.data || lawyersResponse || [];
   const { mutate: apply, isPending: isApplying } = useApplyToJob();
+  const { mutate: declareConflict, isPending: isDeclaringConflict } = useDeclareJobConflict();
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateJobStatus();
   const { user } = useAuthStore();
@@ -72,8 +77,14 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
       return;
     }
 
+    setShowApplyModal(true);
+  };
+
+  const handleConfirmNoConflict = () => {
+    if (!jobId) return;
     apply(jobId, {
       onSuccess: (data: any) => {
+        setShowApplyModal(false);
         const convId = data?.conversationId;
         if (convId) {
           navigation.navigate('ChatsTab', {
@@ -87,6 +98,20 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
       },
       onError: (err: any) => {
         Alert.alert('تنبيه النظام', err.message || 'تعذر تقديم العرض.');
+      },
+    });
+  };
+
+  const handleDeclareConflict = () => {
+    if (!jobId) return;
+    declareConflict(jobId, {
+      onSuccess: () => {
+        setShowApplyModal(false);
+        Alert.alert(
+          'تم تسجيل تعارض المصالح',
+          'لن يتم تقديم طلب لهذه المهمة.',
+          [{ text: 'العودة إلى المهام', onPress: () => navigation.goBack() }],
+        );
       },
     });
   };
@@ -169,11 +194,19 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const courtDisplay = job.courtNameAr ?? job.courtNameEn ?? 'المحكمة';
 
   // Determine if current user is a participant in this completed job and has already reviewed
+  const myApplication = (job as any)?.applications?.find(
+    (application: any) => application.lawyerId === user?.id && application.status !== 'REJECTED',
+  );
   const isParticipant = isOwnJob || user?.id === (job as any)?.assignedLawyerId;
+  const isInvolved = isParticipant || !!myApplication;
   const myReview = (job as any)?.reviews?.find((r: any) => r.reviewerId === user?.id);
 
   return (
     <ScreenContainer scroll={true}>
+      {(isInvolved && (job.status !== 'OPEN' || myApplication)) ? (
+        <JobLifecycleStepper status={job.status} hasApplied={!!myApplication} />
+      ) : null}
+
       {/* 1. Job Title & Meta Date */}
       <View style={styles.headerSection}>
         <Text style={styles.jobTitle}>
@@ -257,6 +290,28 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
       {job.status === 'OPEN' && (
         <View style={styles.applyContainer}>
+          {!isOwnJob && job.posterId && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="عرض الملف الشخصي لصاحب المهمة"
+              activeOpacity={0.75}
+              style={styles.posterTrustCard}
+              onPress={() => navigation.navigate('LawyerProfile', { lawyerId: job.posterId })}
+            >
+              <UserTrustSummary
+                name={posterProfile?.fullName || (job as any).posterName || (job as any).postedBy?.fullName || 'صاحب المهمة'}
+                verificationStatus={posterProfile?.verificationStatus}
+                averageRating={posterProfile?.averageRating}
+                reviewCount={posterProfile?.reviewCount}
+                compact
+              />
+              <ChevronRight
+                size={18}
+                color={tokens.colors.muted}
+                style={{ transform: [{ scaleX: I18nManager.isRTL ? -1 : 1 }] }}
+              />
+            </TouchableOpacity>
+          )}
           {!isVerified && !isOwnJob && (
             <View style={{ marginBottom: tokens.spacing.md }}>
               <VerificationStatusBanner />
@@ -377,6 +432,50 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           )}
         </View>
       )}
+
+      <Modal
+        visible={showApplyModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowApplyModal(false)}
+      >
+        <View style={styles.conflictModalBackdrop}>
+          <View style={styles.conflictModalCard}>
+            <Text style={styles.conflictModalTitle}>التحقق من تعارض المصالح</Text>
+            <Text style={styles.conflictModalBody}>
+              امتثالاً لقواعد نقابة المحامين، يرجى التأكد من أنك لا تمثل الطرف الآخر في هذه القضية.
+            </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={[styles.conflictApplyButton, isApplying && styles.conflictButtonDisabled]}
+              onPress={handleConfirmNoConflict}
+              disabled={isApplying || isDeclaringConflict}
+            >
+              {isApplying ? <ActivityIndicator color={tokens.colors.white} /> : (
+                <Text style={styles.conflictApplyButtonText}>أقر بعدم وجود تعارض — قدّم الطلب</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={[styles.conflictDeclineButton, isDeclaringConflict && styles.conflictButtonDisabled]}
+              onPress={handleDeclareConflict}
+              disabled={isApplying || isDeclaringConflict}
+            >
+              {isDeclaringConflict ? <ActivityIndicator color={tokens.colors.muted} /> : (
+                <Text style={styles.conflictDeclineButtonText}>لديّ تعارض — تراجع</Text>
+              )}
+            </TouchableOpacity>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowApplyModal(false)}
+              disabled={isApplying || isDeclaringConflict}
+              style={styles.conflictCancel}
+            >
+              <Text style={styles.conflictCancelText}>إلغاء</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 };
@@ -527,6 +626,17 @@ const styles = StyleSheet.create({
   applyContainer: {
     paddingBottom: tokens.spacing.xl,
   },
+  posterTrustCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.sm,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.sm,
+    marginBottom: tokens.spacing.sm,
+  },
   applyButton: {
     flexDirection: 'row',
     height: 56,
@@ -566,5 +676,75 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.sizes.sm,
     color: tokens.colors.verdant,
     textAlign: 'right',
+  },
+  conflictModalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(28,35,51,0.45)',
+    padding: tokens.spacing.lg,
+  },
+  conflictModalCard: {
+    backgroundColor: tokens.colors.paper,
+    borderColor: tokens.colors.line,
+    borderWidth: 1,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.lg,
+  },
+  conflictModalTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.display,
+    fontSize: tokens.typography.sizes.lg,
+    marginBottom: tokens.spacing.sm,
+  },
+  conflictModalBody: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    lineHeight: 24,
+    marginBottom: tokens.spacing.md,
+  },
+  conflictApplyButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.signal,
+    borderRadius: tokens.radius.md,
+    padding: tokens.spacing.sm,
+    marginBottom: tokens.spacing.xs,
+  },
+  conflictApplyButtonText: {
+    color: tokens.colors.white,
+    fontFamily: tokens.typography.fonts.bodyMedium,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'center',
+  },
+  conflictDeclineButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.md,
+    padding: tokens.spacing.sm,
+    marginBottom: tokens.spacing.xs,
+  },
+  conflictDeclineButtonText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.bodyMedium,
+    fontSize: tokens.typography.sizes.sm,
+  },
+  conflictButtonDisabled: {
+    opacity: 0.6,
+  },
+  conflictCancel: {
+    alignSelf: 'center',
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.sm,
+  },
+  conflictCancelText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
   },
 });

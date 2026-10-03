@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import { getErrorMessage } from "../utils/errorMessages";
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { fetchJobs, createJob, applyToJob, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
+import { fetchJobs, createJob, applyToJob, declareJobConflict, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
 
 export const useJobs = (courtId?: string, status?: string, taskType?: string, sortBy?: string) => {
   return useInfiniteQuery({
@@ -44,6 +44,17 @@ export const useApplyToJob = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+  });
+};
+
+export const useDeclareJobConflict = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => declareJobConflict(jobId),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
   });
 };

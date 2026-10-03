@@ -38,6 +38,14 @@ export const jobIdParamSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const applyToJobSchema = z.object({
+  conflictsCheckPassed: z.literal(true),
+});
+
+export const conflictDeclarationSchema = z.object({
+  hasConflict: z.literal(true),
+});
+
 export const updateJobStatusSchema = z.object({
   status: z.string(),
 });

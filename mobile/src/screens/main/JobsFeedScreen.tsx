@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator, I18nManager } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
@@ -9,7 +9,7 @@ import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, Info } from 'lucide-react-native';
+import { Briefcase, ChevronRight, MapPin } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
@@ -32,7 +32,9 @@ const SkeletonJobCard = () => {
 };
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
-  const { user } = useAuthStore();
+  const { user, selectedMode } = useAuthStore();
+  const isGigView = user?.accountMode === 'GIG'
+    || (user?.accountMode === 'BOTH' && selectedMode !== 'HIRING');
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(route.params?.courtId ?? undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -159,26 +161,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <Animated.FlatList
           data={jobs}
           keyExtractor={(item: any, index) => item?.id || String(index)}
-          ListHeaderComponent={
-            user?.role === 'LAWYER' && !selectedCourtId && jobs.length > 0 ? (
-              <View style={{ backgroundColor: tokens.colors.navy + '10', padding: 12, marginHorizontal: 24, marginBottom: 16, borderRadius: tokens.radius.md, flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
-                <Info size={20} color={tokens.colors.navy} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: tokens.typography.sizes.xs, color: tokens.colors.ink, textAlign: 'right', lineHeight: 18 }}>
-                    هذه المهام خاصة بمحاكمك المسجلة. يمكنك توسيع نطاق عملك بإضافة محاكم أخرى.
-                  </Text>
-                </View>
-                <TouchableOpacity 
-                  style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: tokens.colors.navy, borderRadius: tokens.radius.sm }}
-                  onPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
-                >
-                  <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, fontSize: tokens.typography.sizes.xs, color: tokens.colors.white }}>
-                    إضافة محاكم
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          }
           renderItem={({ item }: any) => (
             <JobCard
               job={item}
@@ -230,4 +212,32 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
       />
     </View>
   );
+};
+
+const styles = {
+  courtsShortcut: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: tokens.spacing.sm,
+    marginHorizontal: tokens.spacing.md,
+    marginTop: tokens.spacing.sm,
+    padding: tokens.spacing.sm,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.lg,
+  },
+  courtsShortcutTitle: {
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'right' as const,
+  },
+  courtsShortcutDescription: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right' as const,
+    marginTop: tokens.spacing.xxs,
+  },
 };

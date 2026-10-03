@@ -74,8 +74,12 @@ export const createJob = async (jobData: {
 };
 
 export const applyToJob = async (jobId: string): Promise<{ conversationId: string }> => {
-  const res = await apiClient.post<any>(`/jobs/${jobId}/apply`);
+  const res = await apiClient.post<any>(`/jobs/${jobId}/apply`, { conflictsCheckPassed: true });
   return { conversationId: res.data?.conversationId };
+};
+
+export const declareJobConflict = async (jobId: string): Promise<void> => {
+  await apiClient.post(`/jobs/${jobId}/conflict-declaration`, { hasConflict: true });
 };
 
 export const updateJobStatus = async (jobId: string, status: string): Promise<Job> => {

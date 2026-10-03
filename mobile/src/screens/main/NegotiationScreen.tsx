@@ -29,6 +29,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { EmptyStateIllustration } from "../../components/EmptyStateIllustration";
 import { ContextualTooltip } from "../../components/ContextualTooltip";
 import { OfferCard } from "../../components/OfferCard";
+import JobLifecycleStepper from "../../components/JobLifecycleStepper";
 
 const isSameDay = (d1: string | Date, d2: string | Date) => {
   const date1 = new Date(d1);
@@ -67,6 +68,10 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
   );
 
   const isPoster = currentUser?.id === job?.postedByUserId || currentUser?.id === job?.posterId;
+  const hasApplied = !!job?.applications?.some(
+    (application: any) => application.lawyerId === currentUser?.id && application.status !== "REJECTED",
+  );
+  const isAssignedLawyer = currentUser?.id === job?.assignedLawyerId || currentUser?.id === job?.assignedExecutorId;
   const otherPartyName = isPoster 
     ? (job?.assignedLawyer?.fullName || job?.applications?.[0]?.lawyer?.fullName || "الطرف الآخر")
     : (job?.postedBy?.fullName || "الطرف الآخر");
@@ -251,6 +256,10 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
             </Text>
           </View>
         )}
+
+      {job && (isPoster || isAssignedLawyer || hasApplied) ? (
+        <JobLifecycleStepper status={job.status} hasApplied={hasApplied} />
+      ) : null}
 
       {timeline.length === 0 && !isFetching ? (
         <EmptyState

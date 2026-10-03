@@ -5,6 +5,8 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { Message } from '../schemas/message.schema';
 import { tokens } from '../theme/tokens';
 import { formatCurrency } from '../utils/dateUtils';
+import { useLawyerProfile } from '../hooks/useUsers';
+import { UserTrustSummary } from './UserTrustSummary';
 
 interface OfferCardProps {
   item: Message;
@@ -16,6 +18,7 @@ interface OfferCardProps {
 
 export const OfferCard = ({ item, isMe, otherPartyName, timeLabel, onResponse }: OfferCardProps) => {
   const reducedMotion = useReducedMotion();
+  const { data: senderProfile } = useLawyerProfile(isMe ? '' : item.senderId);
   const offerId = item.id;
   const isPending = item.type === 'OFFER'
     ? item.offerStatus !== 'ACCEPTED' && item.offerStatus !== 'REJECTED' && item.offerStatus !== 'WITHDRAWN'
@@ -43,7 +46,19 @@ export const OfferCard = ({ item, isMe, otherPartyName, timeLabel, onResponse }:
         </View>
 
         <Text style={styles.amount}>{formatCurrency(Number(item.offerAmount ?? 0))}</Text>
-        <Text style={styles.sender}>من: {isMe ? 'أنت' : otherPartyName}</Text>
+        {!isMe ? (
+          <View style={styles.senderTrust}>
+            <UserTrustSummary
+              name={senderProfile?.fullName || otherPartyName}
+              verificationStatus={senderProfile?.verificationStatus}
+              averageRating={senderProfile?.averageRating}
+              reviewCount={senderProfile?.reviewCount}
+              compact
+            />
+          </View>
+        ) : (
+          <Text style={styles.sender}>من: أنت</Text>
+        )}
 
         {isAccepted && (
           <MotiView
@@ -135,6 +150,14 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.sizes.xs,
     color: tokens.colors.muted,
     textAlign: 'center',
+    marginBottom: tokens.spacing.sm,
+  },
+  senderTrust: {
+    backgroundColor: tokens.colors.paper,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    borderRadius: tokens.radius.md,
+    padding: tokens.spacing.sm,
     marginBottom: tokens.spacing.sm,
   },
   seal: {
