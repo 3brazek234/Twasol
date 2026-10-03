@@ -1,7 +1,6 @@
-import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
+import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
@@ -18,9 +17,6 @@ import { Button } from '../components/ui/button';
 
 export default function DashboardLayout() {
   const { user, loading, logout } = useAuth();
-  const queryClient = useQueryClient();
-  const [toasts, setToasts] = useState<any[]>([]);
-
   const { data: badgesData } = useQuery({
     queryKey: ['admin-badges'],
     queryFn: async () => {
@@ -33,16 +29,6 @@ export default function DashboardLayout() {
   });
 
   const badges = badgesData || { verification: 0, reports: 0, support: 0, subscriptions: 0 };
-
-  useEffect(() => {
-    if (!user) return;
-    
-    // The previous socket implementation listened for 'admin:new_signup' and 'admin:new_support_message'
-    // to show toasts and update badges. The badges are now natively polled every 30s.
-    // If real-time toasts are heavily desired in the future, a dedicated REST-polling toast queue
-    // could be implemented, but for an admin dashboard, a 30s badge update is sufficient.
-    
-  }, [user]);
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
@@ -115,19 +101,6 @@ export default function DashboardLayout() {
       <main className="flex-1 overflow-y-auto relative">
         <div className="container mx-auto p-6 max-w-6xl">
           <Outlet />
-        </div>
-        
-        {/* Global Toasts */}
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-          {toasts.map((toast) => (
-            <div key={toast.id} className="bg-brand-ink text-brand-paper p-4 rounded-md shadow-lg flex justify-between items-center w-80 pointer-events-auto">
-              <div>
-                <p className="font-bold text-sm">{toast.title}</p>
-                <p className="text-xs">{toast.message}</p>
-              </div>
-              <Link to={toast.link} className="text-xs underline ml-4 whitespace-nowrap">View</Link>
-            </div>
-          ))}
         </div>
       </main>
     </div>

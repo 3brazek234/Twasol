@@ -7,11 +7,20 @@ import Animated, {
   withSequence,
   interpolateColor,
 } from "react-native-reanimated";
-import { Landmark, Users, Clock } from "lucide-react-native";
+import { Landmark, Gavel, Clock } from "lucide-react-native";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { Avatar } from "../Avatar";
-import { getDeadlineInfo, formatCurrency, daysBetween, getTimeAgo } from "../../utils/dateUtils";
+import { getDeadlineInfo, formatCurrency, daysBetween, formatDate } from "../../utils/dateUtils";
+
+const TASK_TYPE_LABELS: Record<string, string> = {
+  ATTEND_SESSION: "حضور جلسة",
+  OBTAIN_DOCUMENT: "استخراج مستند",
+  FILE_PLEADING: "إيداع مذكرة",
+  REGISTER_PROPERTY: "تسجيل عقار",
+  REVIEW_DOCKET: "مراجعة ملف",
+  OTHER: "مهمة قانونية",
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JobCard
@@ -21,6 +30,7 @@ interface JobCardProps {
   job: any;
   variant: "feed" | "posted" | "active" | "compact";
   onPress?: (jobId: string) => void;
+  onApply?: (jobId: string) => void;
   onViewApplications?: (jobId: string) => void;
   onOpenChat?: (job: any) => void;
   onCancel?: (jobId: string) => void;
@@ -80,6 +90,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   job,
   variant,
   onPress,
+  onApply,
   onViewApplications,
   onOpenChat,
   onCancel,
@@ -115,6 +126,15 @@ export const JobCard: React.FC<JobCardProps> = ({
   const cardBg = getStatusCardBg(job.status, variant);
   const expiresAt = job.expiresAt ?? job.deadline ?? null;
   const createdAt = job.createdAt ?? job.created_at ?? null;
+  const deadlineLabel = (() => {
+    if (!expiresAt) return "دون موعد محدد";
+    const days = daysBetween(new Date(), expiresAt);
+    if (days < 0) return "انتهى الموعد";
+    if (days === 0) return "اليوم";
+    if (days === 1) return "غداً";
+    if (days <= 7) return `خلال ${days} أيام`;
+    return formatDate(expiresAt);
+  })();
   
   let deadlineInfo: ReturnType<typeof getDeadlineInfo> | null = null;
   let progress = 0;
@@ -165,21 +185,29 @@ export const JobCard: React.FC<JobCardProps> = ({
           <Text style={styles.feedTitle} numberOfLines={2}>
             {job.title}
           </Text>
-          <Text style={styles.feedFee}>{formatCurrency(displayFee)}</Text>
+          <View style={styles.feedPriceStack}>
+            <StatusPill status={job.status || "OPEN"} />
+            <Text style={styles.feedFee}>{formatCurrency(displayFee)}</Text>
+          </View>
         </View>
 
-        {/* Second Row: Court & Freshness */}
+        {/* Court, task type, and deadline */}
         <View style={styles.feedSubRow}>
-          <View style={styles.feedIconText}>
+          <View style={[styles.feedIconText, styles.feedMetaItem]}>
             <Landmark size={12} color={tokens.colors.muted} />
             <Text style={styles.feedSubText} numberOfLines={1}>
               {courtName}{govSuffix}
             </Text>
           </View>
-          <Text style={styles.feedDot}>•</Text>
-          <View style={styles.feedIconText}>
+          <View style={[styles.feedIconText, styles.feedMetaItem]}>
+            <Gavel size={12} color={tokens.colors.muted} />
+            <Text style={styles.feedSubText} numberOfLines={1}>
+              {TASK_TYPE_LABELS[job.taskType] ?? "مهمة قانونية"}
+            </Text>
+          </View>
+          <View style={[styles.feedIconText, styles.feedMetaItem]}>
             <Clock size={12} color={tokens.colors.muted} />
-            <Text style={styles.feedSubText}>{getTimeAgo(createdAt)}</Text>
+            <Text style={styles.feedSubText} numberOfLines={1}>{deadlineLabel}</Text>
           </View>
         </View>
 
@@ -192,7 +220,7 @@ export const JobCard: React.FC<JobCardProps> = ({
 
         <View style={styles.feedDivider} />
 
-        {/* Footer Row: Poster Identity & Applicant Count */}
+        {/* Footer Row: Poster identity and application path */}
         <View style={styles.feedFooterRow}>
           <View style={styles.feedPosterIdentity}>
             <Avatar name={clientName} size={26} />
@@ -207,17 +235,17 @@ export const JobCard: React.FC<JobCardProps> = ({
               ) : null}
             </View>
           </View>
-
-          {applicantCount !== undefined && applicantCount > 0 ? (
-            <View style={styles.feedIconText}>
-              <Users size={14} color={tokens.colors.navy} />
-              <Text style={styles.feedApplicantText}>
-                {applicantCount} {applicantCount === 1 ? 'متقدم' : 'متقدمين'}
-              </Text>
-            </View>
-          ) : (
-            <StatusPill status={job.status || "OPEN"} />
-          )}
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={(event) => {
+              event.stopPropagation();
+              onApply?.(job.id);
+            }}
+            style={styles.feedApplyButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.feedApplyText}>التفاصيل والتقديم</Text>
+          </TouchableOpacity>
         </View>
       </AnimatedTouchableOpacity>
     );
@@ -943,19 +971,28 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: tokens.spacing.xs,
   },
+  feedPriceStack: {
+    alignItems: 'flex-end',
+    gap: tokens.spacing.xs,
+  },
   feedTitle: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.displayBold,
     fontSize: 16,
     lineHeight: 24,
     flex: 1,
-    marginLeft: tokens.spacing.md,
+    marginEnd: tokens.spacing.md,
   },
   feedFee: {
-    color: tokens.colors.ink,
+    color: tokens.colors.signal,
     fontFamily: tokens.typography.fonts.mono,
     fontSize: 16,
     fontWeight: "700",
+    backgroundColor: `${tokens.colors.signal}15`,
+    borderRadius: tokens.radius.sm,
+    overflow: 'hidden',
+    paddingHorizontal: tokens.spacing.sm,
+    paddingVertical: tokens.spacing.xs,
   },
   feedSubRow: {
     flexDirection: 'row',
@@ -967,14 +1004,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  feedMetaItem: {
+    flex: 1,
+    minWidth: 0,
+  },
   feedSubText: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
-    fontSize: 12,
-  },
-  feedDot: {
-    color: tokens.colors.muted,
-    marginHorizontal: 8,
     fontSize: 12,
   },
   feedDescription: {
@@ -993,6 +1029,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: tokens.spacing.sm,
   },
   feedPosterIdentity: {
     flexDirection: 'row',
@@ -1004,8 +1041,18 @@ const styles = StyleSheet.create({
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 12,
   },
-  feedApplicantText: {
-    color: tokens.colors.navy,
+  feedApplyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: tokens.spacing.xs,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.sm,
+    borderRadius: tokens.radius.md,
+    backgroundColor: tokens.colors.signal,
+  },
+  feedApplyText: {
+    color: tokens.colors.white,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 12,
   },

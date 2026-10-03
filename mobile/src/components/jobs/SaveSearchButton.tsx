@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, View, TextInput, Alert, Modal, StyleSheet } fro
 import { Bookmark } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
 import { useCreateSavedSearch } from '../../hooks/useSavedSearches';
+import { ContextualTooltip } from '../ContextualTooltip';
 
 interface SaveSearchButtonProps {
   criteria: Record<string, any>;
@@ -35,38 +36,45 @@ export const SaveSearchButton: React.FC<SaveSearchButtonProps> = ({ criteria }) 
   if (!isActive) return null;
 
   return (
-    <>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setModalVisible(true)}
-      >
-        <Bookmark size={16} color={tokens.colors.signal} />
-        <Text style={styles.text}>حفظ البحث</Text>
-      </TouchableOpacity>
+    <ContextualTooltip
+      storageKey="@wakeel_tip_saved_search_v1"
+      illustration="jobs"
+      inline
+      message="احفظ هذه التصفية لتصلك تنبيهات عند ظهور مهام مناسبة."
+    >
+      <>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setModalVisible(true)}
+        >
+          <Bookmark size={16} color={tokens.colors.signal} />
+          <Text style={styles.text}>حفظ البحث</Text>
+        </TouchableOpacity>
 
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>حفظ البحث</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="اسم البحث (مثال: طلبات جنايات القاهرة)"
-              value={name}
-              onChangeText={setName}
-              autoFocus
-            />
-            <View style={styles.actions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelText}>إلغاء</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={isPending || !name.trim()}>
-                <Text style={styles.saveText}>{isPending ? 'جاري الحفظ...' : 'حفظ'}</Text>
-              </TouchableOpacity>
+        <Modal visible={modalVisible} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>حفظ البحث</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="اسم البحث (مثال: طلبات جنايات القاهرة)"
+                value={name}
+                onChangeText={setName}
+                autoFocus
+              />
+              <View style={styles.actions}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.cancelText}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={isPending || !name.trim()}>
+                  <Text style={styles.saveText}>{isPending ? 'جاري الحفظ...' : 'حفظ'}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </>
+        </Modal>
+      </>
+    </ContextualTooltip>
   );
 };
 

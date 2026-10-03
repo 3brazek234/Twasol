@@ -3,8 +3,10 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useMyCourts, useRegisterCourt, useRemoveCourt, useToggleCourtStatus } from '../../hooks/useCourts';
 import { LawyerCourt, CourtTypeLabelAr } from '../../schemas/court.schema';
 import { tokens } from '../../theme/tokens';
-import { Plus, Trash2, MapPin, Scale, Bell, BellOff } from 'lucide-react-native';
+import { Plus, Trash2, MapPin, Bell, BellOff } from 'lucide-react-native';
 import { CourtPicker } from '../../components/CourtPicker';
+import { EmptyState as SharedEmptyState } from '../../components/EmptyState';
+import { EmptyStateIllustration } from '../../components/EmptyStateIllustration';
 
 export const MyCourtsScreen = () => {
   const { data: myCourts, isLoading: isLoadingMyCourts } = useMyCourts();
@@ -66,7 +68,7 @@ export const MyCourtsScreen = () => {
       <View style={styles.toggleRow}>
         <View style={styles.toggleTextContainer}>
           <View style={styles.toggleLabelRow}>
-            {item.isActive 
+            {item.isActive
               ? <Bell size={14} color={tokens.colors.verdant} />
               : <BellOff size={14} color={tokens.colors.muted} />
             }
@@ -76,7 +78,7 @@ export const MyCourtsScreen = () => {
           </View>
           <Text style={styles.toggleDesc}>
             {item.isActive 
-              ? 'ستتلقى إشعارات القضايا الجديدة في هذه المحكمة' 
+              ? 'ستتلقى إشعارات القضايا الجديدة في هذه المحكمة'
               : 'لن تتلقى إشعارات لهذه المحكمة حالياً'}
           </Text>
         </View>
@@ -102,25 +104,6 @@ export const MyCourtsScreen = () => {
     </View>
   );
 
-  const EmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconBg}>
-        <Scale size={40} color={tokens.colors.signal} />
-      </View>
-      <Text style={styles.emptyTitle}>لا توجد محاكم مسجلة</Text>
-      <Text style={styles.emptyDesc}>
-        أضف المحاكم التي تعمل بها لتتلقى إشعارات فورية عند نشر قضايا جديدة في نطاق تخصصك.
-      </Text>
-      <TouchableOpacity 
-        style={styles.emptyAction}
-        onPress={() => setPickerVisible(true)}
-      >
-        <Plus size={18} color={tokens.colors.white} />
-        <Text style={styles.emptyActionText}>إضافة أول محكمة</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       {isLoadingMyCourts ? (
@@ -133,15 +116,23 @@ export const MyCourtsScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderMyCourtItem}
           ListHeaderComponent={<ListHeader />}
-          contentContainerStyle={{ padding: tokens.spacing.md, paddingBottom: 100 }}
-          ListEmptyComponent={<EmptyState />}
+          contentContainerStyle={{ padding: tokens.spacing.md, paddingBottom: 100, flexGrow: myCourts?.length ? 0 : 1 }}
+          ListEmptyComponent={
+            <SharedEmptyState
+              illustration={<EmptyStateIllustration kind="courts" />}
+              headline="لا توجد محاكم مسجلة"
+              body="أضف المحاكم التي تعمل بها لتتلقى إشعارات القضايا الجديدة في نطاق تخصصك."
+              ctaText="إضافة أول محكمة"
+              onCtaPress={() => setPickerVisible(true)}
+            />
+          }
         />
       )}
 
       {myCourts && myCourts.length > 0 && (
-        <TouchableOpacity 
+        <TouchableOpacity
           activeOpacity={0.9}
-          style={styles.fab} 
+          style={styles.fab}
           onPress={() => setPickerVisible(true)}
         >
           <Plus size={18} color="#fff" style={{ marginEnd: 6 }} />
@@ -319,48 +310,4 @@ const styles = StyleSheet.create({
     marginStart: 6,
   },
 
-  // Empty state
-  emptyContainer: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingHorizontal: tokens.spacing.lg,
-  },
-  emptyIconBg: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(30, 64, 175, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: tokens.typography.sizes.lg,
-    fontFamily: tokens.typography.fonts.displayBold,
-    color: tokens.colors.ink,
-    marginBottom: tokens.spacing.sm,
-    textAlign: 'center',
-  },
-  emptyDesc: {
-    fontSize: tokens.typography.sizes.sm,
-    fontFamily: tokens.typography.fonts.body,
-    color: tokens.colors.muted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: tokens.spacing.xl,
-  },
-  emptyAction: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: tokens.colors.signal,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: tokens.radius.pill,
-    gap: 8,
-  },
-  emptyActionText: {
-    color: tokens.colors.white,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: tokens.typography.sizes.base,
-  },
 });
