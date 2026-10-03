@@ -180,60 +180,47 @@ export const JobCard: React.FC<JobCardProps> = ({
         onPress={() => onPress?.(job.id)}
         activeOpacity={0.7}
       >
-        {/* Top Row: Title & Fee */}
         <View style={styles.feedTopRow}>
           <Text style={styles.feedTitle} numberOfLines={2}>
             {job.title}
           </Text>
           <View style={styles.feedPriceStack}>
-            <StatusPill status={job.status || "OPEN"} />
             <Text style={styles.feedFee}>{formatCurrency(displayFee)}</Text>
+            <StatusPill status={job.status || "OPEN"} />
           </View>
         </View>
 
-        {/* Court, task type, and deadline */}
-        <View style={styles.feedSubRow}>
-          <View style={[styles.feedIconText, styles.feedMetaItem]}>
-            <Landmark size={12} color={tokens.colors.muted} />
+        <View style={styles.feedMetadata}>
+          <View style={[styles.feedMetaItem, styles.feedMetaCourt]}>
+            <Landmark size={12} color={tokens.colors.navy} />
             <Text style={styles.feedSubText} numberOfLines={1}>
               {courtName}{govSuffix}
             </Text>
           </View>
-          <View style={[styles.feedIconText, styles.feedMetaItem]}>
+          <View style={styles.feedMetaItem}>
             <Gavel size={12} color={tokens.colors.muted} />
             <Text style={styles.feedSubText} numberOfLines={1}>
               {TASK_TYPE_LABELS[job.taskType] ?? "مهمة قانونية"}
             </Text>
           </View>
-          <View style={[styles.feedIconText, styles.feedMetaItem]}>
+          <View style={styles.feedMetaItem}>
             <Clock size={12} color={tokens.colors.muted} />
             <Text style={styles.feedSubText} numberOfLines={1}>{deadlineLabel}</Text>
           </View>
         </View>
 
-        {/* Description Snippet */}
         {job.description ? (
-          <Text style={styles.feedDescription} numberOfLines={2}>
+          <Text style={styles.feedDescription} numberOfLines={1}>
             {job.description}
           </Text>
         ) : null}
 
-        <View style={styles.feedDivider} />
-
-        {/* Footer Row: Poster identity and application path */}
         <View style={styles.feedFooterRow}>
           <View style={styles.feedPosterIdentity}>
-            <Avatar name={clientName} size={26} />
-            <View>
-              <Text style={styles.feedPosterName} numberOfLines={1}>
-                {clientName ?? "غير معروف"}
-              </Text>
-              {clientBarNumber ? (
-                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: 10, color: tokens.colors.muted, textAlign: 'right' }}>
-                  رقم القيد: {clientBarNumber}
-                </Text>
-              ) : null}
-            </View>
+            <Avatar name={clientName} size={24} />
+            <Text style={styles.feedPosterName} numberOfLines={1}>
+              {clientName ?? "غير معروف"}
+            </Text>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
@@ -961,9 +948,10 @@ const styles = StyleSheet.create({
   // Feed Variant Specific Styles (Upwork Style)
   // ════════════════════════════════════════════════════════════════════════════
   feedCard: {
-    padding: tokens.spacing.md,
-    paddingTop: tokens.spacing.lg,
+    padding: tokens.spacing.sm,
+    marginHorizontal: tokens.spacing.sm,
     marginBottom: tokens.spacing.sm,
+    borderRadius: tokens.radius.lg,
   },
   feedTopRow: {
     flexDirection: 'row',
@@ -973,68 +961,67 @@ const styles = StyleSheet.create({
   },
   feedPriceStack: {
     alignItems: 'flex-end',
-    gap: tokens.spacing.xs,
+    gap: tokens.spacing.xxs,
+    marginStart: tokens.spacing.xs,
   },
   feedTitle: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.displayBold,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: tokens.typography.sizes.lg,
+    lineHeight: tokens.typography.sizes.xxl,
     flex: 1,
-    marginEnd: tokens.spacing.md,
   },
   feedFee: {
-    color: tokens.colors.signal,
+    color: tokens.colors.navy,
     fontFamily: tokens.typography.fonts.mono,
-    fontSize: 16,
+    fontSize: tokens.typography.sizes.base,
     fontWeight: "700",
-    backgroundColor: `${tokens.colors.signal}15`,
+    backgroundColor: tokens.colors.goldLight,
+    paddingHorizontal: tokens.spacing.xs,
+    paddingVertical: tokens.spacing.xxs,
     borderRadius: tokens.radius.sm,
-    overflow: 'hidden',
-    paddingHorizontal: tokens.spacing.sm,
-    paddingVertical: tokens.spacing.xs,
   },
-  feedSubRow: {
+  feedMetadata: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: tokens.spacing.sm,
-  },
-  feedIconText: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    gap: tokens.spacing.xs,
+    marginBottom: tokens.spacing.xs,
   },
   feedMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.xxs,
     flex: 1,
     minWidth: 0,
+  },
+  feedMetaCourt: {
+    flex: 1.5,
   },
   feedSubText: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
-    fontSize: 12,
+    fontSize: 10,
+    flex: 1,
   },
   feedDescription: {
-    color: tokens.colors.slate,
+    color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: tokens.spacing.xs,
-  },
-  feedDivider: {
-    height: 1,
-    backgroundColor: tokens.colors.surface,
-    marginVertical: tokens.spacing.md,
+    fontSize: tokens.typography.sizes.xs,
+    lineHeight: tokens.typeScale.caption.lineHeight,
+    marginBottom: tokens.spacing.xs,
   },
   feedFooterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: tokens.spacing.sm,
+    gap: tokens.spacing.xs,
   },
   feedPosterIdentity: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.spacing.xs,
+    gap: tokens.spacing.xxs,
+    flex: 1,
+    minWidth: 0,
   },
   feedPosterName: {
     color: tokens.colors.slate,
@@ -1045,11 +1032,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
-    borderRadius: tokens.radius.md,
-    backgroundColor: tokens.colors.signal,
+    gap: tokens.spacing.xxs,
+    paddingHorizontal: tokens.spacing.sm,
+    paddingVertical: tokens.spacing.xs,
+    borderRadius: tokens.radius.sm,
+    backgroundColor: tokens.colors.navy,
+    minHeight: tokens.spacing.xxl,
   },
   feedApplyText: {
     color: tokens.colors.white,

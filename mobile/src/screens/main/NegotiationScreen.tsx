@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { uploadFileToR2 } from "../../utils/upload";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -88,19 +89,21 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
   const handleUpload = async (file: any) => {
     try {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append("file", {
-        uri: Platform.OS === "ios" ? file.uri.replace("file://", "") : file.uri,
-        type: file.mimeType || "application/octet-stream",
-        name: file.name || "attachment.jpeg",
-      } as any);
 
-      const uploadRes = await apiClient.post("/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const { data: urlData } = await apiClient.post('/uploads/presigned-url', {
+        fileName: file.name || "attachment.jpeg",
+        fileType: file.mimeType || "application/octet-stream",
+        conversationId: conversationId
+      });
+
+      await uploadFileToR2({
+        localUri: Platform.OS === "ios" ? file.uri.replace("file://", "") : file.uri,
+        presignedUrl: urlData.uploadUrl,
+        contentType: file.mimeType || "application/octet-stream",
       });
 
       await actions.sendDocument({
-        attachmentUrl: uploadRes.data.url,
+        attachmentUrl: urlData.publicUrl,
         attachmentType: file.type === "image" ? "IMAGE" : "DOCUMENT",
         attachmentName: file.name || "مستند",
         attachmentSize: file.size,
@@ -152,7 +155,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
     if (item.type === "DATE_DIVIDER") {
       return (
         <View style={styles.dateDividerWrapper}>
-          <View style={styles.dateDivider}>
+          <View style={styles.dateDivider}> 
             <Text style={styles.dateDividerText}>{formatHeaderDate(item.date)}</Text>
           </View>
         </View>
@@ -241,14 +244,6 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Info Bar */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ChevronRight size={24} color={colors.ink} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{job?.title || "التفاوض"}</Text>
-          <Text style={styles.headerSubtitle}>{otherPartyName}</Text>
-        </View>
         {job?.status && (
           <View style={styles.headerPill}>
             <Text style={styles.headerPillText}>
@@ -256,7 +251,6 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
             </Text>
           </View>
         )}
-      </View>
 
       {timeline.length === 0 && !isFetching ? (
         <EmptyState
@@ -332,7 +326,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
                   autoFocus
                 />
                 <View style={styles.chipRow}>
-                  {[500, 1000, 2000, 5000].map(amt => (
+                  {[100, 200, 500, 1000].map(amt => (
                     <TouchableOpacity key={amt} style={styles.chip} onPress={() => setInputValue(amt.toString())}>
                       <Text style={styles.chipText}>{amt} ج.م</Text>
                     </TouchableOpacity>
@@ -400,7 +394,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: { flex: 1, backgroundColor: colors.paper },
 
   headerBar: {
@@ -414,8 +408,8 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: spacing.xs, marginRight: spacing.xs },
   headerTitleContainer: { flex: 1 },
-  headerTitle: { fontFamily: fonts.bodySemibold, fontSize: 16, color: colors.ink, textAlign: "right" },
-  headerSubtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, textAlign: "right" },
+  headerTitle: { fontFamily: fonts.bodySemibold, fontSize: 16, color: colors.ink },
+  headerSubtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
   headerPill: { backgroundColor: colors.paper, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
   headerPillText: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.navy },
 
@@ -452,12 +446,11 @@ const styles = StyleSheet.create({
 
   bottomBar: {
     flexDirection: "row",
-    padding: spacing.md,
+    padding: spacing.sm,
     backgroundColor: colors.white,
-    borderTopWidth: 1,
     borderColor: colors.line,
     justifyContent: "space-between",
-    gap: spacing.xs,
+    gap: spacing.xxs,
   },
   actionButton: {
     flex: 1,
@@ -467,16 +460,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
-    gap: 4,
+    gap: 3,
   },
   actionButtonText: { color: colors.white, fontFamily: fonts.bodySemibold, fontSize: 12 },
 
 
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, justifyContent: "flex-end" },
   modalContent: { backgroundColor: colors.white, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: spacing.lg },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md },
   modalTitle: { fontFamily: fonts.bodySemibold, fontSize: 16, color: colors.ink },
-  modalInput: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, padding: spacing.md, fontFamily: fonts.body, fontSize: 16, height: 50, textAlign: "right", marginBottom: spacing.md },
+  modalInput: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, padding: spacing.sm, fontFamily: fonts.body, fontSize: 16, height: 50, textAlign: "right", marginBottom: spacing.md },
   modalInputArea: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.md, padding: spacing.md, fontFamily: fonts.body, fontSize: 15, minHeight: 100, textAlignVertical: "top", textAlign: "right", marginBottom: spacing.md },
   chipRow: { flexDirection: "row", gap: spacing.xs, justifyContent: "center", marginBottom: spacing.md },
   chip: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
