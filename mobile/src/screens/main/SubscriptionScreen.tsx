@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
-import { CreditCard, Upload, FileCheck, X, AlertCircle } from 'lucide-react-native';
+import { CreditCard, Upload, FileCheck, X, AlertCircle, CheckCircle } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../../stores/authStore';
-import { useSubscriptionPlans, useGetReceiptUploadUrl, useSubmitSubscription } from '../../hooks/useSubscription';
+import { useSubscriptionPlans, useGetReceiptUploadUrl, useSubmitSubscription, useSubscriptionStatus } from '../../hooks/useSubscription';
 import { uploadFileToR2 } from '../../utils/upload';
 import { tokens } from '../../theme/tokens';
 
 export const SubscriptionScreen = () => {
   const { user, hydrate, refreshUserProfile } = useAuthStore();
   
-  const { data: subscriptionData, isLoading, error } = useSubscriptionPlans();
+  const { data: subscriptionData, isLoading: plansLoading, error } = useSubscriptionPlans();
+  const { data: statusData, isLoading: statusLoading } = useSubscriptionStatus();
+  const isLoading = plansLoading || statusLoading;
   const getUrl = useGetReceiptUploadUrl();
   const submit = useSubmitSubscription();
 
@@ -56,26 +58,21 @@ export const SubscriptionScreen = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!file) {
-      Toast.show({ type: 'error', text1: 'مطلوب إيصال', text2: 'يرجى إرفاق صورة إيصال التحويل' });
-      return;
-    }
-
+  const proceedSubmit = async () => {
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
       // 1. Get presigned URL
       const urlData = await getUrl.mutateAsync({
-        contentType: file.mimeType || 'image/jpeg',
+        contentType: file!.mimeType || 'image/jpeg',
       });
 
       // 2. Upload to R2
       await uploadFileToR2({
-        localUri: file.uri,
+        localUri: file!.uri,
         presignedUrl: urlData.uploadUrl,
-        contentType: file.mimeType || 'image/jpeg',
+        contentType: file!.mimeType || 'image/jpeg',
         onProgress: (progress) => setUploadProgress(progress),
       });
 
@@ -101,6 +98,30 @@ export const SubscriptionScreen = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    if (!file) {
+      Toast.show({ type: 'error', text1: 'مطلوب إيصال', text2: 'يرجى إرفاق صورة إيصال التحويل' });
+      return;
+    }
+
+
+
+    if (user?.subscriptionStatus === 'ACTIVE') {
+      const expires = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString('ar-EG') : '';
+      Alert.alert(
+        'تجديد الاشتراك',
+        `لديك اشتراك نشط بالفعل${expires ? ` ينتهي في ${expires}` : ''}. هل أنت متأكد أنك تريد تقديم طلب اشتراك جديد؟ سيتم إضافة المدة الجديدة إلى اشتراكك الحالي.`,
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          { text: 'متابعة التجديد', onPress: proceedSubmit }
+        ]
+      );
+      return;
+    }
+
+    proceedSubmit();
+  };
+
   if (isLoading) {
     return <View className="flex-1 justify-center items-center bg-paper"><ActivityIndicator size="large" color="#1B2A4A" /></View>;
   }
@@ -115,11 +136,38 @@ export const SubscriptionScreen = () => {
     );
   }
 
-  // If user has a pending request
-  if (user?.subscriptionStatus === 'PENDING_PAYMENT' && user?.verificationStatus === 'APPROVED' && user?.isActive === false && !isLoading && file && isUploading === false) {
-    // Wait, the API doesn't push a distinct state to the frontend for 'PENDING_REVIEW' of the receipt.
-    // The backend `SubscriptionService.submitPayment` keeps subscriptionStatus as PENDING_PAYMENT but creates a SubscriptionPayment record.
-    // Let's just let the user see the form, but they will get a 409 Conflict if they try to submit again.
+  const hasPendingPayment = !!statusData?.pendingPayment;
+  const isSubscriptionActive = user?.subscriptionStatus === 'ACTIVE';
+
+  if (isSubscriptionActive) {
+    const expires = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString('ar-EG') : '';
+    return (
+      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
+        <View className="w-16 h-16 rounded-full bg-green-100 justify-center items-center mb-4">
+          <CheckCircle size={32} color="#38A169" />
+        </View>
+        <Text className="text-2xl font-displayBold text-ink mb-2">اشتراكك فعال</Text>
+        <Text className="text-center font-body text-muted mb-4">أنت الآن تتمتع بكافة ميزات المحامي وتقرأ القضايا المتاحة بكل حرية.</Text>
+        {expires ? (
+          <View className="bg-white p-4 rounded-xl border border-line w-full shadow-sm">
+            <Text className="text-center font-bodySemibold text-ink mb-1">تاريخ انتهاء الاشتراك</Text>
+            <Text className="text-center font-displayBold text-signal text-xl">{expires}</Text>
+          </View>
+        ) : null}
+      </SafeAreaView>
+    );
+  }
+
+  if (hasPendingPayment) {
+    return (
+      <SafeAreaView className="flex-1 bg-paper justify-center items-center p-6">
+        <View className="w-16 h-16 rounded-full bg-orange-100 justify-center items-center mb-4">
+          <FileCheck size={32} color="#DD6B20" />
+        </View>
+        <Text className="text-2xl font-displayBold text-ink mb-2">طلب قيد المراجعة</Text>
+        <Text className="text-center font-body text-muted">لقد قمت بإرسال إيصال الدفع مسبقاً وهو الآن قيد المراجعة من قبل الإدارة. يرجى الانتظار، سيتم إشعارك فور التفعيل.</Text>
+      </SafeAreaView>
+    );
   }
 
   return (

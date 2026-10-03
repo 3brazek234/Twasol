@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, RefreshControl, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
-import { ScreenContainer } from '../../components/layout/ScreenContainer';
+import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Search, X, Filter } from 'lucide-react-native';
-import { MotiView, AnimatePresence } from 'moti';
+import { Briefcase, Info } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
 
-import { SaveSearchButton } from '../../components/jobs/SaveSearchButton';
 import { EmptyStateIllustration } from '../../components/EmptyStateIllustration';
 
 const SkeletonJobCard = () => {
@@ -33,14 +32,13 @@ const SkeletonJobCard = () => {
 };
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
-  const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(undefined);
+  const { user } = useAuthStore();
+  const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(route.params?.courtId ?? undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
-  const [taskType, setTaskType] = useState<string | undefined>(undefined);
+  const [taskType, setTaskType] = useState<string | undefined>(route.params?.taskType ?? undefined);
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
 
-  const isSearchVisible = route.params?.isSearchVisible ?? false;
-  const [searchInput, setSearchInput] = useState('');
 
   const {
     data,
@@ -51,7 +49,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useJobs(selectedCourtId, selectedStatus, searchInput, taskType, sortBy);
+  } = useJobs(selectedCourtId, selectedStatus, taskType, sortBy);
 
   // ── Refetch when the screen comes back into focus ──────────────────────────
   // This handles: navigating back from JobDetail, returning from PostJob, etc.
@@ -90,31 +88,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <VerificationStatusBanner />
 
-      <AnimatePresence>
-        {isSearchVisible && (
-          <MotiView
-            from={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 64 }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-6 justify-center bg-white border-b border-line"
-          >
-            <View className="flex-row items-center bg-paper rounded-xl px-4 h-11">
-              <Search color="#718096" size={18} />
-              <TextInput
-                className="flex-1 ml-2 text-base font-bodyMedium text-ink h-full"
-                placeholder={'البحث عن المهام بالكلمات المفتاحية...'}
-                value={searchInput}
-                onChangeText={setSearchInput}
-                placeholderTextColor="#718096"
-                autoFocus
-              />
-              <TouchableOpacity onPress={() => navigation.setParams({ isSearchVisible: false })}>
-                <X size={20} color="#718096" />
-              </TouchableOpacity>
-            </View>
-          </MotiView>
-        )}
-      </AnimatePresence>
 
       <View className="bg-white border-b border-line py-2">
         <ScrollView
@@ -127,7 +100,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             selectedValue={selectedStatus}
             onSelect={setSelectedStatus}
           />
-          <SaveSearchButton criteria={{ courtId: selectedCourtId, status: selectedStatus, taskType, q: searchInput }} />
         </ScrollView>
         <ScrollView
           horizontal
@@ -187,6 +159,26 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <Animated.FlatList
           data={jobs}
           keyExtractor={(item: any, index) => item?.id || String(index)}
+          ListHeaderComponent={
+            user?.role === 'LAWYER' && !selectedCourtId && jobs.length > 0 ? (
+              <View style={{ backgroundColor: tokens.colors.navy + '10', padding: 12, marginHorizontal: 24, marginBottom: 16, borderRadius: tokens.radius.md, flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
+                <Info size={20} color={tokens.colors.navy} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: tokens.typography.sizes.xs, color: tokens.colors.ink, textAlign: 'right', lineHeight: 18 }}>
+                    هذه المهام خاصة بمحاكمك المسجلة. يمكنك توسيع نطاق عملك بإضافة محاكم أخرى.
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: tokens.colors.navy, borderRadius: tokens.radius.sm }}
+                  onPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
+                >
+                  <Text style={{ fontFamily: tokens.typography.fonts.bodySemibold, fontSize: tokens.typography.sizes.xs, color: tokens.colors.white }}>
+                    إضافة محاكم
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null
+          }
           renderItem={({ item }: any) => (
             <JobCard
               job={item}
@@ -222,7 +214,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             <EmptyState
               illustration={<EmptyStateIllustration kind="jobs" />}
               headline="لا توجد مهام تطابق هذه التصفية"
-              body="وسّع نطاق البحث أو احفظ التصفية لتصلك تنبيهات عند ظهور مهام مناسبة."
+              body="جرّب تغيير التصفية أو أضف محاكم أخرى لتوسيع نطاق بحثك."
               ctaText="إدارة المحاكم"
               onCtaPress={() => navigation.navigate('ProfileTab', { screen: 'MyCourts' })}
             />

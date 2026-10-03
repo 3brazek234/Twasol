@@ -61,9 +61,6 @@ export class SubscriptionService {
     if (user.verificationStatus !== 'APPROVED') {
       throw AppError.forbidden('يجب إتمام توثيق حسابك أولاً قبل الاشتراك');
     }
-    if (user.subscriptionStatus === 'ACTIVE') {
-      throw AppError.conflict('حسابك نشط بالفعل، لا داعي للاشتراك مجدداً في الوقت الحالي');
-    }
     return user;
   }
 

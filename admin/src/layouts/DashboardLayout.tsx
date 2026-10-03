@@ -1,8 +1,6 @@
-import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
+import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminSocket } from '../api/socket';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { 
   LayoutDashboard, 
@@ -19,9 +17,6 @@ import { Button } from '../components/ui/button';
 
 export default function DashboardLayout() {
   const { user, loading, logout } = useAuth();
-  const queryClient = useQueryClient();
-  const [toasts, setToasts] = useState<any[]>([]);
-
   const { data: badgesData } = useQuery({
     queryKey: ['admin-badges'],
     queryFn: async () => {
@@ -33,57 +28,7 @@ export default function DashboardLayout() {
     refetchInterval: 30000,
   });
 
-  const badges = badgesData || { verification: 0, reports: 0, support: 0 };
-
-  useEffect(() => {
-    if (!user) return;
-
-    adminSocket.connect();
-    
-    const handleNewSignup = (payload: any) => {
-      const id = Date.now();
-      setToasts(prev => [...prev, { id, title: 'New Signup', message: `${payload.fullName} (${payload.email})`, link: '/users' }]);
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
-
-      queryClient.setQueryData(['admin-overview'], (oldData: any) => {
-        if (!oldData || !oldData.funnel) return oldData;
-        return {
-          ...oldData,
-          funnel: { ...oldData.funnel, totalRegistered: oldData.funnel.totalRegistered + 1 }
-        };
-      });
-    };
-
-    const handleNewSupportMessage = (payload: any) => {
-      const id = Date.now();
-      setToasts(prev => [...prev, { 
-        id, 
-        title: 'New Support Message', 
-        message: payload.message?.sender?.fullName ? `From ${payload.message.sender.fullName}` : 'New message in support', 
-        link: '/support' 
-      }]);
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
-
-      queryClient.setQueryData(['admin-badges'], (oldData: any) => {
-        if (!oldData) return { verification: 0, reports: 0, support: 1 };
-        return { ...oldData, support: oldData.support + 1 };
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-support'] });
-    };
-
-    adminSocket.on('admin:new_signup', handleNewSignup);
-    adminSocket.on('admin:new_support_message', handleNewSupportMessage);
-
-    const cleanupReconnect = adminSocket.onReconnect(() => {
-      queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
-    });
-
-    return () => {
-      adminSocket.off('admin:new_signup', handleNewSignup);
-      adminSocket.off('admin:new_support_message', handleNewSupportMessage);
-      cleanupReconnect();
-    };
-  }, [user, queryClient]);
+  const badges = badgesData || { verification: 0, reports: 0, support: 0, subscriptions: 0 };
 
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
@@ -156,19 +101,6 @@ export default function DashboardLayout() {
       <main className="flex-1 overflow-y-auto relative">
         <div className="container mx-auto p-6 max-w-6xl">
           <Outlet />
-        </div>
-        
-        {/* Global Toasts */}
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-          {toasts.map((toast) => (
-            <div key={toast.id} className="bg-brand-ink text-brand-paper p-4 rounded-md shadow-lg flex justify-between items-center w-80 pointer-events-auto">
-              <div>
-                <p className="font-bold text-sm">{toast.title}</p>
-                <p className="text-xs">{toast.message}</p>
-              </div>
-              <Link to={toast.link} className="text-xs underline ml-4 whitespace-nowrap">View</Link>
-            </div>
-          ))}
         </div>
       </main>
     </div>

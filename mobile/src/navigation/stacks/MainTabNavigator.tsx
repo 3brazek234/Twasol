@@ -1,11 +1,9 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { I18nManager, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
-import { Gavel, Scale, Bell, Award, Settings, Search, Plus, Briefcase, Bookmark } from 'lucide-react-native';
+import { Gavel, Scale, Bell, Award, Settings, Plus, Briefcase } from 'lucide-react-native';
 
-import { HiringHomeScreen } from '../../screens/main/HiringHomeScreen';
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
 import { JobDetailScreen } from '../../screens/main/JobDetailScreen';
 import { JobCompletionScreen } from '../../screens/main/JobCompletionScreen';
@@ -35,12 +33,10 @@ const defaultScreenOptions = {
 };
 
 const JobsNavigator = () => {
-  const { selectedMode } = require('../../stores/authStore').useAuthStore();
   
   return (
     <JobsStack.Navigator 
       screenOptions={defaultScreenOptions} 
-      initialRouteName="JobsFeed"
     >
       <JobsStack.Screen 
         name="JobsFeed" 
@@ -50,37 +46,30 @@ const JobsNavigator = () => {
           const canHire = user?.accountMode === 'HIRING' || user?.accountMode === 'BOTH';
           
           return {
-            header: () => (
-              <View style={styles.jobsFeedHeader}>
-                <View style={styles.jobsFeedHeaderActions}>
+            title: '',
+            headerLeft: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {canHire && (
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
-                    style={styles.jobsFeedHeaderAction}
+                    onPress={() => navigation.navigate('PostJob')}
+                    style={{ marginEnd: 12 }}
                   >
-                    <Settings size={22} color={tokens.colors.ink} />
+                    <Plus size={22} color={tokens.colors.signal} />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => navigation.setParams({ isSearchVisible: true })}
-                    style={styles.jobsFeedHeaderAction}
-                  >
-                    <Search size={22} color={tokens.colors.ink} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('SavedSearches')}
-                    style={styles.jobsFeedHeaderAction}
-                  >
-                    <Bookmark size={22} color={tokens.colors.ink} />
-                  </TouchableOpacity>
-                  {canHire && (
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('PostJob')}
-                      style={styles.jobsFeedHeaderAction}
-                    >
-                      <Plus size={22} color={tokens.colors.signal} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <Text style={styles.jobsFeedHeaderTitle}>القائمة العامة</Text>
+                )}
+
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SettingsStack', { screen: 'Settings' })}
+                >
+                  <Settings size={22} color={tokens.colors.ink} />
+                </TouchableOpacity>
+              </View>
+            ),
+            headerRight: () => (
+              <View style={{ paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: tokens.colors.ink, fontFamily: tokens.typography.fonts.displayBold }}>
+                  القائمة العامة
+                </Text>
               </View>
             ),
           };
@@ -88,7 +77,6 @@ const JobsNavigator = () => {
       />
       <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل القضية' }} />
       <JobsStack.Screen name="JobCompletion" component={JobCompletionScreen} options={{ title: 'إتمام المهمة' }} />
-      <JobsStack.Screen name="SavedSearches" component={require('../../screens/main/SavedSearchesScreen').SavedSearchesScreen} options={{ headerShown: false }} />
       <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'إضافة طلب' }} />
       <JobsStack.Screen name="FindLawyers" component={FindLawyersScreen} options={{ title: 'Find Lawyers' }} />
       <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'Lawyer Profile' }} />
@@ -106,7 +94,7 @@ const ChatsNavigator = () => (
 const ProfileNavigator = () => (
   <ProfileStack.Navigator screenOptions={defaultScreenOptions}>
     <ProfileStack.Screen name="ProfileHome" component={SettingsScreen} options={{ title: 'الاعدادات' }} />
-    <ProfileStack.Screen name="MyCourts" component={MyCourtsScreen} options={{ title: 'Jurisdictions' }} />
+    <ProfileStack.Screen name="MyCourts" component={MyCourtsScreen} options={{ title: 'المحاكم المسجلة لدي حسابي' }} />
   </ProfileStack.Navigator>
 );
 
@@ -144,33 +132,3 @@ export const MainNavigator = () => (
     <MainTabs.Screen name="ProfileTab" component={ProfileNavigator} options={{ title: 'حسابي' }} />
   </MainTabs.Navigator>
 );
-
-const styles = StyleSheet.create({
-  jobsFeedHeader: {
-    alignItems: 'center',
-    backgroundColor: tokens.colors.paper,
-    flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
-    height: 56,
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.spacing.md,
-    width: '100%',
-  },
-  jobsFeedHeaderActions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: tokens.spacing.xs,
-  },
-  jobsFeedHeaderAction: {
-    alignItems: 'center',
-    height: 44,
-    justifyContent: 'center',
-    width: 44,
-  },
-  jobsFeedHeaderTitle: {
-    color: tokens.colors.ink,
-    flexShrink: 1,
-    fontFamily: tokens.typography.fonts.displayBold,
-    fontSize: 18,
-    textAlign: 'right',
-  },
-});

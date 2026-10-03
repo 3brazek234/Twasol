@@ -4,7 +4,6 @@ import { api } from '../lib/api';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { adminSocket } from '../api/socket';
 
 export default function SupportInboxPage() {
   const queryClient = useQueryClient();
@@ -20,7 +19,8 @@ export default function SupportInboxPage() {
         params: { status: activeTab, page: 1, limit: 50 }
       });
       return res.data;
-    }
+    },
+    refetchInterval: 10000,
   });
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
@@ -31,6 +31,7 @@ export default function SupportInboxPage() {
       return res.data;
     },
     enabled: !!selectedConversationId,
+    refetchInterval: 5000, // Faster polling for active chat view
   });
 
   const resolveMutation = useMutation({
@@ -57,17 +58,7 @@ export default function SupportInboxPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    const handleNewMessage = () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-support'] });
-      if (selectedConversationId) {
-        queryClient.invalidateQueries({ queryKey: ['admin-support-messages', selectedConversationId] });
-      }
-    };
-
-    adminSocket.on('admin:new_support_message', handleNewMessage);
-    return () => adminSocket.off('admin:new_support_message', handleNewMessage);
-  }, [queryClient, selectedConversationId]);
+  // Socket listener removed. Live updates are now handled by refetchInterval on the queries above.
 
   const conversations = conversationsData?.data || [];
   const selectedConvDetails = conversations.find((c: any) => c.id === selectedConversationId);

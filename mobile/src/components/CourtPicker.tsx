@@ -252,7 +252,6 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.sizes.lg,
     color: tokens.colors.navy,
     marginBottom: tokens.spacing.md,
-    textAlign: 'right',
   },
   backLink: {
     marginBottom: tokens.spacing.sm,

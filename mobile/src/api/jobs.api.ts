@@ -22,7 +22,6 @@ const mapJobBackendToFrontend = (job: any): any => ({
 export const fetchJobs = async (
   courtId?: string,
   status?: string,
-  searchQuery?: string,
   taskType?: string,
   sortBy?: string,
   page: number = 1,
@@ -31,7 +30,6 @@ export const fetchJobs = async (
   const params = new URLSearchParams();
   if (courtId) params.append('courtId', courtId);
   if (status) params.append('status', status);
-  if (searchQuery) params.append('q', searchQuery);
   if (taskType) params.append('taskType', taskType);
   if (sortBy) params.append('sortBy', sortBy);
   params.append('page', page.toString());

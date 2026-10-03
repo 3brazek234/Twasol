@@ -1,0 +1,28 @@
+name: Service Lint & Type Check
+
+on:
+  pull_request:
+    paths: ['service/**']
+  push:
+    branches: [main]
+    paths: ['service/**']
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: service/package-lock.json
+      - name: Install dependencies
+        working-directory: service
+        run: npm ci
+      - name: Generate Prisma client
+        working-directory: service
+        run: npx prisma generate
+      - name: Type check
+        working-directory: service
+        run: npx tsc --noEmit

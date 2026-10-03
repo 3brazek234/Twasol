@@ -47,6 +47,13 @@ export class CourtsController {
     } catch (error) { next(error); }
   }
 
+  static async getMyCourts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const courts = await CourtsService.getMyCourts(req.user!.userId);
+      res.json({ success: true, data: courts });
+    } catch (error) { next(error); }
+  }
+
   static async registerLawyer(req: Request, res: Response, next: NextFunction) {
     try {
       const { courtId } = req.body;
