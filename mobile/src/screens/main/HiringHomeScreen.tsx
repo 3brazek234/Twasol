@@ -46,7 +46,7 @@ export const HiringHomeScreen = ({ navigation }: any) => {
     isRefetching,
   } = useQuery({
     queryKey: ['myPostedJobs', user?.id],
-    queryFn: () => fetchJobs(undefined, undefined, undefined, undefined, undefined, 1, 20),
+    queryFn: () => fetchJobs(undefined, undefined, undefined, undefined, 1, 20),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

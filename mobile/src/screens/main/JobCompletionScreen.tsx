@@ -1,6 +1,6 @@
 import { useSubmitReview } from "../../hooks/useReviews";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
@@ -23,7 +23,6 @@ export const JobCompletionScreen = ({ route, navigation }: any) => {
   const [comment, setComment] = useState('');
   const [skipped, setSkipped] = useState(false);
   const [showPaymentIssue, setShowPaymentIssue] = useState(false);
-  const { user } = useAuthStore();
   const submitReview = useSubmitReview();
 
   const handleConfirmPayment = () => {
