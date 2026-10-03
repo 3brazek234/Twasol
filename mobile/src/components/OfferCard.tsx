@@ -1,4 +1,3 @@
-import React from 'react';
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { MotiView } from 'moti';
 import { Check, DollarSign, X } from 'lucide-react-native';
