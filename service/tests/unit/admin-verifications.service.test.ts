@@ -10,7 +10,7 @@ describe('AdminVerificationsService', () => {
   describe('approve', () => {
     it('approves document and updates user status', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'user-1', verificationStatus: 'PENDING' } as any);
+      prismaMock.user.findUnique.mockResolvedValue({ id: 'user-1', verificationStatus: 'PENDING', accountMode: 'GIG' } as any);
       prismaMock.verificationDocument.findUnique.mockResolvedValue({ id: 'doc-1', userId: 'user-1', status: 'PENDING' } as any);
       prismaMock.verificationDocument.updateMany.mockResolvedValue({} as any);
       prismaMock.user.update.mockResolvedValue({} as any);
@@ -18,7 +18,9 @@ describe('AdminVerificationsService', () => {
       await AdminVerificationsService.approve('user-1', 'admin-1');
       
       expect(prismaMock.verificationDocument.updateMany).toHaveBeenCalled(expect.objectContaining({ data: { status: 'APPROVED' } }));
-      expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { verificationStatus: 'APPROVED' } }));
+      expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({ 
+        data: { verificationStatus: 'APPROVED', subscriptionStatus: 'PENDING_PAYMENT', isActive: false } 
+      }));
     });
   });
 
