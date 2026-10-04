@@ -59,9 +59,29 @@ export class UsersService {
   static async updateAccountMode(userId: string, mode: any) {
     const { invalidateCachePrefix } = await import('../../common/utils/cache');
     await invalidateCachePrefix(`user:profile:${userId}`);
+    
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    let extraUpdates = {};
+
+    if (user) {
+      if (mode !== 'HIRING' && user.subscriptionStatus === 'NOT_REQUIRED') {
+        // Upgrading to GIG or BOTH: must now pay subscription
+        extraUpdates = {
+          subscriptionStatus: 'PENDING_PAYMENT',
+          isActive: false,
+        };
+      } else if (mode === 'HIRING' && user.verificationStatus === 'APPROVED' && user.subscriptionStatus !== 'NOT_REQUIRED') {
+        // Switching TO HIRING: instantly grant active status since they don't need to pay
+        extraUpdates = {
+          subscriptionStatus: 'NOT_REQUIRED',
+          isActive: true,
+        };
+      }
+    }
+
     return prisma.user.update({
       where: { id: userId },
-      data: { accountMode: mode },
+      data: { accountMode: mode, ...extraUpdates },
       select: { id: true, accountMode: true }
     });
   }

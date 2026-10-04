@@ -12,14 +12,16 @@ export const AccountModeScreen = ({ navigation }: any) => {
 
   const handleContinue = async () => {
     if (!selected) return;
+    console.log('Selected mode:', selected);
     setLoading(true);
 
     try {
       if (selected === 'HIRING') {
         await updateAccountMode('HIRING');
-        
+        navigation.navigate('VerificationIntro');
+
         if (user) {
-          setUser({ ...user, accountMode: 'HIRING' }); // Removed insecure verificationStatus mock
+          setUser({ ...user, accountMode: 'HIRING' }); 
         }
         // Removed client-side mock
       } else {
@@ -27,7 +29,6 @@ export const AccountModeScreen = ({ navigation }: any) => {
         navigation.navigate('VerificationIntro');
       }
     } catch (err) {
-      console.error(err);
       Alert.alert('خطأ', 'فشل في تحديث نوع الحساب. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);

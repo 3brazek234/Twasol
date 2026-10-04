@@ -113,9 +113,20 @@ export class AdminUsersService {
     if (!user) throw AppError.notFound('User');
 
     const result = await prisma.$transaction(async (tx) => {
+      let extraData: any = {};
+      if (status === 'APPROVED') {
+        const isHiringOnly = user.accountMode === 'HIRING';
+        extraData = {
+          subscriptionStatus: isHiringOnly ? 'NOT_REQUIRED' : 'PENDING_PAYMENT',
+          isActive: isHiringOnly
+        };
+      } else if (status === 'REJECTED') {
+        extraData = { isActive: false };
+      }
+
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { verificationStatus: status },
+        data: { verificationStatus: status, ...extraData },
         select: SAFE_USER_SELECT,
       });
       await auditLog(

@@ -30,11 +30,6 @@ export const ModeSwitcher = () => {
           <Text style={[styles.label, isHiring && styles.labelActive]}>توظيف محامٍ</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.description}>
-        {isHiring
-          ? 'انشر مهامك وتابع المحامين المكلّفين بها.'
-          : 'استعرض الفرص في محاكمك وأدر المحاكم المسجلة.'}
-      </Text>
     </View>
   );
 };

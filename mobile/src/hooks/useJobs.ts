@@ -39,7 +39,7 @@ export const useCreateJob = () => {
 export const useApplyToJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (jobId: string) => applyToJob(jobId),
+    mutationFn: applyToJob,
     onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });

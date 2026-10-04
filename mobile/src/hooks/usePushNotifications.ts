@@ -1,93 +1,115 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 import { apiClient } from '../api/client';
+import { useAuthStore } from '../stores/authStore';
+import Constants from 'expo-constants';
 
-const isExpoGo = Constants.appOwnership === 'expo';
-
-export interface PushNotificationState {
-  expoPushToken?: any;
-  notification?: any;
-}
-
-export const usePushNotifications = (): PushNotificationState => {
-  const [expoPushToken, setExpoPushToken] = useState<any>();
-  const [notification, setNotification] = useState<any>();
-
-  const notificationListener = useRef<any>(null);
-  const responseListener = useRef<any>(null);
+/**
+ * Safe push-notification hook.
+ *
+ * expo-notifications requires a native runtime that may not exist in
+ * Expo Go, on the web, or in a dev-client built without the module.
+ * We lazily require the native modules inside the effect so the rest
+ * of the app boots normally even when the runtime isn't ready.
+ */
+export function usePushNotifications() {
+  const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (isExpoGo) return;
+    if (Platform.OS === 'web') return;
+    if (!isAuthenticated) return;
 
-    // Lazy-load expo-notifications only outside Expo Go
-    const Notifications = require('expo-notifications');
+    // Skip in Expo Go (SDK 53+ removed push notification support from Expo Go)
+    if (Constants.appOwnership === 'expo') {
+      console.log('[Push] Running in Expo Go. Push notifications are disabled. Use a development build (EAS) to test push notifications.');
+      return;
+    }
 
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldShowAlert: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+    let Notifications: any;
+    let Device: any;
 
-    async function register() {
-      let token;
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
-      }
+    try {
+      Notifications = require('expo-notifications');
+      Device = require('expo-device');
+    } catch {
+      console.log('[Push] expo-notifications native module not available, skipping.');
+      return;
+    }
 
-      if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
+    // If we get here the native modules loaded successfully
+    try {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+    } catch {
+      console.log('[Push] setNotificationHandler failed, skipping.');
+      return;
+    }
 
-        if (existingStatus !== 'granted') {
+    let receivedSub: any;
+    let responseSub: any;
+
+    (async () => {
+      try {
+        // Android channel
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+          });
+        }
+
+        if (!Device.isDevice) return;
+
+        // Permissions
+        const { status: existing } = await Notifications.getPermissionsAsync();
+        let finalStatus = existing;
+        if (existing !== 'granted') {
           const { status } = await Notifications.requestPermissionsAsync();
           finalStatus = status;
         }
         if (finalStatus !== 'granted') return;
 
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId
-          ?? Constants?.easConfig?.projectId;
+        // Token
+        const projectId =
+          Constants?.expoConfig?.extra?.eas?.projectId ??
+          Constants?.easConfig?.projectId;
 
-        token = await Notifications.getExpoPushTokenAsync({ projectId });
+        const tokenData = projectId
+          ? (await Notifications.getExpoPushTokenAsync({ projectId })).data
+          : (await Notifications.getExpoPushTokenAsync()).data;
 
-        try {
-          await apiClient.post('/users/push-token', { token: token.data });
-        } catch {
-          // ignore
-        }
+        setExpoPushToken(tokenData);
+
+        // Send to backend
+        apiClient.post('/users/push-token', { token: tokenData }).catch(() => {});
+
+        // Listeners
+        receivedSub = Notifications.addNotificationReceivedListener(() => {});
+        responseSub = Notifications.addNotificationResponseReceivedListener((response: any) => {
+          console.log('[Push] tapped:', response.notification.request.content.data);
+        });
+      } catch (e: any) {
+        console.log('[Push] registration error:', e.message || e);
       }
-
-      return token;
-    }
-
-    register().then(setExpoPushToken);
-
-    notificationListener.current = Notifications.addNotificationReceivedListener(
-      (n: any) => setNotification(n),
-    );
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      () => {},
-    );
+    })();
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeSubscription(responseListener.current);
-      }
+      try {
+        if (receivedSub) receivedSub.remove();
+        if (responseSub) responseSub.remove();
+      } catch {}
     };
-  }, []);
+  }, [isAuthenticated]);
 
-  return { expoPushToken, notification };
-};
+  return { expoPushToken };
+}

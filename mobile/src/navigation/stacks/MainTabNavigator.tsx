@@ -17,7 +17,6 @@ import { MyJobsScreen } from '../../screens/main/MyJobsScreen';
 import { PosterReviewScreen } from '../../screens/main/PosterReviewScreen';
 import { SettingsScreen } from '../../screens/main/SettingsScreen';
 import { MyCourtsScreen } from '../../screens/main/MyCourtsScreen';
-import { FindLawyersScreen } from '../../screens/main/FindLawyersScreen';
 import { LawyerProfileScreen } from '../../screens/main/LawyerProfileScreen';
 import { FloatingTabBar } from '../../components/FloatingTabBar';
 import { ModeSwitcher } from '../../components/ModeSwitcher';
@@ -101,7 +100,6 @@ const JobsNavigator = () => {
       <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل القضية' }} />
       <JobsStack.Screen name="JobCompletion" component={JobCompletionScreen} options={{ title: 'إتمام المهمة' }} />
       <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'إضافة طلب' }} />
-      <JobsStack.Screen name="FindLawyers" component={FindLawyersScreen} options={{ title: 'Find Lawyers' }} />
       <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'Lawyer Profile' }} />
       <JobsStack.Screen name="PosterReview" component={PosterReviewScreen} options={{ title: 'تقييم المحامي' }} />
     </JobsStack.Navigator>

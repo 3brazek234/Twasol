@@ -73,8 +73,10 @@ export const createJob = async (jobData: {
   return mapJobBackendToFrontend(response.data);
 };
 
-export const applyToJob = async (jobId: string): Promise<{ conversationId: string }> => {
-  const res = await apiClient.post<any>(`/jobs/${jobId}/apply`, { conflictsCheckPassed: true });
+export const applyToJob = async (
+  { jobId, conflictsCheckPassed }: { jobId: string; conflictsCheckPassed: true },
+): Promise<{ conversationId: string }> => {
+  const res = await apiClient.post<any>(`/jobs/${jobId}/apply`, { conflictsCheckPassed });
   return { conversationId: res.data?.conversationId };
 };
 

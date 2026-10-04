@@ -50,7 +50,7 @@ export class JobsLifecycleService {
   }
 
   static async declareConflict(jobId: string, lawyerId: string, ipAddress?: string) {
-    const job = await JobsLifecycleService.assertCanApply(jobId, lawyerId);
+    const job = await this.assertCanApply(jobId, lawyerId);
 
     return prisma.$transaction(async (tx) => {
       const declaration = await tx.conflictDeclaration.upsert({
@@ -74,7 +74,7 @@ export class JobsLifecycleService {
   }
 
   static async apply(jobId: string, lawyerId: string, ipAddress: string | undefined, conflictsCheckPassed: boolean) {
-    const job = await JobsLifecycleService.assertCanApply(jobId, lawyerId);
+    const job = await this.assertCanApply(jobId, lawyerId);
     if (!conflictsCheckPassed) throw AppError.badRequest("A conflicts check confirmation is required");
 
     const existingApplication = await prisma.jobApplication.findUnique({

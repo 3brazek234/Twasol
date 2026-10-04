@@ -56,15 +56,6 @@ export const HiringHomeScreen = ({ navigation }: any) => {
         <Text style={styles.postButtonText}>نشر مهمة جديدة</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        accessibilityRole="button"
-        style={styles.findButton}
-        onPress={() => navigation.navigate('FindLawyers')}
-      >
-        <Search size={16} color={tokens.colors.navy} />
-        <Text style={styles.findButtonText}>ابحث عن محامٍ</Text>
-      </TouchableOpacity>
-
       <View style={styles.sectionHeading}>
         <Briefcase size={18} color={tokens.colors.navy} />
         <Text style={styles.sectionTitle}>متابعة مهامي المنشورة</Text>

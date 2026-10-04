@@ -82,7 +82,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
 
   const handleConfirmNoConflict = () => {
     if (!jobId) return;
-    apply(jobId, {
+    apply({ jobId, conflictsCheckPassed: true }, {
       onSuccess: (data: any) => {
         setShowApplyModal(false);
         const convId = data?.conversationId;
