@@ -4,6 +4,11 @@ import IORedis from 'ioredis';
 
 export const redisConnection = new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null });
 
+// Prevent unhandled error events from crashing the server
+redisConnection.on('error', (err) => {
+  console.error('[Redis] Connection error:', err.message);
+});
+
 export const notificationFanoutQueue = new Queue('notification-fanout', { 
   connection: redisConnection,
   defaultJobOptions: {
