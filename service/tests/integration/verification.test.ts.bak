@@ -56,7 +56,7 @@ describe('Verification Gating Integration Tests', () => {
         passwordHash: hash,
         fullName: 'Approved Lawyer',
         role: 'LAWYER',
-        verificationStatus: 'APPROVED', isActive: true, subscriptionStatus: 'ACTIVE'
+        verificationStatus: 'APPROVED'
       }
     });
     approvedToken = jwt.sign(

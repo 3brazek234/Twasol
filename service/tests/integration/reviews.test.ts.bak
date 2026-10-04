@@ -27,7 +27,7 @@ describe('Reviews Integration Logic', () => {
         passwordHash: hash,
         fullName: 'Poster',
         
-        verificationStatus: 'APPROVED', isActive: true, subscriptionStatus: 'ACTIVE'
+        verificationStatus: 'APPROVED'
       } as Prisma.UserCreateInput
     });
     posterId = poster.id;
@@ -40,7 +40,7 @@ describe('Reviews Integration Logic', () => {
         passwordHash: hash,
         fullName: 'Lawyer',
         role: 'LAWYER',
-        verificationStatus: 'APPROVED', isActive: true, subscriptionStatus: 'ACTIVE'
+        verificationStatus: 'APPROVED'
       }
     });
     lawyerId = lawyer.id;

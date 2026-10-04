@@ -37,7 +37,7 @@ describe('Offer CAS Logic (Race Condition Prevention)', () => {
         passwordHash: hash,
         fullName: 'Test Lawyer',
         role: 'LAWYER',
-        verificationStatus: 'APPROVED', isActive: true, subscriptionStatus: 'ACTIVE'
+        verificationStatus: 'APPROVED'
       }
     });
     targetUserId = lawyer.id;
