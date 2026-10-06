@@ -132,7 +132,6 @@ export class VerificationService {
 
       const doc = await tx.verificationDocument.findUniqueOrThrow({
         where: { id: docId },
-        include: { user: { select: { accountMode: true } } }
       });
 
       if (status === 'APPROVED') {
@@ -141,14 +140,12 @@ export class VerificationService {
         });
 
         if (pendingOrRejectedCount === 0) {
-          const isHiringOnly = doc.user.accountMode === 'HIRING';
-
           await tx.user.update({
             where: { id: doc.userId },
             data: {
               verificationStatus: 'APPROVED',
-              subscriptionStatus: isHiringOnly ? 'NOT_REQUIRED' : 'PENDING_PAYMENT',
-              isActive: isHiringOnly, // Hiring accounts bypass the payment wall
+              subscriptionStatus: 'PENDING_PAYMENT',
+              isActive: false,
             },
           });
 
@@ -157,10 +154,8 @@ export class VerificationService {
               userId: doc.userId,
               type: 'VERIFICATION_APPROVED',
               titleAr: 'تم توثيق حسابك بنجاح ✅',
-              messageAr: isHiringOnly 
-                ? 'مبروك! تم التحقق من هويتك وحسابك الآن نشط بالكامل.' 
-                : 'مبروك! تم التحقق من هويتك. يرجى إتمام الاشتراك لتفعيل حسابك والبدء في استخدام خدمات وكيل.',
-              data: { nextStep: isHiringOnly ? 'NONE' : 'SUBSCRIPTION_PAYMENT' },
+              messageAr: 'مبروك! تم التحقق من هويتك. يرجى إتمام الاشتراك لتفعيل حسابك والبدء في استخدام خدمات وكيل.',
+              data: { nextStep: 'SUBSCRIPTION_PAYMENT' },
             }),
           });
         }

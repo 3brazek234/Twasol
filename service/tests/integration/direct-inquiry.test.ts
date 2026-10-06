@@ -74,48 +74,48 @@ describe('Direct Inquiry Rate Limiting and Creation', () => {
 
   it('allows creating a direct inquiry', async () => {
     const response = await request(app)
-      .post('/api/chat/direct')
+      .post('/api/conversations/direct')
       .set('Authorization', `Bearer ${posterToken}`)
       .send({ lawyerId: lawyerIds[0] });
 
-    expect(response.status).toBe(201);
-    expect(response.body.type).toBe('DIRECT_INQUIRY');
+    expect(response.status).toBe(200);
+    expect(response.body.data.type).toBe('DIRECT_INQUIRY');
   });
 
   it('returns the same conversation when hitting the same lawyer twice', async () => {
     const response1 = await request(app)
-      .post('/api/chat/direct')
+      .post('/api/conversations/direct')
       .set('Authorization', `Bearer ${posterToken}`)
       .send({ lawyerId: lawyerIds[0] });
 
     const response2 = await request(app)
-      .post('/api/chat/direct')
+      .post('/api/conversations/direct')
       .set('Authorization', `Bearer ${posterToken}`)
       .send({ lawyerId: lawyerIds[0] });
 
-    expect(response1.status).toBe(201);
-    expect(response2.status).toBe(201); // The app might return 200 or 201 for existing, assuming 201 here or just checking body
-    expect(response1.body.id).toBe(response2.body.id);
+    expect(response1.status).toBe(200);
+    expect(response2.status).toBe(200);
+    expect(response1.body.data.id).toBe(response2.body.data.id);
   });
 
   it('rate limits users after 15 inquiries in a 24-hour period', async () => {
     // 15 successful requests
     for (let i = 0; i < 15; i++) {
       const response = await request(app)
-        .post('/api/chat/direct')
+        .post('/api/conversations/direct')
         .set('Authorization', `Bearer ${posterToken}`)
         .send({ lawyerId: lawyerIds[i] });
       
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
     }
 
     // 16th request should fail
     const response16 = await request(app)
-      .post('/api/chat/direct')
+      .post('/api/conversations/direct')
       .set('Authorization', `Bearer ${posterToken}`)
       .send({ lawyerId: lawyerIds[15] });
 
     expect(response16.status).toBe(429);
-    expect(response16.body.error).toMatch(/maximum number/i);
+    expect(response16.body.error.message).toMatch(/maximum number/i);
   });
 });

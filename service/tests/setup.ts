@@ -1,21 +1,21 @@
 import { execSync } from 'child_process';
-import { prisma } from '../src/prisma';
+import 'dotenv/config';
+
+const testDatabaseUrl =
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://testuser:testpassword@localhost:5433/job_test_db?schema=public';
+
+if (new URL(testDatabaseUrl).pathname !== '/job_test_db') {
+  throw new Error('Integration tests require a dedicated database named job_test_db');
+}
+
+process.env.DATABASE_URL = testDatabaseUrl;
 
 beforeAll(async () => {
-  // Use a specific test DB url to ensure we don't drop dev
-  // In CI or docker-compose, this should be mapped to the test DB
-  if (!process.env.DATABASE_URL?.includes('job_test_db')) {
-    process.env.DATABASE_URL = 'postgresql://testuser:testpassword@localhost:5433/job_test_db?schema=public';
-  }
-
-  try {
-    // Run migrations before tests
-    execSync('npx prisma migrate deploy', { stdio: 'ignore' });
-  } catch (error) {
-    console.error('Failed to run migrations', error);
-  }
+  execSync('npx prisma migrate deploy', { stdio: 'inherit' });
 });
 
 afterAll(async () => {
+  const { prisma } = await import('../src/prisma');
   await prisma.$disconnect();
 });

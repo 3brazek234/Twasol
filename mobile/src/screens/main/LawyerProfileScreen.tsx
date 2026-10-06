@@ -146,21 +146,6 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
         </View>
 
       </ScrollView>
-
-      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tokens.colors.white, padding: 24, borderTopWidth: 1, borderTopColor: tokens.colors.line }}>
-        <TouchableOpacity 
-          style={{ backgroundColor: tokens.colors.navy, paddingVertical: 16, borderRadius: 12, flexDirection: "row", justifyContent: "center", alignItems: "center" }}
-          onPress={handleMessage}
-          disabled={loadingMsg}
-        >
-          {loadingMsg ? <ActivityIndicator color={tokens.colors.white} /> : (
-            <>
-              <Text style={{ color: tokens.colors.white, fontFamily: tokens.typography.fonts.displayBold, fontSize: 16, marginRight: 8 }}>مراسلة المحامي</Text>
-              <MessageSquare color={tokens.colors.white} size={20} />
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
     </ScreenContainer>
   );
 };

@@ -20,6 +20,7 @@ vi.mock('../../src/modules/admin/queues.routes', () => {
 
 vi.mock('../../src/common/utils/queue', () => ({
   notificationFanoutQueue: { add: vi.fn() },
+  jobAlertQueue: { add: vi.fn() },
   jobExpirationQueue: { add: vi.fn() },
   pushNotificationQueue: { add: vi.fn(), addBulk: vi.fn() },
   cleanupQueue: { add: vi.fn() },
@@ -29,9 +30,19 @@ vi.mock('../../src/common/utils/queue', () => ({
 describe('Verification Gating Integration Tests', () => {
   let unverifiedToken: string;
   let approvedToken: string;
+  let courtId: string;
 
   beforeEach(async () => {
     const hash = await bcrypt.hash('password123', 10);
+
+    const court = await prisma.court.create({
+      data: {
+        nameAr: 'محكمة الاختبار',
+        nameEn: 'Test Court',
+        type: 'PRIMARY',
+      },
+    });
+    courtId = court.id;
     
     // Create Unverified User
     const unverifiedUser = await prisma.user.create({
@@ -40,7 +51,8 @@ describe('Verification Gating Integration Tests', () => {
         passwordHash: hash,
         fullName: 'Unverified Lawyer',
         role: 'LAWYER',
-        verificationStatus: 'UNVERIFIED'
+        verificationStatus: 'UNVERIFIED',
+        isActive: true,
       }
     });
     unverifiedToken = jwt.sign(
@@ -56,7 +68,10 @@ describe('Verification Gating Integration Tests', () => {
         passwordHash: hash,
         fullName: 'Approved Lawyer',
         role: 'LAWYER',
-        verificationStatus: 'APPROVED', isActive: true, subscriptionStatus: 'ACTIVE'
+        verificationStatus: 'APPROVED',
+        isActive: true,
+        subscriptionStatus: 'ACTIVE',
+        subscriptionExpiresAt: new Date('2030-01-01T00:00:00.000Z'),
       }
     });
     approvedToken = jwt.sign(
@@ -84,14 +99,14 @@ describe('Verification Gating Integration Tests', () => {
       .post('/api/jobs')
       .set('Authorization', `Bearer ${unverifiedToken}`)
       .send({
-        title: 'Test Job',
-        description: 'Test description',
-        expiresInHours: 2,
-        courtIds: [],
+        title: 'Verification Test Job',
+        description: 'Testing verification restrictions',
+        courtId,
+        taskType: 'OTHER',
       });
     
     expect(response.status).toBe(403);
-    expect(response.body.error).toMatch(/verified/i);
+    expect(response.body.error.message).toMatch(/verified/i);
   });
 
   it('allows approved users to post jobs (POST /api/jobs)', async () => {
@@ -99,10 +114,10 @@ describe('Verification Gating Integration Tests', () => {
       .post('/api/jobs')
       .set('Authorization', `Bearer ${approvedToken}`)
       .send({
-        title: 'Test Job',
-        description: 'Test description',
-        expiresInHours: 2,
-        courtIds: [],
+        title: 'Approved Test Job',
+        description: 'Testing approved job creation',
+        courtId,
+        taskType: 'OTHER',
       });
     
     expect(response.status).toBe(201);

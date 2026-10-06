@@ -19,7 +19,9 @@ import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 import { CompleteJobModal } from '../../components/jobs/CompleteJobModal';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
-import { Briefcase, Activity } from 'lucide-react-native';
+import { Briefcase, Activity, LockKeyhole } from 'lucide-react-native';
+import { useSubscriptionAccess } from '../../hooks/useSubscription';
+import { SubscriptionAccessCard } from '../../components/SubscriptionAccessCard';
 
 const FILTER_OPTIONS = [
   { label: 'الكل', value: undefined },
@@ -35,6 +37,7 @@ const FILTER_OPTIONS = [
 export const MyJobsScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
+  const subscription = useSubscriptionAccess();
   const accountMode = user?.accountMode || 'BOTH';
   
   const showPosterTab = accountMode === 'HIRING' || accountMode === 'BOTH';
@@ -117,12 +120,25 @@ console.log('statusFilter', statusFilter);
 
   const postedCount = postedJobs.length;
   const activeCount = activeJobs.length;
+  const openSubscription = () => navigation.navigate('SettingsStack', { screen: 'Subscription' });
 
   return (
-    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
+    <View style={{ flex: 1, backgroundColor: tokens.colors.paper, direction: 'rtl' }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>مهامي</Text>
       </View>
+
+      {showPosterTab && !subscription.hasActiveSubscription && (
+        <View style={styles.subscriptionCardContainer}>
+          <SubscriptionAccessCard
+            isLoading={subscription.isLoading}
+            isError={subscription.isError}
+            hasPendingPayment={subscription.hasPendingPayment}
+            onPress={openSubscription}
+            onRetry={() => subscription.refetch()}
+          />
+        </View>
+      )}
 
       {hasBothTabs && (
         <View style={styles.tabBar}>
@@ -169,10 +185,20 @@ console.log('statusFilter', statusFilter);
           </View>
           <View style={styles.postJobBtnContainer}>
             <TouchableOpacity 
-              style={styles.postJobBtn}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
+              style={[styles.postJobBtn, !subscription.hasActiveSubscription && styles.postJobBtnDisabled]}
+              disabled={!subscription.hasActiveSubscription}
               onPress={() => navigation.navigate('PostJob')}
             >
-              <Text style={styles.postJobBtnText}>نشر مهمة جديدة +</Text>
+              {subscription.hasActiveSubscription
+                ? <Text style={styles.postJobBtnText}>نشر مهمة جديدة +</Text>
+                : (
+                  <View style={styles.lockedPostLabel}>
+                    <LockKeyhole size={16} color={tokens.colors.muted} />
+                    <Text style={styles.postJobBtnTextDisabled}>النشر متاح بعد تفعيل الاشتراك</Text>
+                  </View>
+                )}
             </TouchableOpacity>
           </View>
           
@@ -204,8 +230,10 @@ console.log('statusFilter', statusFilter);
                   icon={<Briefcase size={48} color={tokens.colors.muted} />}
                   headline="لا توجد مهام منشورة"
                   body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل المهام. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي مهام حتى الآن."}
-                  ctaText="نشر مهمة جديدة +"
-                  onCtaPress={() => navigation.navigate('PostJob')}
+                  ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة +' : undefined}
+                  onCtaPress={subscription.hasActiveSubscription
+                    ? () => navigation.navigate('PostJob')
+                    : undefined}
                 />
               ) : null
             }
@@ -275,6 +303,10 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    alignItems: 'flex-end',
+  },
+  subscriptionCardContainer: {
+    paddingHorizontal: 16,
   },
   headerTitle: {
     fontSize: 24,
@@ -283,6 +315,7 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
+    direction: 'rtl',
     backgroundColor: tokens.colors.surface,
     borderRadius: 12,
     padding: 4,
@@ -297,6 +330,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'transparent',
     flexDirection: 'row',
+    direction: 'rtl',
   },
   tabButtonActive: {
     backgroundColor: tokens.colors.navy,
@@ -337,7 +371,7 @@ const styles = StyleSheet.create({
   postJobBtnContainer: {
     paddingHorizontal: 16,
     marginBottom: 12,
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
   },
   postJobBtn: {
     backgroundColor: tokens.colors.gold,
@@ -345,15 +379,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  postJobBtnDisabled: {
+    backgroundColor: tokens.colors.surface,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+  },
   postJobBtnText: {
     color: '#FFFFFF',
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 14,
+  },
+  lockedPostLabel: {
+    flexDirection: 'row',
+    direction: 'rtl',
+    alignItems: 'center',
+    gap: tokens.spacing.xs,
+  },
+  postJobBtnTextDisabled: {
+    color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
-    
+    direction: 'rtl',
     gap: 12,
   },
 });

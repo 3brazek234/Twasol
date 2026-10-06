@@ -115,10 +115,9 @@ export class AdminUsersService {
     const result = await prisma.$transaction(async (tx) => {
       let extraData: any = {};
       if (status === 'APPROVED') {
-        const isHiringOnly = user.accountMode === 'HIRING';
         extraData = {
-          subscriptionStatus: isHiringOnly ? 'NOT_REQUIRED' : 'PENDING_PAYMENT',
-          isActive: isHiringOnly
+          subscriptionStatus: 'PENDING_PAYMENT',
+          isActive: false
         };
       } else if (status === 'REJECTED') {
         extraData = { isActive: false };

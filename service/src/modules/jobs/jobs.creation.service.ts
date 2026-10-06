@@ -16,6 +16,14 @@ export class JobsCreationService {
       throw AppError.forbidden("Account must be verified to post jobs");
     }
 
+    if (
+      user.subscriptionStatus !== "ACTIVE" ||
+      !user.subscriptionExpiresAt ||
+      user.subscriptionExpiresAt <= new Date()
+    ) {
+      throw AppError.forbidden("يتطلب نشر المهام اشتراكاً فعالاً. يرجى تفعيل اشتراكك.");
+    }
+
     // Idempotency guard: reject a near-identical submission from the same user within 10 seconds
     const recentDuplicate = await prisma.job.findFirst({
       where: {

@@ -46,6 +46,13 @@ export function JobCardSkeleton({ variant = "feed" }: { variant?: JobCardVariant
         )}
       </View>
 
+      {isCompact && (
+        <View style={styles.compactInfoRow}>
+          <Animated.View style={[styles.skeletonBlock, { width: 92, height: 24 }, animatedStyle]} />
+          <Animated.View style={[styles.skeletonBlock, { width: 76, height: 16 }, animatedStyle]} />
+        </View>
+      )}
+
       {!isCompact && variant === "active" && (
         <Animated.View style={[styles.skeletonBlock, { width: "100%", height: 4, marginTop: 12 }, animatedStyle]} />
       )}
@@ -77,9 +84,9 @@ const styles = StyleSheet.create({
     ...tokens.shadows.sm,
   },
   cardCompact: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
+    padding: tokens.spacing.md,
+    borderRadius: tokens.radius.lg,
+    marginBottom: tokens.spacing.sm,
   },
   headerRow: {
     flexDirection: "row",
@@ -93,6 +100,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
     marginBottom: 4,
+  },
+  compactInfoRow: {
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: tokens.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.line,
+    paddingTop: tokens.spacing.xs,
+    marginTop: tokens.spacing.xxs,
   },
   actionRow: {
     flexDirection: "row",

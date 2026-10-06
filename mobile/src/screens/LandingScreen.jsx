@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Landmark, ShieldCheck, Star } from 'lucide-react-native';
-import { tokens } from '../theme/tokens';
+import { Landmark, ShieldCheck, Star } from 'lucide-react-native';
+import { radius, spacing, tokens } from '../theme/tokens';
 
 const { width, height } = Dimensions.get('window');
 
@@ -14,7 +14,7 @@ const MockJobCard = () => (
         <Landmark size={14} color={tokens.colors.navy} style={{ marginRight: 6 }} />
         <Text style={styles.mockCourtText}>محكمة استئناف القاهرة</Text>
       </View>
-      <Text style={styles.mockSalaryText}>٢٥٠٠ ج.م</Text>
+      <Text style={styles.mockSalaryText}>٢٥٠ ج.م</Text>
     </View>
     <Text style={styles.mockJobTitle}>حضور جلسة وتأجيل إداري</Text>
     <View style={styles.mockApplyBtn}>
@@ -50,27 +50,26 @@ const MockProfileBadge = () => (
 const SLIDES = [
   {
     id: '1',
-    title: 'وصّل مهمتك\nبالمحامي المناسب',
-    description: 'تصفح آلاف المحامين المسجلين في كافة المحاكم لإنجاز المهام القانونية بسرعة وموثوقية عالية.',
+    title: 'مهمتك القانونية، مع المحامي المناسب',
+    description: 'انشر المهمة بالتفاصيل التي تحتاجها، أو تصفح فرص العمل المتاحة في المحاكم التي تختارها.',
     MockUI: MockJobCard,
   },
   {
     id: '2',
-    title: 'تواصل وتنسيق\nمباشر وآمن',
-    description: 'تواصل فوراً مع زميلك المحامي عبر محادثات مشفرة لتبادل التوكيلات والمستندات بسهولة تامة.',
+    title: 'اتفاق واضح، وتواصل مباشر',
+    description: 'ناقش تفاصيل المهمة والأتعاب مع الطرف الآخر قبل بدء التنفيذ.',
     MockUI: MockChatScreen,
   },
   {
     id: '3',
-    title: 'أمان، ثقة،\nواحترافية تامة',
-    description: 'نوثّق هوية كل محامٍ برقم نقابته بدقة، مع نظام تقييم شفاف يبني سمعتك المهنية ويحمي حقوقك.',
+    title: 'تابع الإنجاز وشارك تقييمك',
+    description: 'تابع حالة المهمة من الاتفاق حتى الإتمام، وقيّم تجربتك بعد انتهاء العمل.',
     MockUI: MockProfileBadge,
   }
 ];
 
 export const LandingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef(null);
 
   const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems && viewableItems.length > 0) {
@@ -79,14 +78,6 @@ export const LandingScreen = ({ navigation }) => {
   }).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
-
-  const goNext = () => {
-    if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
-    } else {
-      navigation.navigate('Register');
-    }
-  };
 
   const renderSlide = ({ item }) => {
     return (
@@ -119,14 +110,11 @@ export const LandingScreen = ({ navigation }) => {
         {/* Top Navigation Row */}
         <View style={styles.topBar}>
           <Text style={styles.logoText}>وكيل</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.7} style={styles.skipBtn}>
-            <Text style={styles.skipText}>تخطي</Text>
-          </TouchableOpacity>
+          <Text style={styles.tagline}>مهام قانونية، واتفاقات أوضح</Text>
         </View>
 
         {/* The Swiper */}
         <FlatList
-          ref={flatListRef}
           data={SLIDES}
           renderItem={renderSlide}
           keyExtractor={(item) => item.id}
@@ -140,9 +128,7 @@ export const LandingScreen = ({ navigation }) => {
           style={styles.flatList}
         />
 
-        {/* Bottom Footer Overlay */}
-        <View style={styles.footerRow}>
-          {/* Pagination Dots */}
+        <View style={styles.footer}>
           <View style={styles.pagination}>
             {SLIDES.map((_, index) => (
               <View
@@ -155,16 +141,24 @@ export const LandingScreen = ({ navigation }) => {
             ))}
           </View>
 
-          {/* Next / Start Button */}
-          <TouchableOpacity 
-            style={styles.nextButton} 
-            activeOpacity={0.8}
-            onPress={goNext}
+          <TouchableOpacity
+            style={styles.createAccountButton}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Register')}
+            accessibilityRole="button"
           >
-            <Text style={styles.nextButtonText}>
-              {currentIndex === SLIDES.length - 1 ? 'ابدأ الآن' : 'التالي'}
+            <Text style={styles.createAccountButtonText}>إنشاء حساب جديد</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Login')}
+            accessibilityRole="button"
+          >
+            <Text style={styles.loginPrompt}>
+              لديك حساب بالفعل؟ <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
             </Text>
-            <ChevronLeft color={tokens.colors.white} size={20} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
         </View>
 
@@ -197,16 +191,10 @@ const styles = StyleSheet.create({
     color: tokens.colors.navy,
     letterSpacing: 1,
   },
-  skipBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: 'rgba(27, 42, 74, 0.05)',
-  },
-  skipText: {
-    fontSize: 14,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    color: tokens.colors.navy,
+  tagline: {
+    fontSize: 13,
+    fontFamily: tokens.typography.fonts.body,
+    color: tokens.colors.muted,
   },
   flatList: {
     flex: 1,
@@ -257,18 +245,47 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 26,
   },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  footer: {
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: 16,
-    direction: 'rtl',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.xs,
   },
   pagination: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  createAccountButton: {
+    width: '100%',
+    minHeight: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.navy,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
+  },
+  createAccountButtonText: {
+    fontSize: 16,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    color: tokens.colors.white,
+  },
+  loginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: spacing.xxl,
+    paddingHorizontal: spacing.sm,
+  },
+  loginPrompt: {
+    fontSize: 14,
+    fontFamily: tokens.typography.fonts.body,
+    color: tokens.colors.muted,
+  },
+  loginButtonText: {
+    fontSize: 14,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    color: tokens.colors.navy,
   },
   dot: {
     height: 8,
@@ -281,25 +298,7 @@ const styles = StyleSheet.create({
   },
   inactiveDot: {
     width: 8,
-    backgroundColor: 'rgba(27, 42, 74, 0.1)',
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tokens.colors.navy,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    shadowColor: tokens.colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  nextButtonText: {
-    fontSize: 16,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    color: tokens.colors.white,
+    backgroundColor: tokens.colors.line,
   },
 
   // MOCK UI
