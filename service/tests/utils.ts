@@ -5,7 +5,7 @@ export async function truncateDb() {
     SELECT current_database() AS database
   `;
 
-  if (database !== 'job_test_db') {
+  if (!database.endsWith('_test') && !database.endsWith('test_db')) {
     throw new Error(`Refusing to truncate non-test database "${database}"`);
   }
 
