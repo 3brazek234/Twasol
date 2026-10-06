@@ -1,6 +1,14 @@
 import { prisma } from '../src/prisma';
 
 export async function truncateDb() {
+  const [{ database }] = await prisma.$queryRaw<Array<{ database: string }>>`
+    SELECT current_database() AS database
+  `;
+
+  if (!database.endsWith('_test') && !database.endsWith('test_db')) {
+    throw new Error(`Refusing to truncate non-test database "${database}"`);
+  }
+
   const tableNames = await prisma.$queryRaw<
     Array<{ tablename: string }>
   >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;
@@ -11,11 +19,7 @@ export async function truncateDb() {
     .map((name) => `"public"."${name}"`)
     .join(', ');
 
-  try {
-    if (tables.length > 0) {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
-    }
-  } catch (error) {
-    console.error({ error }, 'Error truncating database tables');
+  if (tables.length > 0) {
+    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
   }
 }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { getErrorMessage } from '../utils/errorMessages';
 import { Alert } from 'react-native';
+import { useAuthStore } from '../stores/authStore';
 
 export const fetchSubscriptionPlans = async () => {
   const res = await apiClient.get('/subscription/plans');
@@ -69,4 +70,20 @@ export const useSubscriptionStatus = () => {
         : false;
     },
   });
+};
+
+export const useSubscriptionAccess = () => {
+  const user = useAuthStore((state) => state.user);
+  const query = useSubscriptionStatus();
+  const status = query.data?.subscriptionStatus ?? user?.subscriptionStatus;
+  const expiresAt = query.data?.subscriptionExpiresAt ?? user?.subscriptionExpiresAt;
+  const hasNotExpired = !expiresAt || new Date(expiresAt).getTime() > Date.now();
+
+  return {
+    ...query,
+    hasActiveSubscription:
+      !query.isLoading && !query.isError && status === 'ACTIVE' && hasNotExpired,
+    hasPendingPayment:
+      query.data?.pendingPayment?.status === 'PENDING' || query.data?.status === 'PENDING',
+  };
 };

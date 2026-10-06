@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit --target ES2022 --module commonjs --moduleResolution node --esModuleInterop --strict --skipLibCheck prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "test:unit": "vitest run tests/unit -c vitest.unit.config.ts",
-    "test:integration": "vitest run tests/integration --no-threads",
+    "test:integration": "vitest run tests/integration --pool=forks --poolOptions.forks.singleFork",
     "test:watch": "jest --watch",
     "test": "vitest run"
   },

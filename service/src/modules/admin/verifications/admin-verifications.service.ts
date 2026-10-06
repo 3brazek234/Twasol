@@ -83,14 +83,12 @@ export class AdminVerificationsService {
     }
 
     const updated = await prisma.$transaction(async (tx) => {
-      const isHiringOnly = user.accountMode === 'HIRING';
-
       const result = await tx.user.update({
         where: { id: targetUserId },
         data: { 
           verificationStatus: 'APPROVED',
-          subscriptionStatus: isHiringOnly ? 'NOT_REQUIRED' : 'PENDING_PAYMENT',
-          isActive: isHiringOnly
+          subscriptionStatus: 'PENDING_PAYMENT',
+          isActive: false
         },
         select: ADMIN_PENDING_USER_SELECT,
       });

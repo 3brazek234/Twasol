@@ -251,8 +251,8 @@ export class JobsLifecycleService {
           data: buildNotification({
             userId: job.assignedLawyerId,
             type: "JOB_COMPLETED",
-            titleAr: 'تم إتمام المهمة ✓',
-            messageAr: `أكد الموكِّل إتمام مهمة: ${job.title}. هل استلمت المبلغ المتفق عليه؟`,
+            titleAr: 'تم اكتمال المهمة ✅',
+            messageAr: 'قام صاحب المهمة بإنهاء المهمة. شكراً لجهودك!',
             data: { jobId: job.id, jobTitle: job.title, fee: job.agreedSalary || job.salaryMax, posterId: job.postedByUserId },
           })
         });

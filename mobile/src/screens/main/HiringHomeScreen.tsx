@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Briefcase, Plus, Search } from 'lucide-react-native';
+import { Activity, Briefcase, ClipboardList, LockKeyhole, Plus } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
 import { useMyPostedJobs } from '../../hooks/useJobs';
+import { useSubscriptionAccess } from '../../hooks/useSubscription';
 import { JobCard } from '../../components/jobs/JobCard';
 import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 import { EmptyState } from '../../components/EmptyState';
+import { SubscriptionAccessCard } from '../../components/SubscriptionAccessCard';
 
 export const HiringHomeScreen = ({ navigation }: any) => {
   const {
@@ -26,6 +28,8 @@ export const HiringHomeScreen = ({ navigation }: any) => {
     fetchNextPage,
     isFetchingNextPage,
   } = useMyPostedJobs();
+  const subscription = useSubscriptionAccess();
+  const openSubscription = () => navigation.navigate('SettingsStack', { screen: 'Subscription' });
 
   const jobs = useMemo(
     () => data?.pages.flatMap((page: any) => page.data || page) ?? [],
@@ -33,32 +37,65 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   );
   const openJobsCount = jobs.filter((job: any) => job.status === 'OPEN' || job.status === 'NEGOTIATING').length;
   const activeAssignmentsCount = jobs.filter((job: any) => job.status === 'AGREED' || job.status === 'IN_PROGRESS').length;
+  const subscriptionAccessCard = !subscription.hasActiveSubscription ? (
+    <SubscriptionAccessCard
+      isLoading={subscription.isLoading}
+      isError={subscription.isError}
+      hasPendingPayment={subscription.hasPendingPayment}
+      onPress={openSubscription}
+      onRetry={() => subscription.refetch()}
+    />
+  ) : null;
 
   const listHeader = (
     <View style={styles.listHeader}>
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
+          <View style={styles.summaryCardHeading}>
+            <View style={[styles.summaryIcon, styles.openJobsIcon]}>
+              <ClipboardList size={16} color={tokens.colors.navy} />
+            </View>
+            <Text style={styles.summaryLabel}>طلبات مفتوحة</Text>
+          </View>
           <Text style={styles.summaryCount}>{openJobsCount}</Text>
-          <Text style={styles.summaryLabel}>طلبات مفتوحة</Text>
         </View>
         <View style={styles.summaryCard}>
+          <View style={styles.summaryCardHeading}>
+            <View style={[styles.summaryIcon, styles.activeJobsIcon]}>
+              <Activity size={16} color={tokens.colors.verdant} />
+            </View>
+            <Text style={styles.summaryLabel}>تكليفات جارية</Text>
+          </View>
           <Text style={styles.summaryCount}>{activeAssignmentsCount}</Text>
-          <Text style={styles.summaryLabel}>تكليفات جارية</Text>
         </View>
       </View>
 
+      {subscriptionAccessCard}
+
       <TouchableOpacity
         accessibilityRole="button"
-        style={styles.postButton}
+        accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
+        style={[styles.postButton, !subscription.hasActiveSubscription && styles.postButtonDisabled]}
+        disabled={!subscription.hasActiveSubscription}
         onPress={() => navigation.navigate('PostJob')}
       >
-        <Plus size={18} color={tokens.colors.white} />
-        <Text style={styles.postButtonText}>نشر مهمة جديدة</Text>
+        {subscription.hasActiveSubscription
+          ? <Plus size={18} color={tokens.colors.white} />
+          : <LockKeyhole size={18} color={tokens.colors.muted} />}
+        <Text style={[
+          styles.postButtonText,
+          !subscription.hasActiveSubscription && styles.postButtonTextDisabled,
+        ]}>
+          {subscription.hasActiveSubscription ? 'نشر مهمة جديدة' : 'النشر متاح بعد تفعيل الاشتراك'}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.sectionHeading}>
         <Briefcase size={18} color={tokens.colors.navy} />
-        <Text style={styles.sectionTitle}>متابعة مهامي المنشورة</Text>
+        <View style={styles.sectionText}>
+          <Text style={styles.sectionTitle}>مهامي المنشورة</Text>
+          <Text style={styles.sectionDescription}>تابع حالة الطلبات والعروض الواردة</Text>
+        </View>
       </View>
     </View>
   );
@@ -66,6 +103,7 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
+        {subscriptionAccessCard}
         {[1, 2, 3].map((item) => <JobCardSkeleton key={item} variant="compact" />)}
       </View>
     );
@@ -74,6 +112,7 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   if (isError) {
     return (
       <View style={styles.errorContainer}>
+        {subscriptionAccessCard}
         <Text style={styles.errorTitle}>تعذّر تحميل مهامك</Text>
         <Text style={styles.errorMessage}>
           {(error as Error)?.message || 'تحقّق من اتصالك بالإنترنت ثم حاول مجدداً.'}
@@ -103,8 +142,10 @@ export const HiringHomeScreen = ({ navigation }: any) => {
             icon={<Briefcase size={48} color={tokens.colors.muted} />}
             headline="ابدأ بإسناد مهامك"
             body="انشر مهمة لتتابع الطلبات والتكليفات من مكان واحد."
-            ctaText="نشر مهمة جديدة"
-            onCtaPress={() => navigation.navigate('PostJob')}
+            ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة' : undefined}
+            onCtaPress={subscription.hasActiveSubscription
+              ? () => navigation.navigate('PostJob')
+              : undefined}
           />
         ) : null
       }
@@ -135,40 +176,65 @@ const styles = {
     paddingHorizontal: tokens.spacing.md,
     paddingBottom: tokens.spacing.xxl,
     flexGrow: 1,
+    direction: 'rtl' as const,
   },
   listHeader: {
     paddingTop: tokens.spacing.md,
     paddingBottom: tokens.spacing.sm,
+    direction: 'rtl' as const,
   },
   summaryRow: {
     flexDirection: 'row' as const,
+    direction: 'rtl' as const,
     gap: tokens.spacing.sm,
     marginBottom: tokens.spacing.sm,
   },
   summaryCard: {
     flex: 1,
-    padding: tokens.spacing.sm,
+    minHeight: tokens.spacing.xxxl + tokens.spacing.md,
+    padding: tokens.spacing.md,
     backgroundColor: tokens.colors.white,
     borderWidth: 1,
     borderColor: tokens.colors.line,
     borderRadius: tokens.radius.lg,
+    justifyContent: 'space-between' as const,
+  },
+  summaryCardHeading: {
+    flexDirection: 'row' as const,
+    direction: 'rtl' as const,
+    alignItems: 'center' as const,
+    gap: tokens.spacing.xs,
+  },
+  summaryIcon: {
+    width: tokens.spacing.xl,
+    height: tokens.spacing.xl,
+    borderRadius: tokens.radius.md,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  openJobsIcon: {
+    backgroundColor: tokens.colors.slateBg,
+  },
+  activeJobsIcon: {
+    backgroundColor: tokens.colors.verdantBg,
   },
   summaryCount: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.mono,
-    fontSize: tokens.typography.sizes.xl,
+    fontSize: tokens.typography.sizes.xxl,
     textAlign: 'right' as const,
+    marginTop: tokens.spacing.xs,
   },
   summaryLabel: {
-    color: tokens.colors.muted,
-    fontFamily: tokens.typography.fonts.body,
+    color: tokens.colors.ink,
+    fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.xs,
     textAlign: 'right' as const,
-    marginTop: tokens.spacing.xxs,
   },
   postButton: {
     minHeight: tokens.spacing.xxl,
     flexDirection: 'row' as const,
+    direction: 'rtl' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: tokens.spacing.xs,
@@ -177,10 +243,18 @@ const styles = {
     paddingHorizontal: tokens.spacing.md,
     marginBottom: tokens.spacing.xs,
   },
+  postButtonDisabled: {
+    backgroundColor: tokens.colors.surface,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+  },
   postButtonText: {
     color: tokens.colors.white,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.sm,
+  },
+  postButtonTextDisabled: {
+    color: tokens.colors.muted,
   },
   findButton: {
     minHeight: tokens.spacing.xxl,
@@ -201,9 +275,22 @@ const styles = {
   },
   sectionHeading: {
     flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    direction: 'rtl' as const,
+    alignItems: 'flex-start' as const,
     gap: tokens.spacing.xs,
-    paddingVertical: tokens.spacing.xs,
+    paddingTop: tokens.spacing.md,
+    paddingBottom: tokens.spacing.xs,
+  },
+  sectionText: {
+    flex: 1,
+    alignItems: 'flex-end' as const,
+  },
+  sectionDescription: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: 'right' as const,
+    marginTop: tokens.spacing.xxs,
   },
   sectionTitle: {
     color: tokens.colors.ink,
@@ -214,6 +301,7 @@ const styles = {
     flex: 1,
     padding: tokens.spacing.md,
     paddingTop: tokens.spacing.lg,
+    direction: 'rtl' as const,
   },
   errorContainer: {
     flex: 1,

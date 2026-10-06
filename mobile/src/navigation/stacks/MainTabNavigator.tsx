@@ -27,10 +27,18 @@ const ChatsStack = createNativeStackNavigator();
 const ActiveJobsStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 
+const headerTitleStyle = {
+  fontFamily: tokens.typography.fonts.bodySemibold,
+  fontSize: 18,
+  color: tokens.colors.ink,
+  textAlign: 'right' as const,
+};
+
 const defaultScreenOptions = {
   headerStyle: { backgroundColor: tokens.colors.paper },
   headerTintColor: tokens.colors.ink,
-  headerTitleStyle: { fontFamily: tokens.typography.fonts.displayBold, fontSize: 18 },
+  headerTitleStyle,
+  headerTitleAlign: 'left' as const,
   headerShadowVisible: false,
 };
 
@@ -44,7 +52,13 @@ const JobsHomeHeaderTitle = () => {
   const isHiring = getSelectedRole(user?.accountMode, selectedMode) === 'HIRING';
 
   return (
-    <Text style={{ fontSize: 18, fontWeight: '600', color: tokens.colors.ink, fontFamily: tokens.typography.fonts.displayBold }}>
+    <Text
+      style={{
+        ...headerTitleStyle,
+        textAlign: 'right',
+        alignSelf: 'flex-end',
+      }}
+    >
       {isHiring ? 'إدارة مهامي' : 'فرص عمل محلية'}
     </Text>
   );
@@ -100,7 +114,7 @@ const JobsNavigator = () => {
       <JobsStack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'تفاصيل القضية' }} />
       <JobsStack.Screen name="JobCompletion" component={JobCompletionScreen} options={{ title: 'إتمام المهمة' }} />
       <JobsStack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'إضافة طلب' }} />
-      <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'Lawyer Profile' }} />
+      <JobsStack.Screen name="LawyerProfile" component={LawyerProfileScreen} options={{ title: 'الملف التعريفي' }} />
       <JobsStack.Screen name="PosterReview" component={PosterReviewScreen} options={{ title: 'تقييم المحامي' }} />
     </JobsStack.Navigator>
   );

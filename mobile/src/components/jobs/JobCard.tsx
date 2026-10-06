@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   interpolateColor,
 } from "react-native-reanimated";
-import { Landmark, Gavel, Clock } from "lucide-react-native";
+import { Landmark, Gavel, Clock, Users } from "lucide-react-native";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { Avatar } from "../Avatar";
@@ -135,6 +135,17 @@ export const JobCard: React.FC<JobCardProps> = ({
     if (days <= 7) return `خلال ${days} أيام`;
     return formatDate(expiresAt);
   })();
+  const applicantLabel = applicantCount === undefined
+    ? ""
+    : applicantCount === 0
+      ? "لا يوجد متقدمون بعد"
+      : applicantCount === 1
+        ? "متقدم واحد"
+        : applicantCount === 2
+          ? "متقدمان"
+          : applicantCount <= 10
+            ? `${applicantCount} متقدمين`
+            : `${applicantCount} متقدماً`;
   
   let deadlineInfo: ReturnType<typeof getDeadlineInfo> | null = null;
   let progress = 0;
@@ -280,7 +291,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       {/* ══════════════ TITLE ══════════════ */}
       <Text
         style={[styles.title, isCompact && styles.titleCompact]}
-        numberOfLines={isCompact ? 1 : 2}
+        numberOfLines={2}
       >
         {job.title}
       </Text>
@@ -361,6 +372,23 @@ export const JobCard: React.FC<JobCardProps> = ({
           )}
         </View>
       </View>
+
+      {isCompact && ["OPEN", "NEGOTIATING"].includes(job.status) && (
+        <View style={styles.compactInfoRow}>
+          {applicantCount !== undefined && (
+            <View style={styles.compactApplicantBadge}>
+              <Users size={14} color={tokens.colors.navy} />
+              <Text style={styles.compactApplicantText}>{applicantLabel}</Text>
+            </View>
+          )}
+          {expiresAt && (
+            <View style={styles.compactDeadline}>
+              <Clock size={14} color={tokens.colors.muted} />
+              <Text style={styles.compactDeadlineText}>{deadlineLabel}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* ══════════════ POSTED: INLINE DEADLINE PILL ══════════════ */}
       {/* Small dot + colored label. Verdant → amber → crimson as urgency rises. */}
@@ -627,6 +655,7 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.white,
     borderRadius: tokens.radius.xl,      // 12 — slightly tighter than original 16
     padding: tokens.spacing.md,          // 16
+    alignSelf: "stretch",
     borderWidth: 1,
     borderColor: tokens.colors.line,
     marginBottom: tokens.spacing.sm,     // 12
@@ -638,14 +667,14 @@ const styles = StyleSheet.create({
   // get the same shadow for now — elevation is expressed via accent strip instead.
 
   cardCompact: {
-    padding: tokens.spacing.xs,          // 8
-    borderRadius: tokens.radius.md,      // 8
-    marginBottom: tokens.spacing.xxs,    // 4
+    padding: tokens.spacing.md,
+    borderRadius: tokens.radius.lg,
+    marginBottom: tokens.spacing.sm,
   },
 
   // Extra right padding to prevent text from sliding under the accent strip
   cardWithAccent: {
-    paddingRight: tokens.spacing.md + ACCENT_STRIP_WIDTH + 2,
+    paddingEnd: tokens.spacing.md + ACCENT_STRIP_WIDTH + 2,
   },
 
   // Terminal cards fade to ~82% opacity — subtly signals "closed/archived"
@@ -659,7 +688,7 @@ const styles = StyleSheet.create({
   // overflow: "hidden" on the card clips it cleanly to the card radius.
   accentStrip: {
     position: "absolute",
-    right: 0,
+    end: 0,
     top: 0,
     bottom: 0,
     width: ACCENT_STRIP_WIDTH,
@@ -668,6 +697,7 @@ const styles = StyleSheet.create({
   // ── Header row ──────────────────────────────────────────────────────────────
   headerRow: {
     flexDirection: "row",
+    direction: "rtl",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: tokens.spacing.xxs,   // 4
@@ -702,6 +732,7 @@ const styles = StyleSheet.create({
   // ── Person row (poster/lawyer/client) ───────────────────────────────────────
   personRow: {
     flexDirection: "row",               // RTL: first child → RIGHT, second → LEFT
+    direction: "rtl",
     alignItems: "center",
     gap: tokens.spacing.xxs,            // 4
     marginBottom: tokens.spacing.xs,    // 8
@@ -723,6 +754,7 @@ const styles = StyleSheet.create({
   // ── Applicant count badge ────────────────────────────────────────────────────
   applicantRow: {
     flexDirection: "row",
+    direction: "rtl",
     marginBottom: tokens.spacing.xxs,   // 4
     // Default flex-start = right in RTL
   },
@@ -742,6 +774,7 @@ const styles = StyleSheet.create({
   // ── Fee row ─────────────────────────────────────────────────────────────────
   metaRow: {
     flexDirection: "row",
+    direction: "rtl",
     justifyContent: "space-between",
     alignItems: "baseline",
     marginTop: tokens.spacing.xxs,      // 4
@@ -761,7 +794,46 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   feeCompact: {
-    fontSize: 14,
+    fontSize: 16,
+  },
+  compactInfoRow: {
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: tokens.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.line,
+    paddingTop: tokens.spacing.xs,
+    marginTop: tokens.spacing.xxs,
+  },
+  compactApplicantBadge: {
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    gap: tokens.spacing.xxs,
+    backgroundColor: tokens.colors.slateBg,
+    paddingHorizontal: tokens.spacing.xs,
+    paddingVertical: tokens.spacing.xxs,
+    borderRadius: tokens.radius.sm,
+  },
+  compactApplicantText: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+  },
+  compactDeadline: {
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    gap: tokens.spacing.xxs,
+    flexShrink: 1,
+  },
+  compactDeadlineText: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+    textAlign: "right",
   },
   // Strike-through asking fee when negotiation resulted in a different amount.
   feeStrike: {
@@ -781,6 +853,7 @@ const styles = StyleSheet.create({
   // Shows only on posted non-terminal cards that have an expiresAt date.
   deadlinePillRow: {
     flexDirection: "row",
+    direction: "rtl",
     alignItems: "center",
     gap: tokens.spacing.xxs,            // 4
     marginBottom: tokens.spacing.xxs,
@@ -823,6 +896,7 @@ const styles = StyleSheet.create({
   // ── Action row ───────────────────────────────────────────────────────────────
   actionRow: {
     flexDirection: "row",
+    direction: "rtl",
     alignItems: "center",
     gap: tokens.spacing.xs,             // 8 — enough breathing room between buttons
     marginTop: tokens.spacing.sm,       // 12

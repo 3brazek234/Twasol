@@ -101,8 +101,8 @@ describe('Reviews Integration Logic', () => {
       .set('Authorization', `Bearer ${posterToken}`)
       .send({ rating: 2, comment: 'Wait, no' });
 
-    expect(response2.status).toBe(400);
-    expect(response2.body.error.message).toMatch(/already reviewed/i);
+    expect(response2.status).toBe(409);
+    expect(response2.body.error.code).toBe('CONFLICT');
   });
 
   it('computes the average rating correctly for a user', async () => {

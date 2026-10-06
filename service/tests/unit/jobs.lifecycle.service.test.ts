@@ -141,6 +141,16 @@ describe("JobsLifecycleService", () => {
         where: { id: jobId, status: "IN_PROGRESS", version: mockJob.version },
         data: expect.objectContaining({ status: "COMPLETED" })
       }));
+      expect(prismaMock.notification.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          userId: lawyerId,
+          type: "JOB_COMPLETED",
+          payload: expect.objectContaining({
+            titleAr: 'تم اكتمال المهمة ✅',
+            messageAr: 'قام صاحب المهمة بإنهاء المهمة. شكراً لجهودك!',
+          }),
+        }),
+      }));
     });
   });
 

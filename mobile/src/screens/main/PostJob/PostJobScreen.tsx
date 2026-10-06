@@ -6,8 +6,11 @@ import { FileText, DollarSign, ChevronRight, Edit2, Check } from 'lucide-react-n
 import { MotiView, AnimatePresence } from 'moti';
 import { usePostJob } from './usePostJob';
 import { PostJobStepCourts } from './PostJobStepCourts';
+import { useSubscriptionAccess } from '../../../hooks/useSubscription';
+import { SubscriptionAccessCard } from '../../../components/SubscriptionAccessCard';
 
 export const PostJobScreen = ({ navigation }: any) => {
+  const subscription = useSubscriptionAccess();
   const {
     step, setStep,
     selectedCourt, handleCourtSelected,
@@ -313,6 +316,20 @@ export const PostJobScreen = ({ navigation }: any) => {
     </MotiView>
   );
 
+  if (!subscription.hasActiveSubscription) {
+    return (
+      <View style={styles.subscriptionGate}>
+        <SubscriptionAccessCard
+          isLoading={subscription.isLoading}
+          isError={subscription.isError}
+          hasPendingPayment={subscription.hasPendingPayment}
+          onPress={() => navigation.navigate('SettingsStack', { screen: 'Subscription' })}
+          onRetry={() => subscription.refetch()}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {renderStepIndicator()}
@@ -415,6 +432,12 @@ export const PostJobScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.colors.paper },
+  subscriptionGate: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+    backgroundColor: tokens.colors.paper,
+  },
   keyboardView: { flex: 1 },
   scrollContainer: { padding: tokens.spacing.lg },
 

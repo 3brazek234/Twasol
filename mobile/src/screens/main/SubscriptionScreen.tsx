@@ -389,7 +389,6 @@ export const SubscriptionScreen = () => {
 
   const isLoading = plansLoading || statusLoading;
   const subscriptionStatus = statusData?.subscriptionStatus ?? user?.subscriptionStatus;
-  const isHiringOnly = user?.accountMode === 'HIRING';
   const isActive = subscriptionStatus === 'ACTIVE';
   const hasPendingPayment = statusData?.pendingPayment?.status === 'PENDING'
     || statusData?.status === 'PENDING';
@@ -399,15 +398,6 @@ export const SubscriptionScreen = () => {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={tokens.colors.navy} />
-      </SafeAreaView>
-    );
-  }
-
-  if (isHiringOnly) {
-    return (
-      <SafeAreaView style={styles.stateContainer}>
-        <Text style={styles.stateTitle}>الاشتراك غير مطلوب</Text>
-        <Text style={styles.stateBody}>حسابات التوظيف لا تحتاج إلى اشتراك للوصول إلى خدماتها.</Text>
       </SafeAreaView>
     );
   }

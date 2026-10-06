@@ -10,7 +10,7 @@ describe('AdminVerificationsService', () => {
   describe('approve', () => {
     it('approves document and updates user status', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'user-1', verificationStatus: 'PENDING', accountMode: 'GIG' } as any);
+      prismaMock.user.findUnique.mockResolvedValue({ id: 'user-1', verificationStatus: 'PENDING', accountMode: 'HIRING' } as any);
       prismaMock.verificationDocument.findUnique.mockResolvedValue({ id: 'doc-1', userId: 'user-1', status: 'PENDING' } as any);
       prismaMock.verificationDocument.updateMany.mockResolvedValue({} as any);
       prismaMock.user.update.mockResolvedValue({} as any);
