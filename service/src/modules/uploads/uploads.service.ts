@@ -24,7 +24,8 @@ export class UploadsService {
     try {
       const payloadObj = JSON.parse(uploadUrlPayload);
       if (payloadObj.public_id && payloadObj.url.includes('cloudinary')) {
-        publicUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${payloadObj.public_id}`;
+        const ext = fileName.includes('.') ? `.${fileName.split('.').pop()?.toLowerCase()}` : '';
+        publicUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${payloadObj.public_id}${ext}`;
       }
     } catch {
       publicUrl = uploadUrlPayload;

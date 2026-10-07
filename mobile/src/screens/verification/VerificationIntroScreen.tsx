@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import { ShieldCheck, FileText, CheckCircle2, ChevronRight } from 'lucide-react-native';
+import { ShieldCheck, FileText, CheckCircle2, ChevronRight, X } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { useAuthStore } from '../../stores/authStore';
+import { tokens } from '../../theme/tokens';
 
 export const VerificationIntroScreen = ({ navigation }: any) => {
   const { user } = useAuthStore();
@@ -27,6 +28,11 @@ export const VerificationIntroScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView className="flex-1 bg-paper">
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, alignItems: 'flex-start' }}>
+        <TouchableOpacity onPress={() => { if(navigation.canGoBack()) navigation.goBack(); else navigation.navigate('MainTabs'); }}>
+          <X size={28} color={tokens.colors.ink} />
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={{ padding: 32, paddingBottom: 120 }}>
         <MotiView
           from={{ opacity: 0, scale: 0.9 }}

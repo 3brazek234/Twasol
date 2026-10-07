@@ -6,7 +6,7 @@ import { TouchableOpacity } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { verificationApi } from '../../api/verification.api';
 
-export const PendingReviewScreen = () => {
+export const PendingReviewScreen = ({ navigation }: any) => {
   const { submitVerification, logout } = useAuthStore();
 
   useEffect(() => {
@@ -62,12 +62,20 @@ export const PendingReviewScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity 
-          className="mt-8 px-6 py-3 rounded-full bg-line/50" 
-          onPress={() => logout()}
-        >
-          <Text className="text-ink font-bodyMedium">تسجيل الخروج</Text>
-        </TouchableOpacity>
+        <View className="flex-row gap-4 mt-8">
+          <TouchableOpacity 
+            className="flex-1 px-6 py-3 rounded-xl bg-signal justify-center items-center" 
+            onPress={() => (navigation as any)?.goBack()}
+          >
+            <Text className="text-white font-bodySemibold">العودة للرئيسية</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            className="px-6 py-3 rounded-xl bg-line/50 justify-center items-center" 
+            onPress={() => logout()}
+          >
+            <Text className="text-ink font-bodyMedium">تسجيل الخروج</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );

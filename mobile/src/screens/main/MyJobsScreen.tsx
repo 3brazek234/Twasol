@@ -309,9 +309,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   headerTitle: {
-    fontSize: 24,
-    fontFamily: tokens.typography.fonts.displayBold,
-    color: tokens.colors.navy,
+fontFamily: tokens.typography.fonts.displayBold,
+ fontSize: 18,
+    fontWeight: tokens.typography.weights.semibold, 
+    color: tokens.colors.ink, 
+    marginHorizontal: tokens.spacing.md + 4, 
+    marginTop: tokens.spacing.xxxl, 
+    marginBottom: tokens.spacing.xs 
   },
   tabBar: {
     flexDirection: 'row',

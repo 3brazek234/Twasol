@@ -9,11 +9,12 @@ export const VerificationStatusBanner = () => {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
 
-  if (!user || user.verificationStatus === 'APPROVED') return null;
+  if (!user || user.verificationStatus === 'APPROVED' || user.accountMode === 'HIRING') return null;
 
   const getBannerContent = () => {
     switch (user.verificationStatus) {
       case 'UNVERIFIED':
+      case 'PENDING_UPLOAD':
         return {
           title: 'Verification Required',
           subtitle: 'You must verify your credentials to apply for jobs.',

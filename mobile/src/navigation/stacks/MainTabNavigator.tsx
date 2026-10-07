@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
-import { Gavel, Scale, Bell, Award, Settings, Briefcase } from 'lucide-react-native';
+import { Gavel, MessagesSquare, Bell, Award, Settings, Briefcase } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 
 import { JobsFeedScreen } from '../../screens/main/JobsFeedScreen';
@@ -20,6 +20,7 @@ import { MyCourtsScreen } from '../../screens/main/MyCourtsScreen';
 import { LawyerProfileScreen } from '../../screens/main/LawyerProfileScreen';
 import { FloatingTabBar } from '../../components/FloatingTabBar';
 import { ModeSwitcher } from '../../components/ModeSwitcher';
+import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 
 const MainTabs = createBottomTabNavigator();
 const JobsStack = createNativeStackNavigator();
@@ -85,6 +86,7 @@ const RoleFocusedHomeScreen = ({ navigation, route }: any) => {
   return (
     <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
       <ModeSwitcher />
+      <VerificationStatusBanner />
       <View style={{ flex: 1 }}>
         {selectedRole === 'HIRING'
           ? <HiringHomeScreen navigation={navigation} route={route} />
@@ -155,7 +157,7 @@ export const MainNavigator = () => (
         const iconSize = 24;
         if (route.name === 'JobsTab') return <Gavel color={color} size={iconSize} />;
         if (route.name === 'MyJobsTab') return <Briefcase color={color} size={iconSize} />;
-        if (route.name === 'ChatsTab') return <Scale color={color} size={iconSize} />;
+        if (route.name === 'ChatsTab') return <MessagesSquare color={color} size={iconSize} />;
         if (route.name === 'NotificationsTab') return <Bell color={color} size={iconSize} />;
         if (route.name === 'ProfileTab') return <Award color={color} size={iconSize} />;
       },

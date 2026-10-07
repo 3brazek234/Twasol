@@ -4,12 +4,10 @@ import Animated from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { useJobs } from '../../hooks/useJobs';
-import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
-import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
-import { Briefcase, ChevronRight, MapPin } from 'lucide-react-native';
+
 import { MotiView } from 'moti';
 import { tokens } from '../../theme/tokens';
 import { JobFiltersBottomSheet } from '../../components/jobs/JobFiltersBottomSheet';
@@ -32,9 +30,6 @@ const SkeletonJobCard = () => {
 };
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
-  const { user, selectedMode } = useAuthStore();
-  const isGigView = user?.accountMode === 'GIG'
-    || (user?.accountMode === 'BOTH' && selectedMode !== 'HIRING');
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(route.params?.courtId ?? undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -88,7 +83,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
-      <VerificationStatusBanner />
 
 
       <View className="bg-white border-b border-line py-2">
@@ -212,32 +206,4 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
       />
     </View>
   );
-};
-
-const styles = {
-  courtsShortcut: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: tokens.spacing.sm,
-    marginHorizontal: tokens.spacing.md,
-    marginTop: tokens.spacing.sm,
-    padding: tokens.spacing.sm,
-    backgroundColor: tokens.colors.white,
-    borderWidth: 1,
-    borderColor: tokens.colors.line,
-    borderRadius: tokens.radius.lg,
-  },
-  courtsShortcutTitle: {
-    color: tokens.colors.ink,
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: tokens.typography.sizes.sm,
-    textAlign: 'right' as const,
-  },
-  courtsShortcutDescription: {
-    color: tokens.colors.muted,
-    fontFamily: tokens.typography.fonts.body,
-    fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right' as const,
-    marginTop: tokens.spacing.xxs,
-  },
 };

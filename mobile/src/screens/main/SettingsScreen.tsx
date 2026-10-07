@@ -31,7 +31,6 @@ export const SettingsScreen = ({ navigation }: any) => {
   const [matchNotifications, setMatchNotifications] = useState(true);
   const [messageNotifications, setMessageNotifications] = useState(true);
   const [offerNotifications, setOfferNotifications] = useState(true);
-  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
 
 
   const handleLogout = () => {
@@ -61,11 +60,6 @@ export const SettingsScreen = ({ navigation }: any) => {
     );
   };
 
-  const cycleTheme = () => {
-    if (theme === 'system') setTheme('light');
-    else if (theme === 'light') setTheme('dark');
-    else setTheme('system');
-  };
 
   const handleContactSupport = async () => {
     try {
@@ -166,17 +160,6 @@ export const SettingsScreen = ({ navigation }: any) => {
             label="أذونات النظام" 
             subtitle="إدارة إشعارات النظام" 
             onPress={() => Linking.openSettings()} 
-          />
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>المظهر</Text>
-        <View style={styles.card}>
-          <SettingsRow 
-            label="السمة" 
-            value={translateTheme(theme)} 
-            onPress={cycleTheme} 
           />
         </View>
       </View>

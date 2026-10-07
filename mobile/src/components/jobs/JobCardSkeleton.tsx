@@ -34,12 +34,16 @@ export function JobCardSkeleton({ variant = "feed" }: { variant?: JobCardVariant
       <Animated.View style={[styles.skeletonBlock, { width: "80%", height: 24, marginBottom: 8 }, animatedStyle]} />
       {!isCompact && <Animated.View style={[styles.skeletonBlock, { width: "50%", height: 24, marginBottom: 12 }, animatedStyle]} />}
 
+      {isCompact && (
+        <Animated.View style={[styles.skeletonBlock, { width: 110, height: 16, marginBottom: 4 }, animatedStyle]} />
+      )}
+
       {!isCompact && (variant === "feed" || variant === "active") && (
         <Animated.View style={[styles.skeletonBlock, { width: "40%", height: 16, marginBottom: 16 }, animatedStyle]} />
       )}
 
       <View style={[styles.metaRow, isCompact && { marginTop: 4, marginBottom: 0 }]}>
-        <Animated.View style={[styles.skeletonBlock, { width: 80, height: 20 }, animatedStyle]} />
+        <Animated.View style={[styles.skeletonBlock, { width: isCompact ? 120 : 80, height: isCompact ? 28 : 20, borderRadius: isCompact ? 8 : 4 }, animatedStyle]} />
         
         {!isCompact && (
           <Animated.View style={[styles.skeletonBlock, { width: 100, height: 20 }, animatedStyle]} />

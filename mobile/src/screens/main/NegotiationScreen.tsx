@@ -13,7 +13,8 @@ import {
   KeyboardAvoidingView,
   Image as RNImage,
   ActivityIndicator,
-  SafeAreaView
+  SafeAreaView,
+  Linking
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useNegotiationTimeline, useNegotiationActions } from "../../hooks/useNegotiation";
@@ -60,6 +61,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
   const [modalType, setModalType] = useState<"OFFER" | "NOTE" | "DOCUMENT" | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -98,6 +100,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
       const { data: urlData } = await apiClient.post('/uploads/presigned-url', {
         fileName: file.name || "attachment.jpeg",
         fileType: file.mimeType || "application/octet-stream",
+        fileSize: file.fileSize || file.size || 1024,
         conversationId: conversationId
       });
 
@@ -111,7 +114,7 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
         attachmentUrl: urlData.publicUrl,
         attachmentType: file.type === "image" ? "IMAGE" : "DOCUMENT",
         attachmentName: file.name || "مستند",
-        attachmentSize: file.size,
+        attachmentSize: file.fileSize || file.size || 0,
       });
       setModalType(null);
     } catch (err) {
@@ -210,19 +213,35 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
               <Text style={styles.cardTime}>{timeStr}</Text>
             </View>
             
-            <View style={styles.docRow}>
+            <TouchableOpacity 
+              style={{ marginTop: spacing.xs }} 
+              onPress={() => {
+                if (isImage && item.attachmentUrl) {
+                  setSelectedImage(item.attachmentUrl);
+                } else if (item.attachmentUrl) {
+                  Linking.openURL(item.attachmentUrl);
+                }
+              }}
+              activeOpacity={0.8}
+            >
               {isImage && item.attachmentUrl ? (
-                <RNImage source={{ uri: item.attachmentUrl }} style={styles.docThumbnail} />
+                <RNImage 
+                  source={{ uri: item.attachmentUrl }} 
+                  style={{ width: 220, height: 220, borderRadius: radius.md, backgroundColor: colors.line }} 
+                  resizeMode="cover" 
+                />
               ) : (
-                <FileText size={24} color={colors.navy} />
+                <View style={styles.docRow}>
+                  <FileText size={24} color={colors.navy} />
+                  <View style={styles.docInfo}>
+                    <Text style={styles.docName} numberOfLines={1}>{item.attachmentName || "مستند"}</Text>
+                    {item.attachmentSize ? (
+                      <Text style={styles.docSize}>{Math.round(item.attachmentSize / 1024)} KB</Text>
+                    ) : null}
+                  </View>
+                </View>
               )}
-              <View style={styles.docInfo}>
-                <Text style={styles.docName} numberOfLines={1}>{item.attachmentName || "مستند"}</Text>
-                {item.attachmentSize && (
-                  <Text style={styles.docSize}>{Math.round(item.attachmentSize / 1024)} KB</Text>
-                )}
-              </View>
-            </View>
+            </TouchableOpacity>
 
             {item.status === "pending" && <Text style={styles.pendingText}>جاري الإرسال...</Text>}
           </View>
@@ -398,6 +417,25 @@ export const NegotiationScreen = ({ route, navigation }: any) => {
             )}
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Image Viewer Modal */}
+      <Modal visible={!!selectedImage} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity 
+            style={{ position: 'absolute', top: Platform.OS === 'ios' ? 50 : 20, right: 20, zIndex: 10, padding: 10 }} 
+            onPress={() => setSelectedImage(null)}
+          >
+            <X size={32} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <RNImage 
+              source={{ uri: selectedImage }} 
+              style={{ width: '100%', height: '80%' }} 
+              resizeMode="contain" 
+            />
+          )}
+        </View>
       </Modal>
     </SafeAreaView>
   );

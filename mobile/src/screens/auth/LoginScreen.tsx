@@ -234,10 +234,10 @@ export const LoginScreen = ({ navigation }: any) => {
             </TouchableOpacity>
 
             <View className="flex-row justify-center items-center mt-6">
+               <Text className="text-muted text-sm font-bodyAr ml-1">ليس لديك حساب؟</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                 <Text className="text-gold font-bodySemiboldAr text-sm"> إنشاء حساب جديد</Text>
               </TouchableOpacity>
-              <Text className="text-muted text-sm font-bodyAr ml-1">ليس لديك حساب؟</Text>
             </View>
           </MotiView>
         </ScrollView>

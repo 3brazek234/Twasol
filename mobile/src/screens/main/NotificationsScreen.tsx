@@ -17,7 +17,6 @@ const RELATED_JOB_STATUS: Record<string, string> = {
 export const NotificationsScreen = ({ navigation }: any) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useNotifications();
   const { mutate: markAsRead } = useMarkNotificationRead();
-  const queryClient = useQueryClient();
 
   const handleNotificationPress = (item: AppNotification) => {
     if (!item.isRead) {
@@ -147,8 +146,8 @@ export const NotificationsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.colors.paper },
   headerTitle: { 
-    fontSize: tokens.typography.sizes.xxl, 
-    fontFamily: tokens.typography.fonts.display,
+ fontSize: 18,
+fontFamily: tokens.typography.fonts.displayBold,
     fontWeight: tokens.typography.weights.bold, 
     color: tokens.colors.ink, 
     marginHorizontal: tokens.spacing.md + 4, 

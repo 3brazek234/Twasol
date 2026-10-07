@@ -296,6 +296,15 @@ export const JobCard: React.FC<JobCardProps> = ({
         {job.title}
       </Text>
 
+      {isCompact && (
+        <View style={styles.compactDetails}>
+          <Gavel size={14} color={tokens.colors.muted} />
+          <Text style={styles.compactTaskType} numberOfLines={1}>
+            {TASK_TYPE_LABELS[job.taskType] ?? "مهمة قانونية"}
+          </Text>
+        </View>
+      )}
+
       {/* ══════════════ PERSON ROW ══════════════ */}
 
       {/* Active: show client/poster name with avatar */}
@@ -362,7 +371,8 @@ export const JobCard: React.FC<JobCardProps> = ({
       {/* ══════════════ FEE ROW ══════════════ */}
       <View style={styles.metaRow}>
         {/* Fee block — left side in RTL (first child = right edge) */}
-        <View style={styles.feeBlock}>
+        <View style={[styles.feeBlock, isCompact && styles.compactFeeBlock]}>
+          {isCompact && <Text style={styles.compactFeeLabel}>الأتعاب</Text>}
           <Text style={[styles.fee, isCompact && styles.feeCompact]}>
             {formatCurrency(displayFee)}
           </Text>
@@ -660,7 +670,6 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.line,
     marginBottom: tokens.spacing.sm,     // 12
     overflow: "hidden",                  // clips accent strip to card corners
-    direction: "rtl",
     ...tokens.shadows.sm,
   },
   // Feed stays at sm shadow (many cards; shouldn't dominate). Posted/active
@@ -670,6 +679,7 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.md,
     borderRadius: tokens.radius.lg,
     marginBottom: tokens.spacing.sm,
+    direction: "rtl",
   },
 
   // Extra right padding to prevent text from sliding under the accent strip
@@ -701,6 +711,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: tokens.spacing.xxs,   // 4
+    textAlign: "right",                  // ensures text aligns right in RTL
   },
   courtName: {
     color: tokens.colors.muted,
@@ -711,7 +722,9 @@ const styles = StyleSheet.create({
     paddingRight: tokens.spacing.xs,    // gap between court text and pill
   },
   courtNameCompact: {
-    fontSize: 10,
+    fontSize: 12,
+    writingDirection: "rtl",
+    textAlign: "right",
   },
 
   // ── Title ───────────────────────────────────────────────────────────────────
@@ -724,9 +737,25 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   titleCompact: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: tokens.spacing.xxs,   // 4
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: tokens.spacing.xxs,
+    alignSelf: "stretch",
+    writingDirection: "rtl",
+    textAlign: "right",
+  },
+  compactDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: tokens.spacing.xxs,
+    marginBottom: tokens.spacing.xxs,
+  },
+  compactTaskType: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.sm,
+    flexShrink: 1,
+    textAlign: "right",
   },
 
   // ── Person row (poster/lawyer/client) ───────────────────────────────────────
@@ -835,6 +864,17 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.sizes.xs,
     textAlign: "right",
   },
+  compactFeeBlock: {
+    backgroundColor: tokens.colors.goldLight,
+    borderRadius: tokens.radius.md,
+    paddingHorizontal: tokens.spacing.sm,
+    paddingVertical: tokens.spacing.xxs,
+  },
+  compactFeeLabel: {
+    color: tokens.colors.muted,
+    fontFamily: tokens.typography.fonts.body,
+    fontSize: tokens.typography.sizes.xs,
+  },
   // Strike-through asking fee when negotiation resulted in a different amount.
   feeStrike: {
     color: tokens.colors.muted,
@@ -900,6 +940,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: tokens.spacing.xs,             // 8 — enough breathing room between buttons
     marginTop: tokens.spacing.sm,       // 12
+    textAlign: "center",                 // center-aligns the row in RTL context
   },
 
   // ── Button tier: Primary — navy filled ──────────────────────────────────────

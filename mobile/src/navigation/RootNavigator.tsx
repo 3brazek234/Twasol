@@ -173,48 +173,16 @@ export const RootNavigator = () => {
     );
   }
 
-  // ── State 3: Authenticated but NOT verified ─────────────────────────────
-  const vs = user?.verificationStatus;
-
-  if (vs === 'UNVERIFIED' || vs === 'PENDING_UPLOAD') {
-    return (
-      <NavigationContainer linking={linking as any}>
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          <RootStack.Screen name="Verification" component={VerificationNavigator} />
-          <RootStack.Screen name="SettingsStack" component={SettingsNavigator} />
-        </RootStack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  if (vs === 'PENDING') {
-    return (
-      <NavigationContainer linking={linking as any}>
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          <RootStack.Screen name="PendingReview" component={PendingReviewScreen} />
-        </RootStack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  if (vs === 'REJECTED') {
-    return (
-      <NavigationContainer linking={linking as any}>
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          <RootStack.Screen name="Resubmit" component={ResubmitScreen} />
-        </RootStack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // ── State 3: Verified (APPROVED) — full app ────────────────────────────
+  // ── State 3: Main App (Verification states handled via Banner) ────────────────────────────
   return (
     <NavigationContainer linking={linking as any}>
       <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainTabs' : 'OnboardingWalkthrough'}>
         <RootStack.Screen name="OnboardingWalkthrough" component={require('../screens/main/OnboardingWalkthroughScreen').OnboardingWalkthroughScreen} />
-        {/* Added screen for programmatic navigation to the tab navigator */}
         <RootStack.Screen name="MainTabs" component={MainNavigator} />
         <RootStack.Screen name="SettingsStack" component={SettingsNavigator} />
+        <RootStack.Screen name="Verification" component={VerificationNavigator} />
+        <RootStack.Screen name="PendingReviewScreenRoot" component={PendingReviewScreen} />
+        <RootStack.Screen name="ResubmitScreenRoot" component={ResubmitScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

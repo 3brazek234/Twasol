@@ -34,7 +34,7 @@ export async function deleteFromR2(key: string): Promise<void> {
 }
 
 export async function generateUploadUrl(key: string, contentType: string, expiresIn = 300): Promise<string> {
-  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
   if (!ALLOWED_MIME_TYPES.includes(contentType)) {
     throw AppError.badRequest(`File type not allowed. Allowed types: image/jpeg, image/png, application/pdf`);
   }
