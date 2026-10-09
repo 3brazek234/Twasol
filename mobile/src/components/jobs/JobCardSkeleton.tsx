@@ -42,18 +42,20 @@ export function JobCardSkeleton({ variant = "feed" }: { variant?: JobCardVariant
         <Animated.View style={[styles.skeletonBlock, { width: "40%", height: 16, marginBottom: 16 }, animatedStyle]} />
       )}
 
-      <View style={[styles.metaRow, isCompact && { marginTop: 4, marginBottom: 0 }]}>
-        <Animated.View style={[styles.skeletonBlock, { width: isCompact ? 120 : 80, height: isCompact ? 28 : 20, borderRadius: isCompact ? 8 : 4 }, animatedStyle]} />
-        
-        {!isCompact && (
+      {!isCompact && (
+        <View style={styles.metaRow}>
+          <Animated.View style={[styles.skeletonBlock, { width: 80, height: 20, borderRadius: 4 }, animatedStyle]} />
           <Animated.View style={[styles.skeletonBlock, { width: 100, height: 20 }, animatedStyle]} />
-        )}
-      </View>
+        </View>
+      )}
 
       {isCompact && (
-        <View style={styles.compactInfoRow}>
-          <Animated.View style={[styles.skeletonBlock, { width: 92, height: 24 }, animatedStyle]} />
-          <Animated.View style={[styles.skeletonBlock, { width: 76, height: 16 }, animatedStyle]} />
+        <View style={styles.compactFooter}>
+          <Animated.View style={[styles.skeletonBlock, styles.compactFeeSkeleton, animatedStyle]} />
+          <View style={styles.compactMetaGroup}>
+            <Animated.View style={[styles.skeletonBlock, { width: 92, height: 24, borderRadius: tokens.radius.sm }, animatedStyle]} />
+            <Animated.View style={[styles.skeletonBlock, { width: 76, height: 16 }, animatedStyle]} />
+          </View>
         </View>
       )}
 
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
-  compactInfoRow: {
+  compactFooter: {
     flexDirection: "row",
     direction: "rtl",
     alignItems: "center",
@@ -113,8 +115,21 @@ const styles = StyleSheet.create({
     gap: tokens.spacing.xs,
     borderTopWidth: 1,
     borderTopColor: tokens.colors.line,
-    paddingTop: tokens.spacing.xs,
-    marginTop: tokens.spacing.xxs,
+    paddingTop: tokens.spacing.sm,
+    marginTop: tokens.spacing.xs,
+  },
+  compactMetaGroup: {
+    flex: 1,
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    gap: tokens.spacing.xs,
+    minWidth: 0,
+  },
+  compactFeeSkeleton: {
+    width: 88,
+    height: 32,
+    borderRadius: tokens.radius.md,
   },
   actionRow: {
     flexDirection: "row",

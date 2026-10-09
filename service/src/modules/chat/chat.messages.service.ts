@@ -1,11 +1,10 @@
 import { SAFE_USER_SELECT } from '../users/user-safe-fields';
-import { buildNotification } from '../notifications/notification-payload';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
 import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { auditLog } from '../../common/utils/audit';
-import { MessageType, OfferStatus, JobStatus, MessageStatus } from '@prisma/client';
+import {  OfferStatus } from '@prisma/client';
 import { JobsLifecycleService } from '../jobs/jobs.lifecycle.service';
 
 export class ChatMessagesService {
@@ -98,18 +97,40 @@ export class ChatMessagesService {
   static async acceptOffer(messageId: string, userId: string, ipAddress?: string) {
     const message = await prisma.message.findUniqueOrThrow({
       where: { id: messageId },
-      include: { conversation: { include: { participants: true } } }
+      include: {
+        conversation: {
+          include: {
+            participants: true,
+            job: { select: { postedByUserId: true, title: true } },
+          },
+        },
+      },
     });
     const participant = message.conversation.participants.find(p => p.userId === userId);
     if (!participant) throw AppError.forbidden('User is not a participant in this conversation');
-    if (!(message.conversation.jobId as string) || message.conversation.type !== 'JOB') throw AppError.badRequest('Cannot accept an offer in a direct inquiry');
+    if (!(message.conversation.jobId as string) || message.conversation.type !== 'JOB' || !message.conversation.job) throw AppError.badRequest('Cannot accept an offer in a direct inquiry');
+
+    // The offer recipient must be the one accepting — never the sender.
+    if (message.senderId === userId) throw AppError.forbidden('لا يمكنك قبول عرضك الخاص');
+
+    // The assigned lawyer is the participant who is NOT the job poster —
+    // independent of who sent the offer (lawyer offer OR poster counter-offer).
+    const posterId = message.conversation.job.postedByUserId;
+    const lawyerParticipants = message.conversation.participants.filter(p => p.userId !== posterId);
+    if (lawyerParticipants.length === 0) {
+      throw new AppError('NO_LAWYER_PARTICIPANT', 500, 'لم يتم العثور على المحامي في المحادثة');
+    }
+    if (lawyerParticipants.length > 1) {
+      throw new AppError('AMBIGUOUS_LAWYER_PARTICIPANT', 500, 'تعذر تحديد المحامي بشكل فريد');
+    }
+    const lawyerId = lawyerParticipants[0].userId;
 
     const result = await prisma.$transaction(async (tx) => {
       const conflictDeclaration = await tx.conflictDeclaration.findUnique({
         where: {
           jobId_lawyerId: {
             jobId: message.conversation.jobId as string,
-            lawyerId: message.senderId,
+            lawyerId,
           },
         },
       });
@@ -123,7 +144,7 @@ export class ChatMessagesService {
       });
       if (count === 0) throw AppError.conflict('Offer is no longer pending or does not exist');
 
-      await JobsLifecycleService.acceptOffer((message.conversation.jobId as string), message.senderId, message.offerAmount!, tx);
+      await JobsLifecycleService.acceptOffer((message.conversation.jobId as string), lawyerId, message.offerAmount!, tx);
 
       await tx.message.updateMany({
         where: { conversationId: message.conversationId, type: 'OFFER', offerStatus: OfferStatus.PENDING, id: { not: messageId } },
@@ -131,9 +152,9 @@ export class ChatMessagesService {
       });
 
       await tx.conflictDeclaration.upsert({
-        where: { jobId_lawyerId: { jobId: (message.conversation.jobId as string), lawyerId: message.senderId } },
+        where: { jobId_lawyerId: { jobId: (message.conversation.jobId as string), lawyerId } },
         update: { hasConflict: false, ipAddress: ipAddress || null, declaredAt: new Date() },
-        create: { jobId: (message.conversation.jobId as string), lawyerId: message.senderId, hasConflict: false, ipAddress: ipAddress || null }
+        create: { jobId: (message.conversation.jobId as string), lawyerId, hasConflict: false, ipAddress: ipAddress || null }
       });
 
       await auditLog(tx as any, userId, 'offer.accepted', 'Message', messageId, { offerStatus: OfferStatus.PENDING }, { offerStatus: OfferStatus.ACCEPTED, amount: message.offerAmount });
@@ -141,13 +162,13 @@ export class ChatMessagesService {
       return tx.message.findUnique({ where: { id: messageId } });
     });
 
-    const job = await prisma.job.findUnique({ where: { id: (message.conversation.jobId as string) }, select: { title: true } });
+    const job = message.conversation.job;
     for (const p of message.conversation.participants) {
       if (p.userId !== userId) {
         await NotificationsService.notifyManyUsers([p.userId], {
             type: NotificationType.OFFER_ACCEPTED,
             titleAr: 'تم قبول العرض ✅',
-            messageAr: `تم قبول عرضك المالي لمهمة: ${job?.title || 'غير معروف'}`,
+            messageAr: `تم قبول العرض المالي لمهمة: ${job?.title || 'غير معروف'}`,
             data: { jobId: (message.conversation.jobId as string) as string, conversationId: message.conversation.id }
         });
       }

@@ -4,7 +4,6 @@ import { Worker, Job as BullJob, Queue } from 'bullmq';
 import { redisConnection } from '../common/utils/queue';
 import { prisma } from '../prisma';
 import { logger } from '../common/utils/logger';
-import { JobStatus } from '@prisma/client';
 
 export const jobExpirationWorker = new Worker(
   'job-expiration',

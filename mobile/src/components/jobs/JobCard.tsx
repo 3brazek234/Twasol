@@ -196,7 +196,9 @@ export const JobCard: React.FC<JobCardProps> = ({
             {job.title}
           </Text>
           <View style={styles.feedPriceStack}>
-            <Text style={styles.feedFee}>{formatCurrency(displayFee)}</Text>
+            <Text style={styles.feedFee} numberOfLines={1}>
+              {displayFee > 0 ? formatCurrency(displayFee) : "يُحدد بالاتفاق"}
+            </Text>
             <StatusPill status={job.status || "OPEN"} />
           </View>
         </View>
@@ -220,11 +222,9 @@ export const JobCard: React.FC<JobCardProps> = ({
           </View>
         </View>
 
-        {job.description ? (
-          <Text style={styles.feedDescription} numberOfLines={1}>
-            {job.description}
-          </Text>
-        ) : null}
+        <Text style={styles.feedDescription} numberOfLines={1}>
+          {job.description?.trim() || "لا يوجد وصف إضافي"}
+        </Text>
 
         <View style={styles.feedFooterRow}>
           <View style={styles.feedPosterIdentity}>
@@ -369,34 +369,43 @@ export const JobCard: React.FC<JobCardProps> = ({
         )}
 
       {/* ══════════════ FEE ROW ══════════════ */}
-      <View style={styles.metaRow}>
-        {/* Fee block — left side in RTL (first child = right edge) */}
-        <View style={[styles.feeBlock, isCompact && styles.compactFeeBlock]}>
-          {isCompact && <Text style={styles.compactFeeLabel}>الأتعاب</Text>}
-          <Text style={[styles.fee, isCompact && styles.feeCompact]}>
-            {formatCurrency(displayFee)}
-          </Text>
-          {/* Strike-through asking fee if negotiated down — posted variant only */}
-          {showStrikethrough && (
-            <Text style={styles.feeStrike}>{formatCurrency(askingFee)}</Text>
+      {isCompact ? (
+        <View style={styles.compactFooter}>
+          <View style={[styles.feeBlock, styles.compactFeeBlock]}>
+            <Text style={styles.compactFeeLabel}>الأتعاب</Text>
+            <Text style={[styles.fee, styles.feeCompact]}>
+              {formatCurrency(displayFee)}
+            </Text>
+          </View>
+          {["OPEN", "NEGOTIATING"].includes(job.status) && (
+            <View style={styles.compactMetaGroup}>
+              {applicantCount !== undefined && (
+                <View style={styles.compactApplicantBadge}>
+                  <Users size={14} color={tokens.colors.navy} />
+                  <Text style={styles.compactApplicantText} numberOfLines={1}>
+                    {applicantLabel}
+                  </Text>
+                </View>
+              )}
+              {expiresAt && (
+                <View style={styles.compactDeadline}>
+                  <Clock size={14} color={tokens.colors.muted} />
+                  <Text style={styles.compactDeadlineText} numberOfLines={1}>
+                    {deadlineLabel}
+                  </Text>
+                </View>
+              )}
+            </View>
           )}
         </View>
-      </View>
-
-      {isCompact && ["OPEN", "NEGOTIATING"].includes(job.status) && (
-        <View style={styles.compactInfoRow}>
-          {applicantCount !== undefined && (
-            <View style={styles.compactApplicantBadge}>
-              <Users size={14} color={tokens.colors.navy} />
-              <Text style={styles.compactApplicantText}>{applicantLabel}</Text>
-            </View>
-          )}
-          {expiresAt && (
-            <View style={styles.compactDeadline}>
-              <Clock size={14} color={tokens.colors.muted} />
-              <Text style={styles.compactDeadlineText}>{deadlineLabel}</Text>
-            </View>
-          )}
+      ) : (
+        <View style={styles.metaRow}>
+          <View style={styles.feeBlock}>
+            <Text style={styles.fee}>{formatCurrency(displayFee)}</Text>
+            {showStrikethrough && (
+              <Text style={styles.feeStrike}>{formatCurrency(askingFee)}</Text>
+            )}
+          </View>
         </View>
       )}
 
@@ -718,13 +727,11 @@ const styles = StyleSheet.create({
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 11,
     flex: 1,
-    textAlign: "right",
     paddingRight: tokens.spacing.xs,    // gap between court text and pill
   },
   courtNameCompact: {
     fontSize: 12,
     writingDirection: "rtl",
-    textAlign: "right",
   },
 
   // ── Title ───────────────────────────────────────────────────────────────────
@@ -734,7 +741,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginBottom: tokens.spacing.xs,    // 8
-    textAlign: "right",
   },
   titleCompact: {
     fontSize: 16,
@@ -742,19 +748,20 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.xxs,
     alignSelf: "stretch",
     writingDirection: "rtl",
-    textAlign: "right",
   },
   compactDetails: {
     flexDirection: "row",
     alignItems: "center",
     gap: tokens.spacing.xxs,
-    marginBottom: tokens.spacing.xxs,
+    backgroundColor: tokens.colors.paper,
+    borderRadius: tokens.radius.sm,
+    paddingHorizontal: tokens.spacing.xs,
+    paddingVertical: tokens.spacing.xxs,
   },
   compactTaskType: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
     fontSize: tokens.typography.sizes.sm,
-    flexShrink: 1,
     textAlign: "right",
   },
 
@@ -825,7 +832,7 @@ const styles = StyleSheet.create({
   feeCompact: {
     fontSize: 16,
   },
-  compactInfoRow: {
+  compactFooter: {
     flexDirection: "row",
     direction: "rtl",
     alignItems: "center",
@@ -833,8 +840,16 @@ const styles = StyleSheet.create({
     gap: tokens.spacing.xs,
     borderTopWidth: 1,
     borderTopColor: tokens.colors.line,
-    paddingTop: tokens.spacing.xs,
-    marginTop: tokens.spacing.xxs,
+    paddingTop: tokens.spacing.sm,
+    marginTop: tokens.spacing.xs,
+  },
+  compactMetaGroup: {
+    flex: 1,
+    flexDirection: "row",
+    direction: "rtl",
+    alignItems: "center",
+    gap: tokens.spacing.xs,
+    minWidth: 0,
   },
   compactApplicantBadge: {
     flexDirection: "row",
@@ -845,6 +860,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing.xs,
     paddingVertical: tokens.spacing.xxs,
     borderRadius: tokens.radius.sm,
+    flexShrink: 1,
   },
   compactApplicantText: {
     color: tokens.colors.navy,
@@ -857,6 +873,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: tokens.spacing.xxs,
     flexShrink: 1,
+    minWidth: 0,
   },
   compactDeadlineText: {
     color: tokens.colors.muted,
@@ -869,6 +886,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.spacing.sm,
     paddingVertical: tokens.spacing.xxs,
+    flexShrink: 0,
   },
   compactFeeLabel: {
     color: tokens.colors.muted,
@@ -1067,24 +1085,30 @@ const styles = StyleSheet.create({
     marginHorizontal: tokens.spacing.sm,
     marginBottom: tokens.spacing.sm,
     borderRadius: tokens.radius.lg,
+    direction: "rtl",
   },
   feedTopRow: {
     flexDirection: 'row',
+    direction: "rtl",
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: tokens.spacing.xs,
+    minHeight: tokens.typeScale.h3.lineHeight * 2,
   },
   feedPriceStack: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: tokens.spacing.xxs,
     marginStart: tokens.spacing.xs,
+    minWidth: 96,
   },
   feedTitle: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.displayBold,
     fontSize: tokens.typography.sizes.lg,
-    lineHeight: tokens.typography.sizes.xxl,
+    lineHeight: tokens.typeScale.h3.lineHeight,
+    height: tokens.typeScale.h3.lineHeight * 2,
     flex: 1,
+    textAlign: "right",
   },
   feedFee: {
     color: tokens.colors.navy,
@@ -1098,9 +1122,11 @@ const styles = StyleSheet.create({
   },
   feedMetadata: {
     flexDirection: 'row',
+    direction: "rtl",
     alignItems: 'center',
     gap: tokens.spacing.xs,
     marginBottom: tokens.spacing.xs,
+    minHeight: tokens.spacing.md,
   },
   feedMetaItem: {
     flexDirection: 'row',
@@ -1115,8 +1141,10 @@ const styles = StyleSheet.create({
   feedSubText: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
-    fontSize: 10,
+    fontSize: tokens.typography.sizes.xs,
+    lineHeight: tokens.typeScale.caption.lineHeight,
     flex: 1,
+    textAlign: "right",
   },
   feedDescription: {
     color: tokens.colors.muted,
@@ -1124,12 +1152,16 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.sizes.xs,
     lineHeight: tokens.typeScale.caption.lineHeight,
     marginBottom: tokens.spacing.xs,
+    minHeight: tokens.typeScale.caption.lineHeight,
+    textAlign: "right",
   },
   feedFooterRow: {
     flexDirection: 'row',
+    direction: "rtl",
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: tokens.spacing.xs,
+    minHeight: tokens.spacing.xxl,
   },
   feedPosterIdentity: {
     flexDirection: 'row',

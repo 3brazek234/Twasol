@@ -51,9 +51,11 @@ export class JobsQueryService {
     let total = 0;
 
     // ─── STANDARD FILTER & SORT PATH ───────────────────────────────────────
-    const where: Prisma.JobWhereInput = {
-      ...(status ? { status: status as any } : { status: "OPEN" }),
-    };
+    // Privacy guard: the public feed ONLY ever shows OPEN jobs. Any `status`
+    // query param (e.g. a stale client sending NEGOTIATING) is intentionally
+    // ignored — participants see their non-OPEN jobs via /jobs/my-jobs.
+    void status;
+    const where: Prisma.JobWhereInput = { status: "OPEN" };
 
     if (courtId) {
       where.courtId = courtId;

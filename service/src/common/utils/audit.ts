@@ -1,6 +1,4 @@
 import { Prisma } from '@prisma/client';
-import { prisma } from '../../prisma';
-import { env } from '../../env';
 
 export async function auditLog(
   tx: Prisma.TransactionClient,

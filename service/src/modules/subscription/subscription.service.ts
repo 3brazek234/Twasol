@@ -12,7 +12,7 @@ export const SUBSCRIPTION_PLANS = [
     nameAr: 'اشتراك شهري',
     nameEn: 'Monthly',
     durationMonths: 1,
-    amountPiasters: 19900,   // 199 جنيه
+    amountPiasters: 9900,   // 99 جنيه
     currency: 'EGP',
     badge: null,
   },
@@ -21,7 +21,7 @@ export const SUBSCRIPTION_PLANS = [
     nameAr: 'اشتراك سنوي',
     nameEn: 'Annual',
     durationMonths: 12,
-    amountPiasters: 149900,  // 1,499 جنيه (وفر 37%)
+    amountPiasters: 119900,  // 1,499 جنيه (وفر 37%)
     currency: 'EGP',
     badge: 'الأوفر',
   },
@@ -30,10 +30,10 @@ export const SUBSCRIPTION_PLANS = [
 // ─── بيانات الحساب البنكي وفودافون كاش ─────────────────────────────────────────
 export const PAYMENT_INSTRUCTIONS = {
   MANUAL_BANK_TRANSFER: {
-    bankName: 'بنك مصر',
-    accountName: 'وكيل للخدمات القانونية',
-    accountNumber: '1234567890123',
-    iban: 'EG123456789012345678901234',
+    bankName: 'بنك اسكندرية',
+    accountName: 'ahmedhamdy',
+    accountNumber: '01065750357',
+    iban: '01065750357',
   },
   MANUAL_VODAFONE_CASH: {
     phoneNumber: '01065750357',

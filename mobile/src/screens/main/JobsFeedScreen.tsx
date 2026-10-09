@@ -20,18 +20,34 @@ const SkeletonJobCard = () => {
       from={{ opacity: 0.3 }}
       animate={{ opacity: 0.7 }}
       transition={{ type: 'timing', duration: 1000, loop: true }}
-      className="bg-white mx-6 mb-4 p-6 rounded-2xl shadow-sm border border-line"
+      className="bg-white mx-4 mb-3 p-4 rounded-xl shadow-sm border border-line"
     >
-      <View className="h-4 bg-line rounded w-3/5" />
-      <View className="h-4 bg-line rounded w-2/5 mt-2" />
-      <View className="h-4 bg-line rounded w-4/5 mt-3" />
+      <View className="flex-row-reverse justify-between items-start">
+        <View className="flex-1 ml-3">
+          <View className="h-5 bg-line rounded w-4/5" />
+          <View className="h-5 bg-line rounded w-3/5 mt-2" />
+        </View>
+        <View className="items-start gap-2">
+          <View className="h-6 bg-line rounded w-20" />
+          <View className="h-5 bg-line rounded w-16" />
+        </View>
+      </View>
+      <View className="flex-row-reverse items-center justify-between mt-4">
+        <View className="h-4 bg-line rounded w-1/3" />
+        <View className="h-4 bg-line rounded w-1/4" />
+        <View className="h-4 bg-line rounded w-1/4" />
+      </View>
+      <View className="h-4 bg-line rounded w-full mt-3" />
+      <View className="flex-row-reverse items-center justify-between mt-3 pt-3 border-t border-line">
+        <View className="h-6 bg-line rounded w-1/3" />
+        <View className="h-10 bg-line rounded-lg w-1/3" />
+      </View>
     </MotiView>
   );
 };
 
 export const JobsFeedScreen = ({ navigation, route }: any) => {
   const [selectedCourtId, setSelectedCourtId] = useState<string | undefined>(route.params?.courtId ?? undefined);
-  const [selectedStatus, setSelectedStatus] = useState<string | undefined>('OPEN');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [taskType, setTaskType] = useState<string | undefined>(route.params?.taskType ?? undefined);
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
@@ -46,7 +62,7 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useJobs(selectedCourtId, selectedStatus, taskType, sortBy);
+  } = useJobs(selectedCourtId, 'OPEN', taskType, sortBy);
 
   // ── Refetch when the screen comes back into focus ──────────────────────────
   // This handles: navigating back from JobDetail, returning from PostJob, etc.
@@ -75,12 +91,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     return data?.pages.flatMap((page) => page.data).filter(Boolean) || [];
   }, [data]);
 
-  const filterOptions = [
-    { label: 'المهام النشطة', value: 'OPEN' },
-    { label: 'قيد التفاوض', value: 'NEGOTIATING' },
-    { label: 'كل المهام', value: undefined },
-  ];
-
   return (
     <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
 
@@ -90,17 +100,6 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center', gap: 8, flexDirection: 'row' }}
-        >
-          <FilterChipRow
-            options={filterOptions}
-            selectedValue={selectedStatus}
-            onSelect={setSelectedStatus}
-          />
-        </ScrollView>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center', marginTop: 8, gap: 8, flexDirection: 'row' }}
         >
           <TouchableOpacity
             style={{

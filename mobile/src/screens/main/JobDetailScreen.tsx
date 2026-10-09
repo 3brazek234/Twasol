@@ -241,36 +241,11 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         </View>
 
         <View style={styles.divider} />
-
-        {/* Trust Indicator */}
-        <View style={styles.trustIndicator}>
-          <Users size={16} color={tokens.colors.signal} style={{ marginEnd: 8 }} />
-          <Text style={styles.trustText}>
-            {isLoadingLawyers ? (
-              'جاري فحص النشاط...'
-            ) : (
-              `يتوفر ${activeLawyers?.length || 0} محامٍ نشط في هذه المحكمة`
-            )}
-          </Text>
-        </View>
       </View>
 
       {/* 3. Description Section */}
       <View style={styles.detailsHeaderRow}>
         <Text style={styles.sectionHeader}>{'التفاصيل الكاملة'}</Text>
-        <TouchableOpacity 
-          onPress={handleTranslate} 
-          style={styles.translateBtn}
-          disabled={isTranslating}
-        >
-          {isTranslating ? (
-            <ActivityIndicator size="small" color={tokens.colors.signal} />
-          ) : (
-            <Text style={styles.translateBtnText}>
-              {isTranslated ? 'عرض الأصلي' : 'ترجمة الوصف'}
-            </Text>
-          )}
-        </TouchableOpacity>
       </View>
 
       <View style={styles.detailsCard}>

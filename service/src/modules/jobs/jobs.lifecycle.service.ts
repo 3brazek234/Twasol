@@ -323,6 +323,15 @@ export class JobsLifecycleService {
 
     this.assertValidTransition(job.status, 'AGREED');
 
+    // Defense in depth: the assignee must be a real lawyer and never the poster.
+    // Note: every non-admin user has role LAWYER (posters too), so role alone
+    // can't distinguish poster vs lawyer — the poster-id + accountMode checks do.
+    const db = txClient ?? prisma;
+    const lawyer = await db.user.findUnique({ where: { id: lawyerId }, select: { role: true, accountMode: true } });
+    if (!lawyer || lawyerId === job.postedByUserId || lawyer.role !== 'LAWYER' || lawyer.accountMode === 'HIRING') {
+      throw AppError.badRequest('المستخدم المعين ليس محامياً', { code: 'INVALID_LAWYER_ASSIGNMENT' });
+    }
+
     const execute = async (tx: any) => {
       const updated = await tx.job.updateMany({
         where: { id: jobId, status: job.status, version: job.version },

@@ -99,6 +99,7 @@ describe("JobsLifecycleService", () => {
     it("assigns the lawyer and agreed salary", async () => {
       const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "NEGOTIATING" });
       prismaMock.job.findUnique.mockResolvedValue(mockJob);
+      prismaMock.user.findUnique.mockResolvedValue({ role: "LAWYER", accountMode: "GIG" } as any);
       prismaMock.job.updateMany.mockResolvedValue({ count: 1 } as any);
 
       await JobsLifecycleService.acceptOffer(jobId, lawyerId, 2000);
@@ -111,6 +112,22 @@ describe("JobsLifecycleService", () => {
           agreedSalary: 2000,
         }),
       }));
+    });
+
+    it("rejects assigning the job poster as the lawyer", async () => {
+      prismaMock.job.findUnique.mockResolvedValue(makeJob({ id: jobId, postedByUserId: posterId, status: "NEGOTIATING" }));
+      prismaMock.user.findUnique.mockResolvedValue({ role: "LAWYER", accountMode: "BOTH" } as any);
+
+      await expectAppError(() => JobsLifecycleService.acceptOffer(jobId, posterId, 2000), "BAD_REQUEST");
+      expect(prismaMock.job.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("rejects assigning a HIRING-only account", async () => {
+      prismaMock.job.findUnique.mockResolvedValue(makeJob({ id: jobId, postedByUserId: posterId, status: "NEGOTIATING" }));
+      prismaMock.user.findUnique.mockResolvedValue({ role: "LAWYER", accountMode: "HIRING" } as any);
+
+      await expectAppError(() => JobsLifecycleService.acceptOffer(jobId, lawyerId, 2000), "BAD_REQUEST");
+      expect(prismaMock.job.updateMany).not.toHaveBeenCalled();
     });
   });
 

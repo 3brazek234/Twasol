@@ -8,7 +8,7 @@
     },
     "name": "وكيل",
     "slug": "wakeel-mobile",
-    "scheme": "wakeel",
+    "scheme": ["wakeel", "com.googleusercontent.apps.742406497157-baub1dqavv0r97uv7ehdltstfag0nofo"],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images-2.jpeg",

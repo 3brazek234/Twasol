@@ -562,13 +562,11 @@ const styles = StyleSheet.create({
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.body,
     fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right',
   },
   sectionTitle: {
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.sm,
-    textAlign: 'right',
     marginBottom: tokens.spacing.xs,
   },
   planList: {
@@ -599,7 +597,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right',
   },
   planBadge: {
     color: tokens.colors.verdant,
@@ -654,7 +651,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.sm,
-    textAlign: 'right',
   },
   paymentNumber: {
     color: tokens.colors.navy,
@@ -667,21 +663,18 @@ const styles = StyleSheet.create({
     color: tokens.colors.navy,
     fontFamily: tokens.typography.fonts.mono,
     fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right',
     marginTop: tokens.spacing.xs,
   },
   paymentAccountName: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
     fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right',
     marginTop: tokens.spacing.xs,
   },
   paymentHint: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
     fontSize: tokens.typography.sizes.xs,
-    textAlign: 'right',
     marginTop: tokens.spacing.sm,
   },
   receiptPicker: {
@@ -733,7 +726,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.body,
     fontSize: 10,
-    textAlign: 'right',
     marginBottom: tokens.spacing.xxs,
   },
   progressTrack: {
