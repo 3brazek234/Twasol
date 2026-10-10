@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
 import { GoogleAuthService } from './google-auth.service';
 import { CompleteProfileService } from './complete-profile.service';
+import { PasswordResetService } from './password-reset.service';
 import { AppError } from '../../common/errors/AppError';
 import { prisma } from '../../prisma';
 import { SAFE_USER_SELECT } from '../users/user-safe-fields';
@@ -99,6 +100,33 @@ export class AuthController {
       });
       if (!user) throw AppError.notFound('User');
       res.json({ success: true, data: { user } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      await PasswordResetService.requestPasswordReset(req.body.email);
+      res.json({ success: true, data: { message: 'إذا كان البريد الإلكتروني مسجلاً، فستتلقى رمز التحقق.' } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async verifyOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await PasswordResetService.verifyOtp(req.body.email, req.body.otp);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      await PasswordResetService.resetPassword(req.body.resetToken, req.body.newPassword);
+      res.json({ success: true, data: { message: 'تم إعادة تعيين كلمة المرور بنجاح' } });
     } catch (error) {
       next(error);
     }

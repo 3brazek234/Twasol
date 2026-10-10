@@ -12,6 +12,19 @@ export const authLimiter = rateLimit({
   message: { success: false, error: { code: 'RATE_LIMIT', message: 'Too many requests, try again later' } },
 });
 
+export const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 5,                      // 5 attempts per IP per 15 minutes
+  keyGenerator: (req) => req.ip || req.connection.remoteAddress || 'unknown-ip',
+  message: {
+    success: false,
+    error: {
+      code: 'RATE_LIMIT',
+      message: 'محاولات كثيرة جداً، يرجى الانتظار 15 دقيقة'
+    }
+  }
+});
+
 /**
  * Rate limiter for job posting — 20 requests per minute per IP.
  */

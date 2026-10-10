@@ -35,6 +35,10 @@ const envSchema = z.object({
   GOOGLE_WEB_CLIENT_ID: z.string().optional(),
   GOOGLE_IOS_CLIENT_ID: z.string().optional(),
   GOOGLE_ANDROID_CLIENT_ID: z.string().optional(),
+
+  // Email (Resend)
+  RESEND_API_KEY: z.string().min(1).default('re_test_key'), // Fallback for test environments if missing
+  EMAIL_FROM: z.string().email().default('onboarding@resend.dev'),
 });
 
 // Fail fast if env is missing/malformed

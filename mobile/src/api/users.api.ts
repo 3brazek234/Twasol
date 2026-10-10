@@ -6,5 +6,8 @@ export const usersApi = {
   },
   updateAccountMode: async (mode: 'GIG' | 'HIRING' | 'BOTH'): Promise<void> => {
     await apiClient.patch('/users/me/account-mode', { mode });
+  },
+  deleteAccount: async (): Promise<void> => {
+    await apiClient.delete('/users/me');
   }
 };

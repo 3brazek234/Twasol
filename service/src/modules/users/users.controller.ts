@@ -42,4 +42,13 @@ export class UsersController {
       next(error);
     }
   }
+
+  static async deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+      await UsersService.deleteAccount(req.user!.userId);
+      res.json({ success: true, data: { message: 'Account deleted successfully' } });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

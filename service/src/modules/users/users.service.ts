@@ -78,4 +78,38 @@ export class UsersService {
       });
     }
   }
+
+  static async deleteAccount(userId: string) {
+    const { invalidateCachePrefix } = await import('../../common/utils/cache');
+    await invalidateCachePrefix(`user:profile:${userId}`);
+
+    // Cancel OPEN/NEGOTIATING jobs they posted via the lifecycle service (respects state machine)
+    const { JobsLifecycleService } = await import('../jobs/jobs.lifecycle.service');
+    const jobsToCancel = await prisma.job.findMany({
+      where: {
+        postedByUserId: userId,
+        status: { in: ['OPEN', 'NEGOTIATING'] }
+      },
+      select: { id: true }
+    });
+    
+    for (const job of jobsToCancel) {
+      await JobsLifecycleService.cancelJob(job.id, userId);
+    }
+
+    // Anonymize user data
+    const deletedEmail = `deleted_${userId}@deleted.invalid`;
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        deletedAt: new Date(),
+        isActive: false,
+        fullName: 'حساب محذوف',
+        email: deletedEmail,
+        barNumber: null,
+        barId: null,
+        pushTokens: [],
+      }
+    });
+  }
 }

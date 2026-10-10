@@ -202,6 +202,7 @@ model User {
   // ─── الإشعارات ─────────────────────────────────────────────────────────────
   pushTokens            String[]           @default([]) @map("push_tokens") // Expo Push Tokens
   googleId              String?            @unique @map("google_id")
+  tokenVersion          Int                @default(0) @map("token_version")
 
   governorate                  Governorate?              @relation(fields: [governorateId], references: [id])
   courts                       LawyerCourt[]
@@ -221,10 +222,11 @@ model User {
   auditLogs                    AuditLog[]
   conflictDeclarations         ConflictDeclaration[]
   subscriptionPayments         SubscriptionPayment[] // سجل مدفوعات الاشتراك
+  passwordResetTokens          PasswordResetToken[]
+  savedSearches                SavedSearch[]
 
   @@index([verificationStatus])
   @@index([isActive, isOnline])
-  savedSearches                SavedSearch[]
 
   @@map("users")
 }
@@ -509,4 +511,18 @@ model SavedSearch {
   @@index([courtId, taskType])
   @@index([userId])
   @@map("saved_searches")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }

@@ -56,9 +56,7 @@
         "backgroundColor": "#F9FAFB"
       },
       "package": "com.rebuy.wakeel",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/images-2.jpeg"

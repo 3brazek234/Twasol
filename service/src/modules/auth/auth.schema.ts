@@ -39,6 +39,26 @@ export const refreshSchema = z.object({
   })
 });
 
+export const requestPasswordResetSchema = z.object({
+  body: z.object({
+    email: z.string().email('بريد إلكتروني غير صالح')
+  })
+});
+
+export const verifyOtpSchema = z.object({
+  body: z.object({
+    email: z.string().email('بريد إلكتروني غير صالح'),
+    otp: z.string().length(6, 'الرمز يجب أن يكون 6 أرقام')
+  })
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    resetToken: z.string().min(1, 'رمز إعادة التعيين مطلوب'),
+    newPassword: z.string().min(8, 'كلمة المرور يجب أن تكون 8 أحرف على الأقل')
+  })
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
 export type RefreshInput = z.infer<typeof refreshSchema>['body'];

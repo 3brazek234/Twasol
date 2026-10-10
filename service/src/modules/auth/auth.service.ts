@@ -77,7 +77,7 @@ export class AuthService {
       select: SAFE_USER_SELECT,
     });
 
-    const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR' };
+    const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR', tokenVersion: user.tokenVersion };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
@@ -130,7 +130,7 @@ export class AuthService {
       throw AppError.unauthorized('Invalid email or password');
     }
 
-    const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR' };
+    const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR', tokenVersion: user.tokenVersion };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
@@ -158,7 +158,11 @@ export class AuthService {
         throw AppError.unauthorized('Invalid refresh token or user not found');
       }
 
-      const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR' };
+      if (user.tokenVersion !== decoded.tokenVersion) {
+        throw AppError.unauthorized('Session invalidated. Please log in again.');
+      }
+
+      const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role, preferredLocale: user.preferredLocale as 'EN' | 'AR', tokenVersion: user.tokenVersion };
       const newAccessToken = signAccessToken(payload);
       const newRefreshToken = signRefreshToken(payload);
 

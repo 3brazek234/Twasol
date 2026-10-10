@@ -18,6 +18,7 @@ router.get('/me', authenticate, async (req, res, next) => {
   }
 });
 router.patch('/me', authenticate, validate(updateProfileSchema, 'body'), UsersController.updateProfile);
+router.delete('/me', authenticate, UsersController.deleteAccount);
 router.patch('/me/account-mode', authenticate, validate(updateAccountModeSchema, 'body'), UsersController.updateAccountMode);
 router.post('/push-token', authenticate, UsersController.savePushToken);
 router.get('/:id/profile', authenticate, validate(userIdParamsSchema, 'params'), UsersController.getProfile);

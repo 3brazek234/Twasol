@@ -19,4 +19,5 @@ export const SAFE_USER_SELECT = {
   subscriptionStatus: true,
   subscriptionExpiresAt: true,
   googleId: true,
+  tokenVersion: true,
 } as const;

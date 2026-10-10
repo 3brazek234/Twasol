@@ -151,6 +151,15 @@ export const LoginScreen = ({ navigation }: any) => {
                 />
               </View>
               {errors.password && <Text className="text-crimson text-xs font-bodyAr mt-1 ">{errors.password.message}</Text>}
+              
+              <TouchableOpacity
+                style={{ alignSelf: 'flex-start', marginTop: 8 }}
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
+                <Text style={{ fontFamily: tokens.typography.fonts.body, fontSize: tokens.typography.sizes.sm, color: tokens.colors.slate }}>
+                  نسيت كلمة المرور؟
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity

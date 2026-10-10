@@ -8,6 +8,8 @@ export interface TokenPayload {
   role: string;
   preferredLocale?: 'EN' | 'AR';
   exp?: number;
+  tokenVersion?: number;
+  purpose?: 'password_reset'; // Added for password reset token
 }
 
 export function signAccessToken(payload: TokenPayload): string {

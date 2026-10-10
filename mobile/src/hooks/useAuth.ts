@@ -37,3 +37,26 @@ export const useGoogleSignIn = () => {
     },
   });
 };
+
+import { requestPasswordReset, verifyOtp, resetPassword } from '../api/auth.api';
+
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: (email: string) => requestPasswordReset(email),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
+  });
+};
+
+export const useVerifyOtp = () => {
+  return useMutation({
+    mutationFn: (data: { email: string; otp: string }) => verifyOtp(data.email, data.otp),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
+  });
+};
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: (data: { resetToken: string; newPassword: string }) => resetPassword(data.resetToken, data.newPassword),
+    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
+  });
+};

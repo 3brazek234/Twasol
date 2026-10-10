@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
+import { usersApi } from '../../api/users.api';
 
 // Legal URLs have been moved to native LegalScreen
 
@@ -51,11 +52,19 @@ export const SettingsScreen = ({ navigation }: any) => {
       'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف ملفك الشخصي نهائياً وإخفاء هويتك في المهام والتقييمات السابقة.',
       [
         { text: 'إلغاء', style: 'cancel' },
-        { text: 'حذف', style: 'destructive', onPress: () => {
-          // Stub DELETE /users/me
-          Alert.alert('تم حذف الحساب', 'لقد تم حذف حسابك بنجاح.');
-          logout();
-        }}
+        { 
+          text: 'حذف', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              await usersApi.deleteAccount();
+              Alert.alert('تم حذف الحساب', 'لقد تم حذف حسابك بنجاح.');
+              logout();
+            } catch (err) {
+              Alert.alert('خطأ', 'تعذر حذف الحساب. يرجى المحاولة لاحقاً.');
+            }
+          }
+        }
       ]
     );
   };
