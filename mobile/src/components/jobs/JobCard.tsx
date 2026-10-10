@@ -1101,14 +1101,13 @@ const styles = StyleSheet.create({
     marginStart: tokens.spacing.xs,
     minWidth: 96,
   },
-  feedTitle: {
+  feedTitle: { 
     color: tokens.colors.ink,
     fontFamily: tokens.typography.fonts.displayBold,
     fontSize: tokens.typography.sizes.lg,
     lineHeight: tokens.typeScale.h3.lineHeight,
     height: tokens.typeScale.h3.lineHeight * 2,
     flex: 1,
-    textAlign: "right",
   },
   feedFee: {
     color: tokens.colors.navy,

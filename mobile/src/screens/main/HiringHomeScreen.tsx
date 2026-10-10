@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -282,7 +282,7 @@ const styles = {
   },
   sectionText: {
     flex: 1,
-    alignItems: 'flex-start ' as const,
+    alignItems: 'flex-start' as const,
   },
   sectionDescription: {
     color: tokens.colors.muted,

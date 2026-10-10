@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { MessageSquare } from "lucide-react-native";
+import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { StarRating } from "../../components/StarRating";
 import { UserTrustSummary } from "../../components/UserTrustSummary";
 import { useLawyerProfile } from "../../hooks/useUsers";
