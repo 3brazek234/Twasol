@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  AppState,
   ActivityIndicator,
   Alert,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { Check, CheckCircle2, Clock3, CreditCard, FileCheck2, Upload } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
@@ -94,6 +96,7 @@ const PendingSubscriptionView = () => (
 );
 
 interface PaywallViewProps {
+  isRenewal: boolean;
   plans: SubscriptionPlan[];
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
@@ -109,6 +112,7 @@ interface PaywallViewProps {
 }
 
 const PaywallView = ({
+  isRenewal,
   plans,
   selectedPlanId,
   onSelectPlan,
@@ -131,9 +135,13 @@ const PaywallView = ({
           <View style={styles.pitchIcon}>
             <CreditCard size={28} color={tokens.colors.navy} />
           </View>
-          <Text style={styles.pitchTitle}>افتح فرصاً أكثر مع وكيل</Text>
+          <Text style={styles.pitchTitle}>
+            {isRenewal ? 'انتهت صلاحية اشتراكك' : 'فعّل اشتراكك للوصول إلى المنصة'}
+          </Text>
           <Text style={styles.pitchDescription}>
-            اشتراكك يمنحك وصولاً كاملاً إلى فرص العمل في محاكمك، وإمكانية التقديم على المهام، والتواصل ضمن شبكة المحامين الموثقين.
+            {isRenewal
+              ? 'لمواصلة استخدام المنصة، يرجى تجديد اشتراكك'
+              : 'للتقديم على المهام والتواصل مع الموكلين، يجب تفعيل اشتراكك أولاً'}
           </Text>
         </View>
 
@@ -300,6 +308,8 @@ const PaymentMethodOption = ({
 );
 
 export const SubscriptionScreen = () => {
+  const route = useRoute<RouteProp<{ SubscriptionGate: { isRenewal?: boolean } }, 'SubscriptionGate'>>();
+  const routeIsRenewal = route.params?.isRenewal;
   const { user, hydrate, refreshUserProfile } = useAuthStore();
   const { data: subscriptionData, isLoading: plansLoading, error } = useSubscriptionPlans();
   const {
@@ -323,7 +333,29 @@ export const SubscriptionScreen = () => {
   }, [plans, selectedPlanId]);
 
   useEffect(() => {
-    refreshUserProfile();
+    let isRefreshing = false;
+    const refreshProfile = async () => {
+      if (isRefreshing) return;
+      isRefreshing = true;
+      try {
+        await refreshUserProfile();
+      } finally {
+        isRefreshing = false;
+      }
+    };
+
+    const interval = setInterval(refreshProfile, 30000);
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        refreshProfile();
+      }
+    });
+    refreshProfile();
+
+    return () => {
+      clearInterval(interval);
+      appStateSubscription.remove();
+    };
   }, [refreshUserProfile]);
 
   useEffect(() => {
@@ -389,10 +421,22 @@ export const SubscriptionScreen = () => {
 
   const isLoading = plansLoading || statusLoading;
   const subscriptionStatus = statusData?.subscriptionStatus ?? user?.subscriptionStatus;
-  const isActive = subscriptionStatus === 'ACTIVE';
   const hasPendingPayment = statusData?.pendingPayment?.status === 'PENDING'
     || statusData?.status === 'PENDING';
   const expiresAt = statusData?.subscriptionExpiresAt ?? user?.subscriptionExpiresAt;
+  const isRenewal =
+    routeIsRenewal ??
+    (subscriptionStatus === 'EXPIRED' ||
+      (subscriptionStatus === 'ACTIVE' &&
+        expiresAt !== null &&
+        expiresAt !== undefined &&
+        new Date(expiresAt) <= new Date()));
+  const isActive =
+    user?.isActive === true &&
+    subscriptionStatus === 'ACTIVE' &&
+    expiresAt !== null &&
+    expiresAt !== undefined &&
+    new Date(expiresAt) > new Date();
 
   if (isLoading) {
     return (
@@ -407,6 +451,7 @@ export const SubscriptionScreen = () => {
 
   return (
     <PaywallView
+      isRenewal={isRenewal}
       plans={plans}
       selectedPlanId={selectedPlanId}
       onSelectPlan={setSelectedPlanId}

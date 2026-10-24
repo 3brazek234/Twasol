@@ -3,6 +3,7 @@ import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
 import { pushNotificationQueue, jobAlertQueue } from '../../common/utils/queue';
 import { auditLog } from '../../common/utils/audit';
+import { hasSubscriptionAccess } from '../../common/utils/subscription-access';
 
 export class JobsCreationService {
   static async create(userId: string, data: any) {
@@ -16,11 +17,7 @@ export class JobsCreationService {
       throw AppError.forbidden("Account must be verified to post jobs");
     }
 
-    if (
-      user.subscriptionStatus !== "ACTIVE" ||
-      !user.subscriptionExpiresAt ||
-      user.subscriptionExpiresAt <= new Date()
-    ) {
+    if (!hasSubscriptionAccess(user)) {
       throw AppError.forbidden("يتطلب نشر المهام اشتراكاً فعالاً. يرجى تفعيل اشتراكك.");
     }
 

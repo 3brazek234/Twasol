@@ -153,6 +153,8 @@ export const HiringHomeScreen = ({ navigation }: any) => {
           ? <ActivityIndicator style={styles.paginationLoader} color={tokens.colors.navy} />
           : null
       }
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
       contentContainerStyle={styles.listContent}
       refreshControl={
         <RefreshControl

@@ -24,7 +24,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
   const { mutate: login, isPending, error } = useLogin();
   const { mutate: googleSignIn, isPending: isGooglePending } = useGoogleSignIn();
-  const { request, response, promptAsync } = useGoogleAuth();
+  const { request, response, promptAsync, isExpoGo } = useGoogleAuth();
 
   // Handle Google sign-in response
   useEffect(() => {
@@ -171,67 +171,69 @@ export const LoginScreen = ({ navigation }: any) => {
               )}
             </TouchableOpacity>
 
-            {/* ── Separator ── */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 20 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: tokens.colors.line }} />
-              <Text style={{
-                marginHorizontal: 12,
-                color: tokens.colors.muted,
-                fontFamily: tokens.typography.fonts.body,
-                fontSize: 13,
-              }}>
-                أو
-              </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: tokens.colors.line }} />
-            </View>
+            {/* ── Google Sign-In (Hidden in Expo Go due to package mismatch) ── */}
+            {!isExpoGo && (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 20 }}>
+                  <View style={{ flex: 1, height: 1, backgroundColor: tokens.colors.line }} />
+                  <Text style={{
+                    marginHorizontal: 12,
+                    color: tokens.colors.muted,
+                    fontFamily: tokens.typography.fonts.body,
+                    fontSize: 13,
+                  }}>
+                    أو
+                  </Text>
+                  <View style={{ flex: 1, height: 1, backgroundColor: tokens.colors.line }} />
+                </View>
 
-            {/* ── Google Sign-In Button (official branding) ── */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              disabled={!request || isAnyPending}
-              onPress={() => promptAsync()}
-              style={{
-                height: 52,
-                borderRadius: 12,
-                backgroundColor: tokens.colors.white,
-                flexDirection: 'row-reverse',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: '#DADCE0',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-                opacity: (!request || isAnyPending) ? 0.5 : 1,
-              }}
-            >
-              {isGooglePending ? (
-                <ActivityIndicator color="#4285F4" />
-              ) : (
-                <>
-                  {/* Google "G" logo — inline SVG-style text fallback */}
-                  <View style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 2,
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  disabled={!request || isAnyPending}
+                  onPress={() => promptAsync()}
+                  style={{
+                    height: 52,
+                    borderRadius: 12,
+                    backgroundColor: tokens.colors.white,
+                    flexDirection: 'row-reverse',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginLeft: 10,
-                  }}>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#4285F4' }}>G</Text>
-                  </View>
-                  <Text style={{
-                    color: '#3C4043',
-                    fontFamily: tokens.typography.fonts.bodySemibold,
-                    fontSize: 15,
-                  }}>
-                    تسجيل الدخول بواسطة Google
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+                    borderWidth: 1,
+                    borderColor: '#DADCE0',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                    opacity: (!request || isAnyPending) ? 0.5 : 1,
+                  }}
+                >
+                  {isGooglePending ? (
+                    <ActivityIndicator color="#4285F4" />
+                  ) : (
+                    <>
+                      <View style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 2,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginLeft: 10,
+                      }}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#4285F4' }}>G</Text>
+                      </View>
+                      <Text style={{
+                        color: '#3C4043',
+                        fontFamily: tokens.typography.fonts.bodySemibold,
+                        fontSize: 15,
+                      }}>
+                        تسجيل الدخول بواسطة Google
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
 
             <View className="flex-row justify-center items-center mt-6">
                <Text className="text-muted text-sm font-bodyAr ml-1">ليس لديك حساب؟</Text>

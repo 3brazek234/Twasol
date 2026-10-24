@@ -8,7 +8,8 @@ cache.on('error', (err) => {
   logger.error({ err }, 'Redis cache connection error');
 });
 
-export async function getCached<T>(key: string, fetcher: () => Promise<T>, ttlSeconds = 300): Promise<T> {
+export async function getCached<T>(key: string
+, fetcher: () => Promise<T>, ttlSeconds = 300): Promise<T> {
   try {
     const cached = await cache.get(key);
     if (cached) {

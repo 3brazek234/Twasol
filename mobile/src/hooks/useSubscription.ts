@@ -77,12 +77,19 @@ export const useSubscriptionAccess = () => {
   const query = useSubscriptionStatus();
   const status = query.data?.subscriptionStatus ?? user?.subscriptionStatus;
   const expiresAt = query.data?.subscriptionExpiresAt ?? user?.subscriptionExpiresAt;
-  const hasNotExpired = !expiresAt || new Date(expiresAt).getTime() > Date.now();
+  const isActive = query.data?.isActive ?? user?.isActive;
+  const hasActiveSubscription =
+    status === 'NOT_REQUIRED' ||
+    (status === 'ACTIVE' &&
+      isActive === true &&
+      expiresAt !== null &&
+      expiresAt !== undefined &&
+      new Date(expiresAt).getTime() > Date.now());
 
   return {
     ...query,
     hasActiveSubscription:
-      !query.isLoading && !query.isError && status === 'ACTIVE' && hasNotExpired,
+      !query.isLoading && !query.isError && hasActiveSubscription,
     hasPendingPayment:
       query.data?.pendingPayment?.status === 'PENDING' || query.data?.status === 'PENDING',
   };

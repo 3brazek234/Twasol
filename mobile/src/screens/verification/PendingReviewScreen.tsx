@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Text, SafeAreaView } from 'react-native';
+import { AppState, View, Text, SafeAreaView } from 'react-native';
 import { Clock, CheckCircle2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { TouchableOpacity } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { verificationApi } from '../../api/verification.api';
+import { tokens } from '../../theme/tokens';
 
-export const PendingReviewScreen = ({ navigation }: any) => {
+export const PendingReviewScreen = () => {
   const { submitVerification, logout } = useAuthStore();
 
   useEffect(() => {
@@ -21,10 +22,18 @@ export const PendingReviewScreen = ({ navigation }: any) => {
       }
     };
 
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        pollStatus();
+      }
+    });
     const interval = setInterval(pollStatus, 30000); // 30s
     pollStatus(); // Initial check
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      appStateSubscription.remove();
+    };
   }, [submitVerification]);
 
   return (
@@ -53,28 +62,25 @@ export const PendingReviewScreen = ({ navigation }: any) => {
 
         <View className="w-full bg-white rounded-2xl p-8 border border-line gap-6">
           <View className="flex-row-reverse items-center gap-4">
-            <CheckCircle2 size={20} color="#38A169" />
+            <CheckCircle2 size={20} color={tokens.colors.verdant} />
             <Text className="text-sm font-bodyMedium text-ink ">تم رفع مستند الهوية</Text>
           </View>
           <View className="flex-row-reverse items-center gap-4">
-            <Clock size={20} color="#E08A4F" />
+            <Clock size={20} color={tokens.colors.gold} />
             <Text className="text-sm font-bodyMedium text-ink ">بانتظار فحص نقابة المحامين</Text>
           </View>
         </View>
 
-        <View className="flex-row gap-4 mt-8">
-          <TouchableOpacity 
-            className="flex-1 px-6 py-3 rounded-xl bg-signal justify-center items-center" 
-            onPress={() => (navigation as any)?.goBack()}
-          >
-            <Text className="text-white font-bodySemibold">العودة للرئيسية</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            className="px-6 py-3 rounded-xl bg-line/50 justify-center items-center" 
+        <View className="mt-8 items-center">
+          <TouchableOpacity
+            className="px-6 py-3 rounded-xl bg-line/50 justify-center items-center"
             onPress={() => logout()}
           >
             <Text className="text-ink font-bodyMedium">تسجيل الخروج</Text>
           </TouchableOpacity>
+          <Text className="mt-4 text-sm font-body text-muted text-center">
+            يمكنك تسجيل الدخول مجدداً في أي وقت لمتابعة حالة طلبك
+          </Text>
         </View>
       </View>
     </SafeAreaView>

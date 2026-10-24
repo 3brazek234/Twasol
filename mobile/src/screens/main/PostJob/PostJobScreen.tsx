@@ -19,6 +19,21 @@ export const PostJobScreen = ({ navigation }: any) => {
   } = usePostJob();
 
   const onSubmit = (data: any) => {
+    if (!subscription.hasActiveSubscription) {
+      Alert.alert(
+        'يتطلب النشر اشتراكاً فعالاً',
+        'فعّل اشتراكك قبل نشر مهمة جديدة.',
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          {
+            text: 'تفعيل الاشتراك',
+            onPress: () => navigation.navigate('SettingsStack', { screen: 'Subscription' }),
+          },
+        ],
+      );
+      return;
+    }
+
     const formattedAmount = data.salaryMax ? parseFloat(data.salaryMax) : (data.salaryMin ? parseFloat(data.salaryMin) : undefined);
     
     let expiresAt: string | undefined;

@@ -64,6 +64,23 @@ describe('JobsCreationService', () => {
       },
     );
 
+    it('creates jobs for users exempt from subscription requirements', async () => {
+      prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
+      prismaMock.user.findUnique.mockResolvedValue({
+        isActive: true,
+        verificationStatus: 'APPROVED',
+        subscriptionStatus: 'NOT_REQUIRED',
+        subscriptionExpiresAt: null,
+      } as any);
+      prismaMock.job.findFirst.mockResolvedValue(null);
+      const mockJob = { id: 'job-1', status: 'OPEN' };
+      prismaMock.job.create.mockResolvedValue(mockJob as any);
+
+      await expect(
+        JobsCreationService.create('user-1', createJobData),
+      ).resolves.toEqual(mockJob);
+    });
+
     it('creates a job and assigns it if invitedLawyerId is provided', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
       prismaMock.user.findUnique.mockResolvedValue({

@@ -4,6 +4,7 @@ import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
 import { auditLog } from '../../common/utils/audit';
+import { hasSubscriptionAccess } from '../../common/utils/subscription-access';
 
 export class JobsLifecycleService {
   private static assertValidTransition(current: JobStatus, target: JobStatus) {
@@ -25,14 +26,18 @@ export class JobsLifecycleService {
   private static async assertCanApply(jobId: string, lawyerId: string) {
     const user = await prisma.user.findUnique({
       where: { id: lawyerId },
-      select: { isActive: true, verificationStatus: true, subscriptionExpiresAt: true },
+      select: {
+        isActive: true,
+        verificationStatus: true,
+        subscriptionStatus: true,
+        subscriptionExpiresAt: true,
+      },
     });
 
     if (!user?.isActive) throw AppError.forbidden("Account is not active");
     if (user?.verificationStatus !== "APPROVED") throw AppError.forbidden("Account must be verified to apply for jobs");
 
-    const isActiveSub = user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date();
-    if (!isActiveSub) {
+    if (!hasSubscriptionAccess(user)) {
       throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.");
     }
 

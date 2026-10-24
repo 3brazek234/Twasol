@@ -5,6 +5,7 @@ import { useJob, useApplyToJob, useDeclareJobConflict, useTranslateJob, useUpdat
 import { useLawyersAtCourt } from '../../hooks/useCourts';
 import { useLawyerProfile } from '../../hooks/useUsers';
 import { useAuthStore } from '../../stores/authStore';
+import { useSubscriptionAccess } from '../../hooks/useSubscription';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { UserTrustSummary } from '../../components/UserTrustSummary';
 import { tokens } from '../../theme/tokens';
@@ -26,12 +27,12 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const { mutate: translate, isPending: isTranslating } = useTranslateJob();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateJobStatus();
   const { user } = useAuthStore();
+  const subscription = useSubscriptionAccess();
   
   // Backend uses uppercase APPROVED
   const isVerified = (user?.verificationStatus as string) === 'APPROVED';
   const isOwnJob = user?.id === job?.posterId;
-  const isLawyer = user?.accountMode !== 'HIRING';
-  const hasActiveSubscription = user?.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
+  const hasActiveSubscription = subscription.hasActiveSubscription;
 
   const [translatedTitle, setTranslatedTitle] = React.useState<string | null>(null);
   const [translatedDescription, setTranslatedDescription] = React.useState<string | null>(null);
@@ -65,7 +66,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const handleApply = () => {
     if (!jobId) return;
     
-    if (isLawyer && !hasActiveSubscription) {
+    if (!hasActiveSubscription) {
       Alert.alert(
         "يتطلب التقديم اشتراكاً فعالاً",
         "لتقديم عروض على المهام، يجب عليك تفعيل اشتراكك.",
@@ -307,17 +308,17 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
           ) : (
             <TouchableOpacity 
               activeOpacity={0.8}
-              style={[styles.applyButton, ((!isVerified || (isLawyer && !hasActiveSubscription)) || isApplying) && styles.applyButtonDisabled]}
+              style={[styles.applyButton, (!isVerified || isApplying) && styles.applyButtonDisabled]}
               onPress={handleApply}
-              disabled={(!isVerified && !(!isLawyer)) || isApplying}
+              disabled={!isVerified || isApplying}
             >
               {isApplying ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  {(!isLawyer || hasActiveSubscription) ? <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} /> : <AlertTriangle size={18} color="#fff" style={{ marginEnd: 8 }} />}
+                  {hasActiveSubscription ? <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} /> : <AlertTriangle size={18} color="#fff" style={{ marginEnd: 8 }} />}
                   <Text style={styles.applyButtonText}>
-                    {(!isLawyer || hasActiveSubscription) ? 'تقديم عرض تمثيل قانوني' : 'اشترك للتقديم على المهام'}
+                    {hasActiveSubscription ? 'تقديم عرض تمثيل قانوني' : 'اشترك للتقديم على المهام'}
                   </Text>
                 </>
               )}

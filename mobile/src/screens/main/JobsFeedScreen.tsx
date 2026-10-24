@@ -99,6 +99,9 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0 }}
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustContentInsets={false}
           contentContainerStyle={{ paddingHorizontal: 24, alignItems: 'center', gap: 8, flexDirection: 'row' }}
         >
           <TouchableOpacity
@@ -134,7 +137,11 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
       </View>
 
       {isLoading ? (
-        <ScrollView className="pt-4">
+        <ScrollView
+          className="pt-4"
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustContentInsets={false}
+        >
           {[1, 2, 3, 4, 5].map(i => <SkeletonJobCard key={i} />)}
         </ScrollView>
       ) : error ? (
@@ -162,6 +169,8 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
               onApply={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustContentInsets={false}
           contentContainerStyle={{ paddingTop: 16, flexGrow: jobs.length === 0 ? 1 : 0 }}
           scrollEventThrottle={16}
           onEndReached={() => {

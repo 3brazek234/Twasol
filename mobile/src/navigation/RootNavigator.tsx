@@ -10,6 +10,7 @@ import { CompleteProfileScreen } from '../screens/auth/CompleteProfileScreen';
 import { AuthNavigator } from './stacks/AuthNavigator';
 import { VerificationNavigator } from './stacks/VerificationNavigator';
 import { MainNavigator } from './stacks/MainTabNavigator';
+import { OnboardingWalkthroughScreen } from '../screens/main/OnboardingWalkthroughScreen';
 import { SettingsScreen } from '../screens/main/SettingsScreen';
 import { EditProfileScreen } from '../screens/main/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/main/ChangePasswordScreen';
@@ -127,10 +128,6 @@ const linking = {
 };
 
 // ─── Root Navigator ──────────────────────────────────────────────────────────
-// Three-state gate:
-//   1. Not authenticated        → AuthNavigator
-//   2. Authenticated, unverified → VerificationNavigator / PendingReview / Resubmit
-//   3. Verified (APPROVED)       → MainTabNavigator
 
 export const RootNavigator = () => {
   const { isAuthenticated, isLoading, hydrate, user, hasSeenOnboarding } = useAuthStore();
@@ -140,7 +137,6 @@ export const RootNavigator = () => {
     hydrate();
   }, [hydrate]);
 
-  // Loading spinner while auth state hydrates
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tokens.colors.paper }}>
@@ -149,23 +145,21 @@ export const RootNavigator = () => {
     );
   }
 
-  // ── State 1: Not authenticated ──────────────────────────────────────────
-  if (!isAuthenticated) {
+  // Gate 0: authentication
+  if (!isAuthenticated || !user) {
     return (
-      <NavigationContainer linking={linking as any}>
+      <NavigationContainer key="auth">
         <RootStack.Navigator screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="Auth" component={AuthNavigator} />
         </RootStack.Navigator>
       </NavigationContainer>
     );
   }
-  // ── State 2: Authenticated but profile incomplete (Google sign-up) ────
-  //    Google-registered users have no barNumber yet — collect it before
-  //    proceeding to verification. Email/password users skip this gate
-  //    because they always provide barNumber during registration.
-  if (isAuthenticated && user && !user.barNumber) {
+
+  // Gate 1: Google users must complete their bar profile before verification.
+  if (!user.barNumber) {
     return (
-      <NavigationContainer linking={linking as any}>
+      <NavigationContainer key="profile">
         <RootStack.Navigator screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
         </RootStack.Navigator>
@@ -173,16 +167,37 @@ export const RootNavigator = () => {
     );
   }
 
-  // ── State 3: Main App (Verification states handled via Banner) ────────────────────────────
+  // Gate 2: verification. Each state replaces the full navigation tree.
+  if (user.verificationStatus !== 'APPROVED') {
+    const verificationGateKey =
+      user.verificationStatus === 'PENDING'
+        ? 'verification-pending'
+        : user.verificationStatus === 'REJECTED'
+          ? 'verification-rejected'
+          : 'verification-upload';
+
+    return (
+      <NavigationContainer key={verificationGateKey}>
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          {user.verificationStatus === 'PENDING' ? (
+            <RootStack.Screen name="PendingReview" component={PendingReviewScreen} />
+          ) : user.verificationStatus === 'REJECTED' ? (
+            <RootStack.Screen name="Resubmit" component={ResubmitScreen} />
+          ) : (
+            <RootStack.Screen name="Verification" component={VerificationNavigator} />
+          )}
+        </RootStack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  // Gate 3: subscriptions restrict job posting/applying, not app navigation.
   return (
-    <NavigationContainer linking={linking as any}>
+    <NavigationContainer key="main" linking={linking as any}>
       <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainTabs' : 'OnboardingWalkthrough'}>
-        <RootStack.Screen name="OnboardingWalkthrough" component={require('../screens/main/OnboardingWalkthroughScreen').OnboardingWalkthroughScreen} />
+        <RootStack.Screen name="OnboardingWalkthrough" component={OnboardingWalkthroughScreen} />
         <RootStack.Screen name="MainTabs" component={MainNavigator} />
         <RootStack.Screen name="SettingsStack" component={SettingsNavigator} />
-        <RootStack.Screen name="Verification" component={VerificationNavigator} />
-        <RootStack.Screen name="PendingReviewScreenRoot" component={PendingReviewScreen} />
-        <RootStack.Screen name="ResubmitScreenRoot" component={ResubmitScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

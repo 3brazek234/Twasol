@@ -21,6 +21,7 @@ describe("JobsLifecycleService", () => {
       prismaMock.user.findUnique.mockResolvedValue(makeUser({
         isActive: true,
         verificationStatus: "APPROVED",
+        subscriptionStatus: "ACTIVE",
         subscriptionExpiresAt: new Date(Date.now() + 60_000),
       }) as any);
       prismaMock.job.findUnique.mockResolvedValue(job);
@@ -44,6 +45,7 @@ describe("JobsLifecycleService", () => {
       prismaMock.user.findUnique.mockResolvedValue(makeUser({
         isActive: true,
         verificationStatus: "APPROVED",
+        subscriptionStatus: "ACTIVE",
         subscriptionExpiresAt: new Date(Date.now() + 60_000),
       }) as any);
       prismaMock.job.findUnique.mockResolvedValue(job);
@@ -59,6 +61,34 @@ describe("JobsLifecycleService", () => {
         () => JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true),
         "FORBIDDEN",
       );
+      expect(prismaMock.jobApplication.create).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        subscriptionStatus: "PENDING_PAYMENT",
+        subscriptionExpiresAt: null,
+      },
+      {
+        subscriptionStatus: "ACTIVE",
+        subscriptionExpiresAt: new Date(Date.now() - 60_000),
+      },
+    ] as const)("rejects applying without a current subscription: $subscriptionStatus", async ({
+      subscriptionStatus,
+      subscriptionExpiresAt,
+    }) => {
+      prismaMock.user.findUnique.mockResolvedValue(makeUser({
+        isActive: true,
+        verificationStatus: "APPROVED",
+        subscriptionStatus,
+        subscriptionExpiresAt,
+      }) as any);
+
+      await expectAppError(
+        () => JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true),
+        "FORBIDDEN",
+      );
+      expect(prismaMock.job.findUnique).not.toHaveBeenCalled();
       expect(prismaMock.jobApplication.create).not.toHaveBeenCalled();
     });
   });
