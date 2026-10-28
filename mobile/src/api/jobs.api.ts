@@ -8,6 +8,9 @@ const mapJobBackendToFrontend = (job: any): any => ({
   ...job,
   posterId: job.postedByUserId || job.posterId,
   assignedExecutorId: job.assignedLawyerId ?? job.assignedExecutorId ?? null,
+  assignedLawyerName: job.assignedLawyer?.fullName ?? job.assignedLawyerName ?? undefined,
+  conversationId: job.conversationId ?? job.conversations?.[0]?.id ?? null,
+  reviews: Array.isArray(job.reviews) ? job.reviews : [],
   offerAmount: job.offerAmount ? parseFloat(job.offerAmount) : undefined,
   salaryMin: job.salaryMin ? parseFloat(job.salaryMin) : undefined,
   salaryMax: job.salaryMax ? parseFloat(job.salaryMax) : undefined,
@@ -138,12 +141,14 @@ export const fetchMyPostedJobs = async (
     postedJobs = payload.data;
   }
 
+  const totalAll = postedJobs.length;
+
   if (status && status !== 'undefined') {
     postedJobs = postedJobs.filter((job: any) => job.status === status);
   }
 
   return {
     data: postedJobs.map(mapJobBackendToFrontend),
-    meta: { total: postedJobs.length, page: 1, limit: postedJobs.length, pages: 1 },
+    meta: { total: postedJobs.length, totalAll, page: 1, limit: postedJobs.length, pages: 1 } as any,
   };
 };

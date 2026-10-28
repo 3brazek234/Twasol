@@ -18,13 +18,18 @@ export const useGovernorates = () => {
   });
 };
 
-// ─── All Courts (cascading filter) ───────────────────────────────────────────
+// ─── Courts by Governorate (Single Governorate Selection) ────────────────────
 
 export const useAllCourts = (filters?: { type?: CourtType; governorateId?: string }) => {
+  const isCassation = filters?.type === 'CASSATION';
+  const hasGovernorate = Boolean(filters?.governorateId);
+
   return useQuery({
-    queryKey: ['courts', 'all', filters?.type ?? 'none', filters?.governorateId ?? 'none'],
+    queryKey: ['courts', 'by-gov', filters?.governorateId ?? 'none', filters?.type ?? 'all'],
     queryFn: () => getAllCourts(filters),
-    enabled: !!(filters?.type), // only fetch once a type is selected
+    // Never fetch all courts globally — only fetch when a single governorate is selected (or national Cassation)
+    enabled: isCassation || hasGovernorate,
+    staleTime: 1000 * 60 * 5,
   });
 };
 

@@ -30,19 +30,22 @@ export const JobCompletionScreen = ({ route, navigation }: any) => {
   };
 
   const handleReviewSubmit = async () => {
-    if (rating === 0) return;
+    if (rating === 0 || submitReview.isPending) return;
     try {
       await submitReview.mutateAsync({
         jobId,
         revieweeId: posterId,
         rating,
-        comment
+        comment: comment.trim() || undefined,
       });
       setSkipped(false);
       setCurrentStep(3);
-    } catch (err) {
-      setSkipped(false);
-      setCurrentStep(3);
+    } catch (err: any) {
+      // useCreateReview.onError already alerts the user with the backend message.
+      // Ifalready reviewed (409), return to previous screen so they can't submit again.
+      if (err?.response?.status === 409) {
+        navigation.goBack();
+      }
     }
   };
 

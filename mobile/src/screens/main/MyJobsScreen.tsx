@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
@@ -19,7 +20,7 @@ import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 import { CompleteJobModal } from '../../components/jobs/CompleteJobModal';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
-import { Briefcase, Activity, LockKeyhole } from 'lucide-react-native';
+import { Briefcase, Activity, LockKeyhole, Plus } from 'lucide-react-native';
 import { useSubscriptionAccess } from '../../hooks/useSubscription';
 import { SubscriptionAccessCard } from '../../components/SubscriptionAccessCard';
 
@@ -56,9 +57,7 @@ export const MyJobsScreen = () => {
 
   // Tab B - Active Jobs
   const activeJobsQuery = useMyActiveJobs();
-console.log('activeJobsQuery', activeJobsQuery);
-console.log('postedJobsQuery', postedJobsQuery);
-console.log('statusFilter', statusFilter);
+
   const handleCancelJob = (jobId: string) => {
     Alert.alert(
       'إلغاء المهمة',
@@ -87,45 +86,117 @@ console.log('statusFilter', statusFilter);
     );
   };
 
-  const renderPostedJob = ({ item }: { item: any }) => (
-    <JobCard variant="posted"
-      job={item}
-      onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
-      onViewApplications={(id) => navigation.navigate('JobDetail', { jobId: id, initialTab: 'applications' })}
-      onOpenChat={() => navigation.navigate('ChatsTab')}
-      onCancel={handleCancelJob}
-      onComplete={(job) => setCompleteModalJob(job)}
-    />
-  );
+  const renderPostedJob = ({ item }: { item: any }) => {
+    const myReview = Array.isArray(item.reviews)
+      ? item.reviews.find((r: any) => r.reviewerId === user?.id)
+      : undefined;
 
-  const renderActiveJob = ({ item }: { item: any }) => (
-    <JobCard variant="active"
-      job={item}
-      onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
-      onOpenChat={(job) => {
-        if (job.conversationId) {
-          navigation.navigate('Chat', {
-            conversationId: job.conversationId,
-            jobStatus: job.status,
-            jobTitle: job.title,
+    return (
+      <JobCard
+        variant="posted"
+        job={item}
+        hasReviewed={!!myReview}
+        ratingGiven={myReview?.rating}
+        onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
+        onViewApplications={(id) => navigation.navigate('JobDetail', { jobId: id, initialTab: 'applications' })}
+        onOpenChat={(job) => {
+          if (job?.conversationId) {
+            navigation.navigate('Chat', {
+              conversationId: job.conversationId,
+              jobStatus: job.status,
+              jobTitle: job.title,
+            });
+          } else {
+            navigation.navigate('ChatsTab');
+          }
+        }}
+        onCancel={handleCancelJob}
+        onComplete={(job) => setCompleteModalJob(job)}
+        onReview={() => {
+          if (myReview) return;
+          navigation.navigate('PosterReview', {
+            jobId: item.id,
+            jobTitle: item.title,
+            lawyerId: item.assignedExecutorId || item.assignedLawyerId,
+            lawyerName: item.assignedLawyerName || item.assignedLawyer?.fullName,
+            fee: item.agreedSalary || item.salaryMin,
           });
-        }
-      }}
-      onStartJob={handleStartActiveJob}
-    />
-  );
+        }}
+      />
+    );
+  };
+
+  const renderActiveJob = ({ item }: { item: any }) => {
+    const myReview = Array.isArray(item.reviews)
+      ? item.reviews.find((r: any) => r.reviewerId === user?.id)
+      : undefined;
+
+    return (
+      <JobCard
+        variant="active"
+        job={item}
+        hasReviewed={!!myReview}
+        ratingGiven={myReview?.rating}
+        onPress={(id) => navigation.navigate('JobDetail', { jobId: id })}
+        onOpenChat={(job) => {
+          if (job?.conversationId) {
+            navigation.navigate('Chat', {
+              conversationId: job.conversationId,
+              jobStatus: job.status,
+              jobTitle: job.title,
+            });
+          } else {
+            navigation.navigate('ChatsTab');
+          }
+        }}
+        onStartJob={handleStartActiveJob}
+        onReview={() => {
+          if (myReview) return;
+          navigation.navigate('JobCompletion', {
+            jobId: item.id,
+            posterId: item.posterId || item.postedByUserId,
+            posterName: item.posterName || item.poster_name,
+            fee: item.agreedSalary || item.fee,
+          });
+        }}
+      />
+    );
+  };
 
   const postedJobs = postedJobsQuery.data?.pages.flatMap((p: any) => p.data || p) || [];
   const activeJobs = activeJobsQuery.data || [];
 
-  const postedCount = postedJobs.length;
+  const postedCount =
+    (postedJobsQuery.data?.pages?.[0] as any)?.meta?.totalAll ?? postedJobs.length;
   const activeCount = activeJobs.length;
   const openSubscription = () => navigation.navigate('SettingsStack', { screen: 'Subscription' });
 
   return (
-    <View style={{ flex: 1, backgroundColor: tokens.colors.paper, direction: 'rtl' }}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>مهامي</Text>
+        {activeTab === 'posted' && showPosterTab && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
+            style={[styles.postJobBtn, !subscription.hasActiveSubscription && styles.postJobBtnDisabled]}
+            disabled={!subscription.hasActiveSubscription}
+            onPress={() => navigation.navigate('PostJob')}
+            activeOpacity={0.8}
+          >
+            {subscription.hasActiveSubscription ? (
+              <View style={styles.postJobBtnInner}>
+                <Plus size={15} color={tokens.colors.white} strokeWidth={2.5} />
+                <Text style={styles.postJobBtnText}>نشر مهمة جديدة</Text>
+              </View>
+            ) : (
+              <View style={styles.lockedPostLabel}>
+                <LockKeyhole size={14} color={tokens.colors.muted} />
+                <Text style={styles.postJobBtnTextDisabled}>يتطلب اشتراكاً</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       {showPosterTab && !subscription.hasActiveSubscription && (
@@ -145,13 +216,16 @@ console.log('statusFilter', statusFilter);
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'posted' && styles.tabButtonActive]}
             onPress={() => setActiveTab('posted')}
+            activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === 'posted' && styles.tabTextActive]}>
               مهامي المنشورة
             </Text>
             {postedCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{postedCount}</Text>
+              <View style={[styles.badge, activeTab === 'posted' ? styles.badgeActive : styles.badgeInactive]}>
+                <Text style={[styles.badgeText, activeTab === 'posted' ? styles.badgeTextActive : styles.badgeTextInactive]}>
+                  {postedCount}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -159,13 +233,16 @@ console.log('statusFilter', statusFilter);
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'active' && styles.tabButtonActive]}
             onPress={() => setActiveTab('active')}
+            activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
               مهامي الجارية
             </Text>
             {activeCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{activeCount}</Text>
+              <View style={[styles.badge, activeTab === 'active' ? styles.badgeActive : styles.badgeInactive]}>
+                <Text style={[styles.badgeText, activeTab === 'active' ? styles.badgeTextActive : styles.badgeTextInactive]}>
+                  {activeCount}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -175,7 +252,14 @@ console.log('statusFilter', statusFilter);
       {activeTab === 'posted' && showPosterTab && (
         <View style={styles.tabContent}>
           <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              style={styles.filterScroll}
+              contentContainerStyle={styles.filterScrollContent}
+            >
               <FilterChipRow
                 options={FILTER_OPTIONS}
                 selectedValue={statusFilter}
@@ -183,61 +267,50 @@ console.log('statusFilter', statusFilter);
               />
             </ScrollView>
           </View>
-          <View style={styles.postJobBtnContainer}>
-            <TouchableOpacity 
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
-              style={[styles.postJobBtn, !subscription.hasActiveSubscription && styles.postJobBtnDisabled]}
-              disabled={!subscription.hasActiveSubscription}
-              onPress={() => navigation.navigate('PostJob')}
-            >
-              {subscription.hasActiveSubscription
-                ? <Text style={styles.postJobBtnText}>نشر مهمة جديدة +</Text>
-                : (
-                  <View style={styles.lockedPostLabel}>
-                    <LockKeyhole size={16} color={tokens.colors.muted} />
-                    <Text style={styles.postJobBtnTextDisabled}>النشر متاح بعد تفعيل الاشتراك</Text>
-                  </View>
-                )}
-            </TouchableOpacity>
-          </View>
-          
+
           {postedJobsQuery.isLoading ? (
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
+            <ScrollView
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={styles.listContent}
+            >
               {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="posted" />)}
             </ScrollView>
           ) : (
             <FlatList
-            data={postedJobs}
-            keyExtractor={(item) => item.id}
-            renderItem={renderPostedJob}
-            contentContainerStyle={styles.listContent}
-            onEndReached={() => {
-              if (postedJobsQuery.hasNextPage) {
-                postedJobsQuery.fetchNextPage();
-              }
-            }}
-            onEndReachedThreshold={0.5}
-            refreshControl={
-              <RefreshControl
-                refreshing={postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage}
-                onRefresh={() => postedJobsQuery.refetch()}
-              />
-            }
-            ListEmptyComponent={
-              !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
-                <EmptyState
-                  icon={<Briefcase size={48} color={tokens.colors.muted} />}
-                  headline="لا توجد مهام منشورة"
-                  body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل المهام. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي مهام حتى الآن."}
-                  ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة +' : undefined}
-                  onCtaPress={subscription.hasActiveSubscription
-                    ? () => navigation.navigate('PostJob')
-                    : undefined}
+              data={postedJobs}
+              keyExtractor={(item) => item.id}
+              renderItem={renderPostedJob}
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={styles.listContent}
+              onEndReached={() => {
+                if (postedJobsQuery.hasNextPage) {
+                  postedJobsQuery.fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.5}
+              refreshControl={
+                <RefreshControl
+                  refreshing={postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage}
+                  onRefresh={() => postedJobsQuery.refetch()}
+                  tintColor={tokens.colors.gold}
                 />
-              ) : null
-            }
-          />
+              }
+              ListEmptyComponent={
+                !postedJobsQuery.isFetching && !postedJobsQuery.isFetchingNextPage ? (
+                  <EmptyState
+                    icon={<Briefcase size={48} color={tokens.colors.muted} />}
+                    headline="لا توجد مهام منشورة"
+                    body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل المهام. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي مهام مطابقة لهذا التصنيف حتى الآن."}
+                    ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة +' : undefined}
+                    onCtaPress={subscription.hasActiveSubscription
+                      ? () => navigation.navigate('PostJob')
+                      : undefined}
+                  />
+                ) : null
+              }
+            />
           )}
         </View>
       )}
@@ -245,33 +318,40 @@ console.log('statusFilter', statusFilter);
       {activeTab === 'active' && showGigTab && (
         <View style={styles.tabContent}>
           {activeJobsQuery.isLoading ? (
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
+            <ScrollView
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={styles.listContent}
+            >
               {[1, 2, 3].map(i => <JobCardSkeleton key={i} variant="active" />)}
             </ScrollView>
           ) : (
             <FlatList
-            data={activeJobs}
-            keyExtractor={(item) => item.id}
-            renderItem={renderActiveJob}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl
-                refreshing={activeJobsQuery.isFetching}
-                onRefresh={() => activeJobsQuery.refetch()}
-              />
-            }
-            ListEmptyComponent={
-              !activeJobsQuery.isFetching ? (
-                <EmptyState
-                  icon={<Activity size={48} color={tokens.colors.muted} />}
-                  headline="لا توجد مهام نشطة حالياً"
-                  body="استعرض المهام المتاحة للبدء في تلقي العروض."
-                  ctaText="استعرض المهام"
-                  onCtaPress={() => navigation.navigate('JobsTab')}
+              data={activeJobs}
+              keyExtractor={(item) => item.id}
+              renderItem={renderActiveJob}
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl
+                  refreshing={activeJobsQuery.isFetching}
+                  onRefresh={() => activeJobsQuery.refetch()}
+                  tintColor={tokens.colors.gold}
                 />
-              ) : null
-            }
-          />
+              }
+              ListEmptyComponent={
+                !activeJobsQuery.isFetching ? (
+                  <EmptyState
+                    icon={<Activity size={48} color={tokens.colors.muted} />}
+                    headline="لا توجد مهام نشطة حالياً"
+                    body="استعرض المهام المتاحة للبدء في تلقي العروض."
+                    ctaText="استعرض المهام"
+                    onCtaPress={() => navigation.navigate('JobsTab')}
+                  />
+                ) : null
+              }
+            />
           )}
         </View>
       )}
@@ -285,13 +365,13 @@ console.log('statusFilter', statusFilter);
           navigation.navigate('PosterReview', {
             jobId: job.id,
             jobTitle: job.title,
-            lawyerId: job.assignedExecutorId,
-            lawyerName: job.assignedLawyerName,
+            lawyerId: job.assignedExecutorId || job.assignedLawyerId,
+            lawyerName: job.assignedLawyerName || job.assignedLawyer?.fullName,
             fee: job.agreedSalary || job.salaryMin,
           });
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -299,89 +379,105 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.paper,
+    direction: 'rtl',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: 'flex-end',
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontFamily: tokens.typography.fonts.displayBold,
+    fontSize: 24,
+    color: tokens.colors.ink,
+    textAlign: 'right',
   },
   subscriptionCardContainer: {
     paddingHorizontal: 16,
-  },
-  headerTitle: {
-fontFamily: tokens.typography.fonts.displayBold,
- fontSize: 18,
-    fontWeight: tokens.typography.weights.semibold, 
-    color: tokens.colors.ink, 
-    marginHorizontal: tokens.spacing.md + 4, 
-    marginTop: tokens.spacing.xxxl, 
-    marginBottom: tokens.spacing.xs 
+    marginBottom: 8,
   },
   tabBar: {
     flexDirection: 'row',
-    direction: 'rtl',
     backgroundColor: tokens.colors.surface,
     borderRadius: 12,
     padding: 4,
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
   },
   tabButton: {
     flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    borderRadius: 9,
     backgroundColor: 'transparent',
     flexDirection: 'row',
-    direction: 'rtl',
+    gap: 6,
   },
   tabButtonActive: {
     backgroundColor: tokens.colors.navy,
   },
   tabText: {
     fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 14,
     color: tokens.colors.muted,
   },
   tabTextActive: {
-    color: '#FFFFFF',
+    color: tokens.colors.white,
   },
   badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: tokens.colors.gold,
     borderRadius: 10,
-    minWidth: 20,
+    minWidth: 22,
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
+  },
+  badgeActive: {
+    backgroundColor: tokens.colors.gold,
+  },
+  badgeInactive: {
+    backgroundColor: tokens.colors.line,
   },
   badgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: tokens.typography.fonts.bodySemibold,
+  },
+  badgeTextActive: {
+    color: tokens.colors.white,
+  },
+  badgeTextInactive: {
+    color: tokens.colors.slate,
   },
   tabContent: {
     flex: 1,
   },
   filterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 12,
-    height: 40,
   },
-  postJobBtnContainer: {
+  filterScroll: {
+    flexGrow: 0,
+  },
+  filterScrollContent: {
     paddingHorizontal: 16,
-    marginBottom: 12,
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   postJobBtn: {
     backgroundColor: tokens.colors.gold,
     borderRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
+  },
+  postJobBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   postJobBtnDisabled: {
     backgroundColor: tokens.colors.surface,
@@ -389,25 +485,23 @@ fontFamily: tokens.typography.fonts.displayBold,
     borderColor: tokens.colors.line,
   },
   postJobBtnText: {
-    color: '#FFFFFF',
+    color: tokens.colors.white,
     fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: 14,
+    fontSize: 13,
   },
   lockedPostLabel: {
     flexDirection: 'row',
-    direction: 'rtl',
     alignItems: 'center',
     gap: tokens.spacing.xs,
   },
   postJobBtnTextDisabled: {
     color: tokens.colors.muted,
     fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: 14,
+    fontSize: 12,
   },
   listContent: {
-    padding: 16,
-    paddingTop: 0,
-    direction: 'rtl',
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 24,
   },
 });

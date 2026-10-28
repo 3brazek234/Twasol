@@ -38,6 +38,7 @@ interface JobCardProps {
   onStartJob?: (jobId: string) => void;
   onReview?: (jobId: string) => void;
   hasReviewed?: boolean;
+  ratingGiven?: number;
 }
 
 const getStatusFlashColor = (status: string): string => {
@@ -66,15 +67,8 @@ const getStatusAccentColor = (status: string): string => {
 
 const getStatusCardBg = (status: string, variant: string): string => {
   if (variant === "feed" || variant === "compact") return tokens.colors.white;
-  switch (status) {
-    case "NEGOTIATING": return tokens.colors.amberBg;
-    case "AGREED":
-    case "IN_PROGRESS": return tokens.colors.verdantBg;
-    case "COMPLETED": return tokens.colors.slateBg;
-    case "EXPIRED": return tokens.colors.crimsonBg;
-    case "CANCELLED": return tokens.colors.surface;
-    default: return tokens.colors.white;
-  }
+  if (status === "CANCELLED") return tokens.colors.surface;
+  return tokens.colors.white;
 };
 
 const getProgressColor = (p: number): string => {
@@ -98,6 +92,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   onStartJob,
   onReview,
   hasReviewed = false,
+  ratingGiven,
 }) => {
   const isCompact = variant === "compact";
   const isPostedOrActive = variant === "posted" || variant === "active";
@@ -531,7 +526,9 @@ export const JobCard: React.FC<JobCardProps> = ({
             <>
               {hasReviewed ? (
                 <View style={styles.reviewedBadge}>
-                  <Text style={styles.reviewedBadgeText}>تقييمك: ★★★★★</Text>
+                  <Text style={styles.reviewedBadgeText}>
+                    تقييمك: {"★".repeat(ratingGiven || 5)}
+                  </Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -601,7 +598,9 @@ export const JobCard: React.FC<JobCardProps> = ({
             <>
               {hasReviewed ? (
                 <View style={styles.reviewedBadge}>
-                  <Text style={styles.reviewedBadgeText}>تقييمك: ★★★★★</Text>
+                  <Text style={styles.reviewedBadgeText}>
+                    تقييمك: {"★".repeat(ratingGiven || 5)}
+                  </Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -658,7 +657,9 @@ export default React.memo(JobCard, (prev, next) => {
     prev.job.status === next.job.status &&
     prev.job.version === next.job.version &&
     prev.variant === next.variant &&
-    prev.hasReviewed === next.hasReviewed
+    prev.hasReviewed === next.hasReviewed &&
+    prev.ratingGiven === next.ratingGiven &&
+    (prev.job.reviews?.length ?? 0) === (next.job.reviews?.length ?? 0)
   );
 });
 

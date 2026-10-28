@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   FlatList,
   ActivityIndicator,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { tokens } from '../theme/tokens';
-import { Search, MapPin, X, ChevronRight, Check } from 'lucide-react-native';
+import { Search, MapPin, X, ChevronLeft } from 'lucide-react-native';
 import { useGovernorates, useAllCourts, useCourtSearch } from '../hooks/useCourts';
 import { Court, CourtType, Governorate, CourtTypeLabelAr } from '../schemas/court.schema';
 
@@ -19,43 +20,75 @@ interface CourtPickerProps {
   myCourtsIds: string[];
 }
 
+const DEGREE_FILTERS: { value: CourtType | null; label: string }[] = [
+  { value: null,      label: 'الكل' },
+  { value: 'PARTIAL', label: 'جزئي' },
+  { value: 'PRIMARY', label: 'ابتدائي' },
+  { value: 'APPEAL',  label: 'استئناف' },
+];
+
 export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPickerProps) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedType, setSelectedType] = useState<CourtType | null>(null);
+  // Step 1: Select a single Governorate (or Cassation)
+  // Step 2: Browse & filter courts belonging ONLY to that selected Governorate
+  const [step, setStep] = useState<1 | 2>(1);
   const [selectedGov, setSelectedGov] = useState<Governorate | null>(null);
+  const [selectedType, setSelectedType] = useState<CourtType | null>(null);
+  const [isCassationMode, setIsCassationMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Queries
-  const { data: governorates, isLoading: isLoadingGovs } = useGovernorates();
-  const { data: courts, isLoading: isLoadingCourts } = useAllCourts({
-    type: selectedType || undefined,
-    governorateId: selectedGov?.id,
+  // Queries — courts are ONLY fetched once a single governorate is selected (or in Cassation mode)
+  const { data: governorates = [], isLoading: isLoadingGovs } = useGovernorates();
+  const { data: courts = [], isLoading: isLoadingCourts } = useAllCourts({
+    governorateId: isCassationMode ? undefined : selectedGov?.id,
+    type: isCassationMode ? 'CASSATION' : (selectedType || undefined),
   });
-  const { data: searchResults, isLoading: isSearching } = useCourtSearch(searchQuery);
+  const { data: searchResults, isLoading: isSearching } = useCourtSearch(
+    step === 1 ? searchQuery : ''
+  );
 
-  // Derivations
-  const availableCourts = courts?.filter((c) => !myCourtsIds.includes(c.id)) || [];
-  const availableSearchResults = searchResults?.filter((c) => !myCourtsIds.includes(c.id)) || [];
+  // Filter governorates on Step 1 when typing single-char or matching governorate names
+  const filteredGovernorates = useMemo(() => {
+    if (!searchQuery.trim()) return governorates;
+    const q = searchQuery.trim().toLowerCase();
+    return governorates.filter(
+      g => g.nameAr.toLowerCase().includes(q) || g.nameEn.toLowerCase().includes(q)
+    );
+  }, [governorates, searchQuery]);
 
-  const handleSelectType = (type: CourtType) => {
-    setSelectedType(type);
-    if (type === 'CASSATION') {
-      // Cassation skips governorate step
-      setStep(3);
-    } else {
-      setStep(2);
-    }
-  };
+  // Filter courts inside Step 2
+  const availableCourts = useMemo(() => {
+    const base = courts.filter(c => !myCourtsIds.includes(c.id));
+    if (!searchQuery.trim()) return base;
+    const q = searchQuery.trim().toLowerCase();
+    return base.filter(c => c.nameAr.toLowerCase().includes(q));
+  }, [courts, myCourtsIds, searchQuery]);
+
+  const availableSearchResults = useMemo(
+    () => (searchResults || []).filter(c => !myCourtsIds.includes(c.id)),
+    [searchResults, myCourtsIds]
+  );
 
   const handleSelectGov = (gov: Governorate) => {
     setSelectedGov(gov);
-    setStep(3);
+    setIsCassationMode(false);
+    setSelectedType(null);
+    setSearchQuery('');
+    setStep(2);
   };
 
-  const resetFilters = () => {
-    setStep(1);
-    setSelectedType(null);
+  const handleSelectCassation = () => {
     setSelectedGov(null);
+    setIsCassationMode(true);
+    setSelectedType('CASSATION');
+    setSearchQuery('');
+    setStep(2);
+  };
+
+  const handleBackToGovernorates = () => {
+    setStep(1);
+    setSelectedGov(null);
+    setSelectedType(null);
+    setIsCassationMode(false);
     setSearchQuery('');
   };
 
@@ -94,7 +127,11 @@ export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPicker
         <Search size={18} color={tokens.colors.muted} />
         <TextInput
           style={styles.searchInput}
-          placeholder="ابحث عن محكمة..."
+          placeholder={
+            step === 1
+              ? 'ابحث عن المحافظة أو اسم المحكمة...'
+              : `ابحث في محاكم ${selectedGov?.nameAr || 'النقض'}...`
+          }
           placeholderTextColor={tokens.colors.muted}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -107,8 +144,8 @@ export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPicker
         )}
       </View>
 
-      {searchQuery.trim().length >= 2 ? (
-        // Search Results View
+      {step === 1 && searchQuery.trim().length >= 2 && filteredGovernorates.length === 0 ? (
+        // Direct Court Search Results when query doesn't match a governorate name
         <View style={styles.content}>
           <Text style={styles.stepTitle}>نتائج البحث</Text>
           {isSearching ? (
@@ -123,43 +160,38 @@ export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPicker
           )}
         </View>
       ) : (
-        // Browsing Flow
         <View style={styles.content}>
           {step === 1 && (
-            <View>
-              <Text style={styles.stepTitle}>اختر الدرجة القضائية</Text>
-              {(['PARTIAL', 'PRIMARY', 'APPEAL', 'CASSATION'] as CourtType[]).map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  style={styles.optionRow}
-                  onPress={() => handleSelectType(type)}
-                >
-                  <Text style={styles.optionText}>{CourtTypeLabelAr[type]}</Text>
-                  <ChevronRight size={20} color={tokens.colors.muted} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {step === 2 && (
             <View style={{ flex: 1 }}>
-              <TouchableOpacity style={styles.backLink} onPress={() => setStep(1)}>
-                <Text style={styles.backText}>→ رجوع للدرجات</Text>
-              </TouchableOpacity>
               <Text style={styles.stepTitle}>اختر المحافظة</Text>
+
               {isLoadingGovs ? (
                 <ActivityIndicator style={styles.loader} color={tokens.colors.navy} />
               ) : (
                 <FlatList
-                  data={governorates}
+                  data={filteredGovernorates}
                   keyExtractor={(g) => g.id}
+                  showsVerticalScrollIndicator={false}
+                  ListHeaderComponent={
+                    !searchQuery.trim() ? (
+                      <TouchableOpacity
+                        style={[styles.optionRow, styles.cassationOptionRow]}
+                        onPress={handleSelectCassation}
+                      >
+                        <Text style={styles.cassationOptionText}>
+                          المحاكم العليا (محكمة النقض / الإدارية العليا)
+                        </Text>
+                        <ChevronLeft size={20} color={tokens.colors.gold} />
+                      </TouchableOpacity>
+                    ) : null
+                  }
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       style={styles.optionRow}
                       onPress={() => handleSelectGov(item)}
                     >
                       <Text style={styles.optionText}>{item.nameAr}</Text>
-                      <ChevronRight size={20} color={tokens.colors.muted} />
+                      <ChevronLeft size={20} color={tokens.colors.muted} />
                     </TouchableOpacity>
                   )}
                 />
@@ -167,19 +199,47 @@ export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPicker
             </View>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <View style={{ flex: 1 }}>
               <TouchableOpacity
                 style={styles.backLink}
-                onPress={() => (selectedType === 'CASSATION' ? setStep(1) : setStep(2))}
+                onPress={handleBackToGovernorates}
               >
-                <Text style={styles.backText}>→ رجوع للمحافظات</Text>
+                <Text style={styles.backText}>→ تغيير المحافظة</Text>
               </TouchableOpacity>
+
               <Text style={styles.stepTitle}>
-                {selectedType === 'CASSATION'
-                  ? 'محكمة النقض'
-                  : `محاكم ${selectedGov?.nameAr || ''} (${CourtTypeLabelAr[selectedType!]})`}
+                {isCassationMode
+                  ? 'المحاكم العليا'
+                  : `محاكم محافظة ${selectedGov?.nameAr || ''}`}
               </Text>
+
+              {!isCassationMode && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentInsetAdjustmentBehavior="never"
+                  automaticallyAdjustContentInsets={false}
+                  style={styles.degreeScroll}
+                  contentContainerStyle={styles.degreeChipsRow}
+                >
+                  {DEGREE_FILTERS.map((deg) => {
+                    const isActive = selectedType === deg.value;
+                    return (
+                      <TouchableOpacity
+                        key={deg.value ?? 'ALL'}
+                        style={[styles.degreeChip, isActive && styles.degreeChipActive]}
+                        onPress={() => setSelectedType(deg.value)}
+                      >
+                        <Text style={[styles.degreeChipText, isActive && styles.degreeChipTextActive]}>
+                          {deg.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
               {isLoadingCourts ? (
                 <ActivityIndicator style={styles.loader} color={tokens.colors.navy} />
               ) : (
@@ -187,11 +247,12 @@ export const CourtPicker = ({ onSelectCourt, onClose, myCourtsIds }: CourtPicker
                   data={availableCourts}
                   keyExtractor={(c) => c.id}
                   renderItem={renderCourtItem}
+                  showsVerticalScrollIndicator={false}
                   ListEmptyComponent={
                     <Text style={styles.emptyText}>
                       {!courts || courts.length === 0
                         ? 'لا توجد محاكم مسجلة في هذا النطاق حالياً'
-                        : 'جميع محاكم هذه الدرجة مضافة مسبقاً'}
+                        : 'جميع محاكم هذا النطاق مضافة مسبقاً'}
                     </Text>
                   }
                 />
@@ -208,6 +269,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.paper,
+    direction: 'rtl',
   },
   header: {
     flexDirection: 'row',
@@ -251,11 +313,12 @@ const styles = StyleSheet.create({
     fontFamily: tokens.typography.fonts.displayBold,
     fontSize: tokens.typography.sizes.lg,
     color: tokens.colors.navy,
-    marginBottom: tokens.spacing.md,
+    marginBottom: tokens.spacing.sm,
+    textAlign: 'right',
   },
   backLink: {
-    marginBottom: tokens.spacing.sm,
-    alignSelf: 'flex-end',
+    marginBottom: tokens.spacing.xs,
+    alignSelf: 'flex-start',
   },
   backText: {
     fontFamily: tokens.typography.fonts.bodySemibold,
@@ -270,10 +333,51 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: tokens.colors.line,
   },
+  cassationOptionRow: {
+    backgroundColor: tokens.colors.white,
+    paddingHorizontal: tokens.spacing.md,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.gold,
+    marginBottom: tokens.spacing.xs,
+  },
+  cassationOptionText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.base,
+    color: tokens.colors.navy,
+  },
   optionText: {
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: tokens.typography.sizes.base,
     color: tokens.colors.ink,
+  },
+  degreeScroll: {
+    flexGrow: 0,
+    marginBottom: tokens.spacing.md,
+  },
+  degreeChipsRow: {
+    flexDirection: 'row',
+    gap: tokens.spacing.xs,
+  },
+  degreeChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: tokens.colors.line,
+    backgroundColor: tokens.colors.white,
+  },
+  degreeChipActive: {
+    backgroundColor: tokens.colors.navy,
+    borderColor: tokens.colors.navy,
+  },
+  degreeChipText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    color: tokens.colors.muted,
+  },
+  degreeChipTextActive: {
+    color: tokens.colors.white,
   },
   loader: {
     marginTop: tokens.spacing.xl,
@@ -318,13 +422,13 @@ const styles = StyleSheet.create({
     color: tokens.colors.paper,
   },
   locationRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   courtLocation: {
     fontFamily: tokens.typography.fonts.body,
     fontSize: tokens.typography.sizes.sm,
     color: tokens.colors.muted,
-    marginEnd: 4,
   },
 });

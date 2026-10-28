@@ -103,6 +103,7 @@ export class JobsQueryService {
         applications: { include: { lawyer: { select: SAFE_USER_SELECT } } },
         postedBy: { select: SAFE_USER_SELECT },
         assignedLawyer: { select: SAFE_USER_SELECT },
+        reviews: { select: { id: true, reviewerId: true, rating: true, comment: true } },
       },
     });
     if (!job) throw AppError.notFound("Job");
@@ -113,15 +114,22 @@ export class JobsQueryService {
     const [posted, assigned] = await Promise.all([
       prisma.job.findMany({ 
         where: { postedByUserId: userId },
+        orderBy: { createdAt: 'desc' },
         include: {
           applications: { select: { id: true, status: true } },
           court: true,
           // Gap 3: expose hired lawyer name for AGREED/IN_PROGRESS posted cards
           assignedLawyer: { select: { fullName: true } },
+          conversations: { select: { id: true } },
+          reviews: { select: { id: true, reviewerId: true, rating: true, comment: true } },
         }
       }),
       prisma.job.findMany({
         where: { assignedLawyerId: userId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reviews: { select: { id: true, reviewerId: true, rating: true, comment: true } },
+        }
       }),
     ]);
     return { posted, assigned };
@@ -152,7 +160,8 @@ export class JobsQueryService {
         postedBy: { select: { fullName: true } },
         court: { select: { nameAr: true, governorate: true } },
         conversations: { select: { id: true } },
-        assignedLawyer: { select: { fullName: true } }
+        assignedLawyer: { select: { fullName: true } },
+        reviews: { select: { id: true, reviewerId: true, rating: true, comment: true } },
       },
       orderBy: { expiresAt: 'asc' }
     });
@@ -173,6 +182,7 @@ export class JobsQueryService {
         court_name: j.court?.nameAr || 'Unknown',
         court_governorate: j.court?.governorate?.nameAr || 'Unknown',
         conversationId: j.conversations[0]?.id || null,
+        reviews: j.reviews || [],
         // Gap 4: elapsed-time calculation needs the start timestamp
         agreedAt: j.agreedAt ?? null,
         // Gap 5: fee strike-through needs the original asking fee

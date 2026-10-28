@@ -1,19 +1,21 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, TextInput } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { MotiView } from 'moti';
 import { tokens } from '../../../theme/tokens';
-import { Landmark, Check } from 'lucide-react-native';
-import { useAllCourts } from '../../../hooks/useCourts';
+import { Landmark, MapPin, ChevronDown, Search, Check } from 'lucide-react-native';
+import { useAllCourts, useGovernorates } from '../../../hooks/useCourts';
+import { useAuthStore } from '../../../stores/authStore';
 import { SelectedCourt } from './usePostJob';
 import { CourtRow } from '../../../components/courts/CourtRow';
 
 type CourtType = 'PARTIAL' | 'PRIMARY' | 'APPEAL' | 'CASSATION';
 
-const COURT_LEVELS: { value: CourtType; label: string; description: string }[] = [
-  { value: 'CASSATION', label: 'نقض',     description: 'المحكمة العليا — مستوى وطني' },
-  { value: 'APPEAL',    label: 'استئناف', description: 'محاكم الدرجة الثانية' },
-  { value: 'PRIMARY',   label: 'ابتدائي', description: 'محاكم الدرجة الأولى' },
-  { value: 'PARTIAL',   label: 'جزئي',   description: 'محاكم جزئية' },
+const COURT_LEVELS: { value: CourtType | null; label: string }[] = [
+  { value: null,        label: 'الكل' },
+  { value: 'PARTIAL',   label: 'جزئي' },
+  { value: 'PRIMARY',   label: 'ابتدائي' },
+  { value: 'APPEAL',    label: 'استئناف' },
+  { value: 'CASSATION', label: 'نقض / عليا' },
 ];
 
 interface Props {
@@ -27,29 +29,30 @@ export const PostJobStepCourts: React.FC<Props> = ({
   onCourtSelected,
   errors,
 }) => {
-  const [selectedLevel, setSelectedLevel] = useState<CourtType | null>(
-    selectedCourt?.type ?? null
+  const { user } = useAuthStore();
+  const { data: governorates = [], isLoading: isLoadingGovs } = useGovernorates();
+
+  const [selectedGovId, setSelectedGovId] = useState<string | null>(
+    selectedCourt?.governorateId ?? (user as any)?.governorateId ?? null
   );
+  const [isPickingGov, setIsPickingGov] = useState<boolean>(
+    !(selectedCourt?.governorateId ?? (user as any)?.governorateId)
+  );
+  const [govSearchQuery, setGovSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<CourtType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCourts, setExpandedCourts] = useState<Set<string>>(new Set());
 
-  const { data: courts = [], isFetching: isLoading } = useAllCourts({
+  const selectedGov = useMemo(
+    () => governorates.find(g => g.id === selectedGovId) || null,
+    [governorates, selectedGovId]
+  );
+
+  // Only fetches courts once a single governorate is selected (or when CASSATION is selected)
+  const { data: courts = [], isFetching: isLoadingCourts } = useAllCourts({
+    governorateId: selectedLevel === 'CASSATION' ? undefined : (selectedGovId || undefined),
     type: selectedLevel || undefined,
   });
-
-  const handleLevelSelect = (level: CourtType) => {
-    setSelectedLevel(level);
-    setSearchQuery('');
-    setExpandedCourts(new Set()); // Reset expanded on tab switch
-    
-    // If cassation, auto-select it if we already fetched it
-    if (level === 'CASSATION') {
-      const cassationCourt = courts.find(c => c.type === 'CASSATION');
-      if (cassationCourt) {
-        onCourtSelected(cassationCourt);
-      }
-    }
-  };
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedCourts(prev => {
@@ -60,28 +63,43 @@ export const PostJobStepCourts: React.FC<Props> = ({
     });
   }, []);
 
-  // Filter courts by search query
-  const filteredCourts = courts.filter(court => 
-    court.nameAr.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (court.governorate?.nameAr || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredGovernorates = useMemo(() => {
+    if (!govSearchQuery.trim()) return governorates;
+    const q = govSearchQuery.trim().toLowerCase();
+    return governorates.filter(
+      g => g.nameAr.toLowerCase().includes(q) || g.nameEn.toLowerCase().includes(q)
+    );
+  }, [governorates, govSearchQuery]);
 
-  // Auto-select when Cassation chosen (only 1 court exists)
-  useEffect(() => {
-    if (selectedLevel === 'CASSATION' && courts.length === 1 && !selectedCourt) {
-      onCourtSelected({
-        id: courts[0].id,
-        nameAr: courts[0].nameAr,
-        type: 'CASSATION',
-        cityAr: courts[0].governorate?.nameAr,
-      });
+  const filteredCourts = useMemo(() => {
+    if (!searchQuery.trim()) return courts;
+    const q = searchQuery.trim().toLowerCase();
+    return courts.filter(court =>
+      court.nameAr.toLowerCase().includes(q) ||
+      (court.governorate?.nameAr || '').toLowerCase().includes(q)
+    );
+  }, [courts, searchQuery]);
+
+  const handleSelectGovernorate = (govId: string) => {
+    setSelectedGovId(govId);
+    setIsPickingGov(false);
+    setGovSearchQuery('');
+    setSearchQuery('');
+    setExpandedCourts(new Set());
+    if (selectedLevel === 'CASSATION') {
+      setSelectedLevel(null);
     }
-  }, [selectedLevel, courts]);
+  };
 
-  const handleLevelPress = (level: CourtType) => {
-    if (selectedLevel === level) return;
+  const handleLevelPress = (level: CourtType | null) => {
     setSelectedLevel(level);
     setSearchQuery('');
+    setExpandedCourts(new Set());
+    if (level === 'CASSATION') {
+      setIsPickingGov(false);
+    } else if (!selectedGovId) {
+      setIsPickingGov(true);
+    }
   };
 
   const handleCourtPress = (court: any) => {
@@ -90,8 +108,11 @@ export const PostJobStepCourts: React.FC<Props> = ({
       nameAr: court.nameAr,
       type: court.type,
       cityAr: court.governorate?.nameAr,
+      governorateId: court.governorateId || selectedGovId || undefined,
     });
   };
+
+  const canShowCourts = selectedLevel === 'CASSATION' || (Boolean(selectedGovId) && !isPickingGov);
 
   return (
     <MotiView
@@ -100,97 +121,135 @@ export const PostJobStepCourts: React.FC<Props> = ({
       exit={{ opacity: 0, translateX: -50 }}
       style={styles.stepContent}
     >
-      {/* ─── Step 1: Court Level ─── */}
-      <Text style={styles.sectionLabel}>الخطوة ١: اختر درجة المحكمة</Text>
-      <View style={styles.levelRow}>
-        {COURT_LEVELS.map(level => (
-          <TouchableOpacity
-            key={level.value}
-            style={[
-              styles.levelChip,
-              selectedLevel === level.value && styles.levelChipActive,
-            ]}
-            onPress={() => handleLevelPress(level.value)}
-          >
-            <Text style={[
-              styles.levelChipText,
-              selectedLevel === level.value && styles.levelChipTextActive,
-            ]}>
-              {level.label}
-            </Text>
-            <Text style={[
-              styles.levelChipDesc,
-              selectedLevel === level.value && styles.levelChipDescActive,
-            ]}>
-              {level.description}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* ─── Step 1: Single Governorate Selection ─── */}
+      <Text style={styles.sectionLabel}>الخطوة ١: اختر المحافظة</Text>
 
-      {/* ─── Step 2: Specific Court ─── */}
-      {selectedLevel !== null && (
+      {selectedGov && !isPickingGov && selectedLevel !== 'CASSATION' ? (
+        <TouchableOpacity
+          style={styles.selectedGovBar}
+          onPress={() => setIsPickingGov(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.selectedGovInfo}>
+            <MapPin size={18} color={tokens.colors.gold} />
+            <Text style={styles.selectedGovName}>محافظة {selectedGov.nameAr}</Text>
+          </View>
+          <View style={styles.changeGovBtn}>
+            <Text style={styles.changeGovText}>تغيير المحافظة</Text>
+            <ChevronDown size={16} color={tokens.colors.navy} />
+          </View>
+        </TouchableOpacity>
+      ) : null}
+
+      {(isPickingGov || (!selectedGovId && selectedLevel !== 'CASSATION')) && (
+        <View style={styles.govPickerBox}>
+          <View style={styles.searchContainer}>
+            <Search size={16} color={tokens.colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="ابحث عن المحافظة..."
+              placeholderTextColor={tokens.colors.muted}
+              value={govSearchQuery}
+              onChangeText={setGovSearchQuery}
+            />
+          </View>
+
+          {isLoadingGovs ? (
+            <ActivityIndicator color={tokens.colors.navy} style={{ marginVertical: tokens.spacing.lg }} />
+          ) : (
+            <View style={styles.govChipsGrid}>
+              {filteredGovernorates.map(gov => {
+                const isSelected = gov.id === selectedGovId;
+                return (
+                  <TouchableOpacity
+                    key={gov.id}
+                    style={[styles.govChip, isSelected && styles.govChipActive]}
+                    onPress={() => handleSelectGovernorate(gov.id)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.govChipText, isSelected && styles.govChipTextActive]}>
+                      {gov.nameAr}
+                    </Text>
+                    {isSelected && <Check size={14} color={tokens.colors.white} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* ─── Step 2: Court Level Filter & Court List for Selected Governorate ─── */}
+      {canShowCourts && (
         <>
-          <Text style={styles.sectionLabel}>الخطوة ٢: اختر المحكمة المختصة</Text>
+          <Text style={styles.sectionLabel}>الخطوة ٢: اختر درجة المحكمة والمحكمة المختصة</Text>
 
-          {/* Search Bar for long lists (Partial/Primary/Appeal) */}
-          {selectedLevel !== 'CASSATION' && (
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="ابحث عن اسم المحكمة أو المحافظة..."
-                placeholderTextColor={tokens.colors.muted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-          )}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentInsetAdjustmentBehavior="never"
+            automaticallyAdjustContentInsets={false}
+            style={styles.levelScroll}
+            contentContainerStyle={styles.levelRow}
+          >
+            {COURT_LEVELS.map(level => {
+              const isActive = selectedLevel === level.value;
+              return (
+                <TouchableOpacity
+                  key={level.value ?? 'ALL'}
+                  style={[styles.levelChip, isActive && styles.levelChipActive]}
+                  onPress={() => handleLevelPress(level.value)}
+                >
+                  <Text style={[styles.levelChipText, isActive && styles.levelChipTextActive]}>
+                    {level.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-          {/* Cassation: auto-selected banner */}
-          {selectedLevel === 'CASSATION' && courts.length === 1 && (
-            <View style={styles.autoSelectedBanner}>
-              <View style={styles.autoSelectedIconWrapper}>
-                <Check size={20} color={tokens.colors.signal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.autoSelectedName}>{courts[0].nameAr}</Text>
-                <Text style={styles.autoSelectedNote}>
-                  محكمة النقض هي المحكمة الوحيدة على مستوى الجمهورية
-                </Text>
-              </View>
-            </View>
-          )}
+          <View style={styles.searchContainer}>
+            <Search size={16} color={tokens.colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={
+                selectedLevel === 'CASSATION'
+                  ? 'ابحث في المحاكم العليا...'
+                  : `ابحث في محاكم ${selectedGov?.nameAr || ''}...`
+              }
+              placeholderTextColor={tokens.colors.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
 
-          {/* Appeal / Primary / Partial: scrollable list */}
-          {selectedLevel !== 'CASSATION' && (
-            <>
-              {isLoading ? (
-                <ActivityIndicator
-                  size="large"
-                  color={tokens.colors.signal}
-                  style={{ marginTop: tokens.spacing.xl }}
-                />
-              ) : filteredCourts.length === 0 ? (
-                <Text style={styles.emptyText}>لا توجد محاكم مطابقة للبحث</Text>
-              ) : (
-                <FlatList
-                  data={filteredCourts}
-                  keyExtractor={item => item.id}
-                  contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
-                  showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }}
-                  renderItem={({ item }) => (
-                    <CourtRow
-                      item={item as any}
-                      isSelected={selectedCourt?.id === item.id}
-                      isExpanded={expandedCourts.has(item.id)}
-                      onSelect={handleCourtPress}
-                      onToggleExpand={toggleExpand}
-                    />
-                  )}
+          {isLoadingCourts ? (
+            <ActivityIndicator
+              size="large"
+              color={tokens.colors.signal}
+              style={{ marginTop: tokens.spacing.xl }}
+            />
+          ) : filteredCourts.length === 0 ? (
+            <Text style={styles.emptyText}>لا توجد محاكم مطابقة في هذا النطاق</Text>
+          ) : (
+            <FlatList
+              data={filteredCourts}
+              keyExtractor={item => item.id}
+              contentInsetAdjustmentBehavior="never"
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+              renderItem={({ item }) => (
+                <CourtRow
+                  item={item as any}
+                  isSelected={selectedCourt?.id === item.id}
+                  isExpanded={expandedCourts.has(item.id)}
+                  onSelect={handleCourtPress}
+                  onToggleExpand={toggleExpand}
                 />
               )}
-            </>
+            />
           )}
         </>
       )}
@@ -219,80 +278,116 @@ const styles = StyleSheet.create({
   stepContent: {
     flex: 1,
     minHeight: 400,
+    direction: 'rtl',
   },
   sectionLabel: {
     fontFamily: tokens.typography.fonts.bodySemibold,
     fontSize: 14,
     color: colors.ink,
     marginBottom: spacing.sm,
+    textAlign: 'right',
+  },
+  selectedGovBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    marginBottom: spacing.md,
+  },
+  selectedGovInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  selectedGovName: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 15,
+    color: colors.navy,
+  },
+  changeGovBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  changeGovText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 12,
+    color: colors.navy,
+  },
+  govPickerBox: {
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  govChipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  govChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.paper,
+  },
+  govChipActive: {
+    backgroundColor: colors.navy,
+    borderColor: colors.navy,
+  },
+  govChipText: {
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  govChipTextActive: {
+    color: colors.white,
+  },
+  levelScroll: {
+    flexGrow: 0,
+    marginBottom: spacing.sm,
   },
   levelRow: {
     flexDirection: 'row',
     gap: spacing.xs,
-    marginBottom: spacing.lg,
   },
   levelChip: {
-    flex: 1,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
+    borderRadius: radius.pill,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     alignItems: 'center',
-    backgroundColor: colors.paper,
+    justifyContent: 'center',
+    backgroundColor: colors.white,
   },
   levelChipActive: {
-    borderColor: colors.signal,
-    backgroundColor: colors.signal + '12',
+    borderColor: colors.navy,
+    backgroundColor: colors.navy,
   },
   levelChipText: {
     fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.muted,
-    textAlign: 'center',
   },
   levelChipTextActive: {
-    color: colors.signal,
-  },
-  levelChipDesc: {
-    fontFamily: tokens.typography.fonts.body,
-    fontSize: 10,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  levelChipDescActive: {
-    color: colors.signal,
-  },
-  autoSelectedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.signal + '12',
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.signal + '40',
-    marginBottom: spacing.lg,
-  },
-  autoSelectedIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.signal + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  autoSelectedName: {
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    fontSize: 16,
-    color: colors.ink,
-  },
-  autoSelectedNote: {
-    fontFamily: tokens.typography.fonts.body,
-    fontSize: 12,
-    color: colors.muted,
-    marginTop: 2,
+    color: colors.white,
   },
   emptyText: {
     fontFamily: tokens.typography.fonts.body,
@@ -301,60 +396,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.xl,
   },
-  courtRow: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.paper,
-    marginBottom: spacing.xs,
-  },
-  courtRowSelected: {
-    borderColor: colors.signal,
-    backgroundColor: colors.signal + '08',
-  },
-  courtRowRadio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.muted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  courtRowRadioSelected: {
-    borderColor: colors.signal,
-  },
-  courtRowRadioDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.signal,
-  },
-  courtRowText: {
-    flex: 1,
-  },
-  courtName: {
-    fontFamily: tokens.typography.fonts.bodyMedium,
-    fontSize: 14,
-    color: colors.ink,
-  },
-  courtNameSelected: {
-    fontFamily: tokens.typography.fonts.bodySemibold,
-    color: colors.signal,
-  },
-  courtCity: {
-    fontFamily: tokens.typography.fonts.body,
-    fontSize: 12,
-    color: colors.muted,
-    marginTop: 2,
-  },
-  searchContainer: {
-    marginBottom: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
     backgroundColor: colors.paper,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -362,10 +408,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   searchInput: {
+    flex: 1,
     fontFamily: tokens.typography.fonts.body,
     fontSize: 14,
     color: colors.ink,
-    height: 44,
+    height: 42,
     textAlign: 'right',
   },
   errorText: {

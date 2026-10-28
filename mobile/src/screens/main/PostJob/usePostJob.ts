@@ -3,7 +3,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateJob } from '../../../hooks/useJobs';
-import { useAllCourts } from '../../../hooks/useCourts';
 
 type CourtType = 'PARTIAL' | 'PRIMARY' | 'APPEAL' | 'CASSATION';
 
@@ -12,6 +11,7 @@ export interface SelectedCourt {
   nameAr: string;
   type: CourtType;
   cityAr?: string;
+  governorateId?: string;
 }
 
 export const postJobSchema = z.object({

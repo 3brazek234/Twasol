@@ -32,7 +32,7 @@ export const PosterReviewScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (rating === 0) return;
+    if (rating === 0 || isSubmitting || submitReview.isPending) return;
     
     setIsSubmitting(true);
     try {
@@ -45,8 +45,11 @@ export const PosterReviewScreen = () => {
       Alert.alert('شكراً', 'تم تسجيل تقييمك بنجاح', [
         { text: 'حسناً', onPress: () => navigation.goBack() }
       ]);
-    } catch (error) {
-      Alert.alert('خطأ', 'حدث خطأ أثناء إرسال التقييم');
+    } catch (error: any) {
+      // useCreateReview.onError already shows the specific error alert.
+      if (error?.response?.status === 409) {
+        navigation.goBack();
+      }
     } finally {
       setIsSubmitting(false);
     }
