@@ -18,7 +18,7 @@ export class UploadsService {
     }
 
     const key = `conversations/${conversationId}/attachments/${Date.now()}_${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const uploadUrlPayload = await generateUploadUrl(key, fileType);
+    const uploadUrlPayload = await generateUploadUrl(key, fileType, 'NEGOTIATION_ATTACHMENT');
 
     let publicUrl = '';
     try {

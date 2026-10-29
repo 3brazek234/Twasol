@@ -3,7 +3,7 @@ import { ChatMessagesService } from './chat.messages.service';
 import { ChatInquiryService } from './chat.inquiry.service';
 
 export class ChatService {
-  static getOrCreateConversation = ChatConversationsService.getOrCreateConversation;
+  static getOrCreateDirectInquiryConversation = ChatConversationsService.getOrCreateDirectInquiryConversation;
   static getMyConversations = ChatConversationsService.getMyConversations;
   
   static sendMessage = ChatMessagesService.sendMessage;
@@ -12,5 +12,5 @@ export class ChatService {
   static getMessages = ChatMessagesService.getMessages;
   
   static createDirectInquiry = ChatInquiryService.createDirectInquiry;
-  static convertDirectInquiryToJob = ChatInquiryService.convertDirectInquiryToJob;
 }
+

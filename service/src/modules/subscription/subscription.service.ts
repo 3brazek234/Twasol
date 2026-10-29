@@ -89,13 +89,8 @@ export class SubscriptionService {
 
   // ─── طلب رابط رفع الإيصال ──────────────────────────────────────────────────
   static async getReceiptUploadUrl(userId: string, contentType: string) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-    if (!allowedTypes.includes(contentType)) {
-      throw AppError.badRequest('نوع الملف غير مدعوم. الأنواع المقبولة: صورة (JPEG/PNG) أو ملف PDF');
-    }
-
     const key = `subscription-receipts/${userId}/${Date.now()}`;
-    const uploadUrl = await generateUploadUrl(key, contentType);
+    const uploadUrl = await generateUploadUrl(key, contentType, 'SUBSCRIPTION_RECEIPT');
     return { uploadUrl, fileKey: key };
   }
 

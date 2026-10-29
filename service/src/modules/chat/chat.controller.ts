@@ -50,20 +50,6 @@ export class ChatController {
     }
   }
 
-  static async convertToJob(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await ChatService.convertDirectInquiryToJob(
-        req.params.id,
-        req.user!.userId,
-        req.body
-      );
-      res.status(200).json({ success: true, data });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-
   static async sendMessage(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await ChatMessagesService.sendMessage(

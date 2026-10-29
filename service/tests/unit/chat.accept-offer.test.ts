@@ -77,3 +77,73 @@ describe("ChatMessagesService.acceptOffer — lawyer assignment", () => {
     expect(prismaMock.job.updateMany).not.toHaveBeenCalled();
   });
 });
+
+describe("ChatMessagesService.sendMessage — offer guards", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects non-participants before offer checks", async () => {
+    prismaMock.conversation.findUniqueOrThrow.mockResolvedValue({
+      id: conversationId,
+      type: "DIRECT_INQUIRY",
+      jobId: null,
+      participants: [{ id: "p1", conversationId, userId: posterId }],
+    } as any);
+
+    await expectAppError(
+      () => ChatMessagesService.sendMessage(conversationId, "outsider-id", { type: "OFFER", offerAmount: "1000" }),
+      "FORBIDDEN"
+    );
+  });
+
+  it("rejects OFFER in a DIRECT_INQUIRY conversation with 400 OFFER_NOT_ALLOWED_IN_CONVERSATION", async () => {
+    prismaMock.conversation.findUniqueOrThrow.mockResolvedValue({
+      id: conversationId,
+      type: "DIRECT_INQUIRY",
+      jobId: null,
+      participants: [
+        { id: "p1", conversationId, userId: posterId },
+        { id: "p2", conversationId, userId: lawyerId },
+      ],
+    } as any);
+
+    await expectAppError(
+      () => ChatMessagesService.sendMessage(conversationId, lawyerId, { type: "OFFER", offerAmount: "1000" }),
+      "OFFER_NOT_ALLOWED_IN_CONVERSATION"
+    );
+  });
+
+  it("rejects OFFER in a SUPPORT conversation with 400 OFFER_NOT_ALLOWED_IN_CONVERSATION", async () => {
+    prismaMock.conversation.findUniqueOrThrow.mockResolvedValue({
+      id: conversationId,
+      type: "SUPPORT",
+      jobId: null,
+      participants: [{ id: "p1", conversationId, userId: lawyerId }],
+    } as any);
+
+    await expectAppError(
+      () => ChatMessagesService.sendMessage(conversationId, lawyerId, { type: "OFFER", offerAmount: "1000" }),
+      "OFFER_NOT_ALLOWED_IN_CONVERSATION"
+    );
+  });
+
+  it("rejects OFFER on a non-offerable (AGREED/COMPLETED) job with 400 JOB_NOT_OFFERABLE", async () => {
+    prismaMock.conversation.findUniqueOrThrow.mockResolvedValue({
+      id: conversationId,
+      type: "JOB",
+      jobId,
+      participants: [
+        { id: "p1", conversationId, userId: posterId },
+        { id: "p2", conversationId, userId: lawyerId },
+      ],
+    } as any);
+    prismaMock.job.findUnique.mockResolvedValue({ id: jobId, status: "AGREED" } as any);
+
+    await expectAppError(
+      () => ChatMessagesService.sendMessage(conversationId, lawyerId, { type: "OFFER", offerAmount: "1000" }),
+      "JOB_NOT_OFFERABLE"
+    );
+  });
+});
+

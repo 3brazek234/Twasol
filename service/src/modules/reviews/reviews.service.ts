@@ -85,6 +85,11 @@ export class ReviewsService {
       _count: { rating: true }
     });
 
+    // By design:
+    // - EXPIRED jobs count against the assigned lawyer's completionRate (an agreed job that was never completed).
+    // - CANCELLED is excluded because only the poster can cancel a job.
+    // - Jobs with assignedLawyerId must never be created outside the offer-acceptance path
+    //   (the former convertDirectInquiryToJob endpoint was the only such path and has been deleted).
     const jobStats = await prisma.job.groupBy({
       by: ['status'],
       where: {

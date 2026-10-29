@@ -3,7 +3,7 @@ import { authenticate } from '../../common/middleware/authenticate';
 import { validate } from '../../common/middleware/validate';
 import { chatLimiter } from '../../common/middleware/rateLimiter';
 import { ChatController } from './chat.controller';
-import { directInquirySchema, convertToJobSchema } from './chat.schema';
+import { directInquirySchema } from './chat.schema';
 
 const router = Router();
 
@@ -16,7 +16,6 @@ router.post('/messages/:messageId/reject', authenticate, ChatController.rejectOf
 
 router.patch('/:id/messages/read', authenticate, ChatController.markMessagesAsRead);
 router.post('/direct', authenticate, chatLimiter, validate(directInquirySchema, 'body'), ChatController.createDirectInquiry);
-router.post('/:id/convert-to-job', authenticate, validate(convertToJobSchema, 'body'), ChatController.convertToJob);
 router.get('/:id/messages/search', authenticate, ChatController.searchMessages);
 
 

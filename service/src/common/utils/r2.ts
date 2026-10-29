@@ -33,25 +33,58 @@ export async function deleteFromR2(key: string): Promise<void> {
   }
 }
 
-export async function generateUploadUrl(key: string, contentType: string, expiresIn = 300): Promise<string> {
-  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-  if (!ALLOWED_MIME_TYPES.includes(contentType)) {
-    throw AppError.badRequest(`File type not allowed. Allowed types: image/jpeg, image/png, application/pdf`);
+export type UploadPurpose =
+  | 'NEGOTIATION_ATTACHMENT'
+  | 'VERIFICATION_DOCUMENT'
+  | 'SUBSCRIPTION_RECEIPT';
+
+export const UPLOAD_PURPOSE_CONFIG: Record<
+  UploadPurpose,
+  { allowedMimeTypes: readonly string[]; allowedFormats: string }
+> = {
+  NEGOTIATION_ATTACHMENT: {
+    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    allowedFormats: 'jpg,jpeg,png,webp',
+  },
+  VERIFICATION_DOCUMENT: {
+    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'],
+    allowedFormats: 'jpg,jpeg,png,pdf',
+  },
+  SUBSCRIPTION_RECEIPT: {
+    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    allowedFormats: 'jpg,jpeg,png,webp',
+  },
+};
+
+export async function generateUploadUrl(
+  key: string,
+  contentType: string,
+  purpose: UploadPurpose,
+  expiresIn = 300
+): Promise<string> {
+  const purposeConfig = UPLOAD_PURPOSE_CONFIG[purpose];
+  if (!purposeConfig) {
+    throw new AppError('INVALID_UPLOAD_PURPOSE', 400, 'Invalid upload purpose');
   }
 
-  const timestamp = Math.round((new Date).getTime() / 1000);
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_FORMATS = 'jpg,jpeg,png,pdf'; // Server-side enforced by Cloudinary
-  
+  if (!purposeConfig.allowedMimeTypes.includes(contentType)) {
+    throw new AppError(
+      'UNSUPPORTED_FILE_TYPE',
+      400,
+      `File type not allowed for ${purpose}. Allowed types: ${purposeConfig.allowedMimeTypes.join(', ')}`
+    );
+  }
+
+  const timestamp = Math.round(new Date().getTime() / 1000);
   const UPLOAD_PRESET = 'secure_5mb_preset'; // Must be created in Cloudinary Dashboard
 
   const signParams = {
     timestamp: timestamp,
     public_id: key,
     upload_preset: UPLOAD_PRESET, // Enforces settings (like max_file_size) server-side
-    allowed_formats: ALLOWED_FORMATS, // Cloudinary validates file bytes against this list
+    allowed_formats: purposeConfig.allowedFormats, // Cloudinary validates file bytes against this list
   };
-  
+
   const signature = cloudinary.utils.api_sign_request(signParams, process.env.CLOUDINARY_API_SECRET!);
 
   const payload = {
@@ -61,7 +94,7 @@ export async function generateUploadUrl(key: string, contentType: string, expire
     api_key: process.env.CLOUDINARY_API_KEY,
     public_id: key,
     upload_preset: UPLOAD_PRESET,
-    allowed_formats: ALLOWED_FORMATS,
+    allowed_formats: purposeConfig.allowedFormats,
   };
 
   return JSON.stringify(payload);

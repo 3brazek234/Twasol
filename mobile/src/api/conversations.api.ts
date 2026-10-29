@@ -7,7 +7,9 @@ export interface ConversationSummary {
   jobId: string | null;
   jobTitle: string | null;
   jobStatus: string | null;
-  otherPartyName: string;
+  otherPartyId: string | null;
+  otherPartyName: string | null;
+  otherPartyBarNumber?: string | null;
   lastMessage: string | null;
   lastMessageAt: string;
 }

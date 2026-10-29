@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MotiView } from 'moti';
 import { X } from 'lucide-react-native';
@@ -13,6 +13,7 @@ interface ContextualTooltipProps {
   message: string;
   illustration: 'offer' | 'jobs';
   inline?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const ContextualTooltip = ({
@@ -21,6 +22,7 @@ export const ContextualTooltip = ({
   message,
   illustration,
   inline = false,
+  style,
 }: ContextualTooltipProps) => {
   const [visible, setVisible] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -46,7 +48,7 @@ export const ContextualTooltip = ({
   };
 
   return (
-    <View style={styles.anchor}>
+    <View style={[styles.anchor, style]}>
       {visible && (
         <MotiView
           from={reducedMotion ? { opacity: 1, translateY: 0 } : { opacity: 0, translateY: 8 }}

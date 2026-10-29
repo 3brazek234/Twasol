@@ -104,56 +104,85 @@ export class JobsLifecycleService {
       return { application: existingApplication, conversationId: existingConversation?.id ?? null };
     }
 
-    return prisma.$transaction(async (tx) => {
-      const existingDeclaration = await tx.conflictDeclaration.findUnique({
-        where: { jobId_lawyerId: { jobId, lawyerId } },
-      });
-      if (existingDeclaration?.hasConflict) {
-        throw AppError.forbidden("A declared conflict prevents applying to this job");
-      }
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const existingDeclaration = await tx.conflictDeclaration.findUnique({
+          where: { jobId_lawyerId: { jobId, lawyerId } },
+        });
+        if (existingDeclaration?.hasConflict) {
+          throw AppError.forbidden("A declared conflict prevents applying to this job");
+        }
 
-      const declaration = await tx.conflictDeclaration.upsert({
-        where: { jobId_lawyerId: { jobId, lawyerId } },
-        update: { hasConflict: false, ipAddress: ipAddress || null, declaredAt: new Date() },
-        create: { jobId, lawyerId, hasConflict: false, ipAddress: ipAddress || null },
-      });
-      const application = await tx.jobApplication.create({
-        data: { jobId, lawyerId, status: "PENDING" },
-      });
-      await auditLog(
-        tx as any,
-        lawyerId,
-        "job.conflict_check.passed",
-        "ConflictDeclaration",
-        declaration.id,
-        null,
-        { jobId, hasConflict: false },
-      );
+        const declaration = await tx.conflictDeclaration.upsert({
+          where: { jobId_lawyerId: { jobId, lawyerId } },
+          update: { hasConflict: false, ipAddress: ipAddress || null, declaredAt: new Date() },
+          create: { jobId, lawyerId, hasConflict: false, ipAddress: ipAddress || null },
+        });
+        const application = await tx.jobApplication.create({
+          data: { jobId, lawyerId, status: "PENDING" },
+        });
+        await auditLog(
+          tx as any,
+          lawyerId,
+          "job.conflict_check.passed",
+          "ConflictDeclaration",
+          declaration.id,
+          null,
+          { jobId, hasConflict: false },
+        );
 
-      const existingConversation = await tx.conversation.findFirst({
-        where: {
-          jobId,
-          AND: [
-            { participants: { some: { userId: job.postedByUserId } } },
-            { participants: { some: { userId: lawyerId } } },
-          ],
-        },
-      });
-
-      let conversation = existingConversation;
-      if (!conversation) {
-        conversation = await tx.conversation.create({
-          data: {
+        const existingConversation = await tx.conversation.findFirst({
+          where: {
             jobId,
-            participants: {
-              create: [{ userId: job.postedByUserId }, { userId: lawyerId }],
-            },
+            AND: [
+              { participants: { some: { userId: job.postedByUserId } } },
+              { participants: { some: { userId: lawyerId } } },
+            ],
           },
         });
-      }
 
-      return { application, conversationId: conversation.id };
-    });
+        let conversation = existingConversation;
+        if (!conversation) {
+          conversation = await tx.conversation.create({
+            data: {
+              jobId,
+              participants: {
+                create: [{ userId: job.postedByUserId }, { userId: lawyerId }],
+              },
+            },
+          });
+        }
+
+        return { application, conversationId: conversation.id };
+      });
+    } catch (err: any) {
+      const target = err?.meta?.target;
+      const isJobLawyerTarget =
+        (Array.isArray(target) &&
+          target.some((t: string) => t === "jobId" || t === "job_id") &&
+          target.some((t: string) => t === "lawyerId" || t === "lawyer_id")) ||
+        (typeof target === "string" &&
+          (target.includes("jobId_lawyerId") || target.includes("job_id_lawyer_id")));
+
+      if (err?.code === "P2002" && isJobLawyerTarget) {
+        const racedApplication = await prisma.jobApplication.findUnique({
+          where: { jobId_lawyerId: { jobId, lawyerId } },
+        });
+        if (racedApplication) {
+          const racedConversation = await prisma.conversation.findFirst({
+            where: {
+              jobId,
+              AND: [
+                { participants: { some: { userId: job.postedByUserId } } },
+                { participants: { some: { userId: lawyerId } } },
+              ],
+            },
+          });
+          return { application: racedApplication, conversationId: racedConversation?.id ?? null };
+        }
+      }
+      throw err;
+    }
   }
 
   static async startNegotiation(jobId: string, posterId: string) {
@@ -370,46 +399,6 @@ export class JobsLifecycleService {
 
   static async complete(jobId: string, userId: string) {
     return JobsLifecycleService.completeJob(jobId, userId);
-  }
-
-  static async convertInquiryToJob(conversationId: string, posterId: string, data: any) {
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
-      include: { participants: true }
-    });
-    if (!conversation) throw AppError.notFound("Conversation");
-    if (conversation.type !== 'DIRECT_INQUIRY') throw AppError.badRequest("Not a direct inquiry");
-    if (!conversation.participants.some(p => p.userId === posterId)) throw AppError.forbidden();
-
-    const otherParticipant = conversation.participants.find(p => p.userId !== posterId);
-    if (!otherParticipant) throw AppError.badRequest("No other participant");
-
-    return prisma.$transaction(async (tx) => {
-      const job = await tx.job.create({
-        data: {
-          title: data.title,
-          description: data.description,
-          status: 'NEGOTIATING',
-          postedByUserId: posterId,
-          invitedLawyerId: otherParticipant.userId,
-          courtId: data.courtId,
-          salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : null,
-          salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : null,
-          negotiatingSince: new Date(),
-        }
-      });
-
-      await tx.jobApplication.create({
-        data: { jobId: job.id, lawyerId: otherParticipant.userId, status: 'PENDING' }
-      });
-
-      await tx.conversation.update({
-        where: { id: conversationId },
-        data: { type: 'JOB', jobId: job.id }
-      });
-
-      return { job, conversationId };
-    });
   }
   
   static async translate(jobId: string, targetLocale: "EN" | "AR") {

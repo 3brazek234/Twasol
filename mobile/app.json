@@ -56,7 +56,8 @@
         "backgroundColor": "#F9FAFB"
       },
       "package": "com.rebuy.wakeel",
-      "versionCode": 1
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/images-2.jpeg"

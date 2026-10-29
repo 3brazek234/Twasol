@@ -46,10 +46,3 @@ export const directInquirySchema = z.object({
   lawyerId: z.string().uuid(),
 });
 
-export const convertToJobSchema = z.object({
-  title: z.string().min(5).max(100),
-  description: z.string().min(20).max(5000),
-  courtIds: z.array(z.string().uuid()).min(1).max(5),
-  salaryMin: z.number().positive().optional(),
-  salaryMax: z.number().positive().optional(),
-});

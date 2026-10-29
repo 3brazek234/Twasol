@@ -21,7 +21,7 @@ export class VerificationService {
 
     const key = `verification/${userId}/${Date.now()}_${documentType}`;
     const { generateUploadUrl } = await import('../../common/utils/r2');
-    const uploadUrl = await generateUploadUrl(key, contentType);
+    const uploadUrl = await generateUploadUrl(key, contentType, 'VERIFICATION_DOCUMENT');
 
     const document = await prisma.verificationDocument.create({
       data: {

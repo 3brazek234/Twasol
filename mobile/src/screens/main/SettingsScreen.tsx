@@ -168,7 +168,7 @@ export const SettingsScreen = ({ navigation }: any) => {
         <Text style={styles.sectionTitle}>المساعدة والدعم</Text>
         <View style={styles.card}>
           <SettingsRow label="كيف تعمل المنصة؟" onPress={() => navigation.navigate('OnboardingWalkthrough', { fromSettings: true })} />
-          <SettingsRow label="الدعم الفني" onPress={() => navigation.navigate('SettingsStack', { screen: 'SupportChat' })} />
+          <SettingsRow label="الدعم الفني" onPress={() => navigation.navigate('SettingsStack', { screen: 'SupportChat', params: { conversationType: 'SUPPORT', otherPartyName: 'الدعم الفني' } })} />
           <SettingsRow label="التواصل عبر واتساب" onPress={handleContactSupport} />
           <SettingsRow label="شروط الخدمة" onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'terms' } })} />
           <SettingsRow label="سياسة الخصوصية" onPress={() => navigation.navigate('SettingsStack', { screen: 'Legal', params: { type: 'privacy' } })} />

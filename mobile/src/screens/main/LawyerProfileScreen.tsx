@@ -24,24 +24,24 @@ export const LawyerProfileScreen = ({ route, navigation }: any) => {
   });
 
   const handleMessage = async () => {
-    if (!profile) return;
+    if (!profile || loadingMsg) return;
     setLoadingMsg(true);
     try {
-      setTimeout(() => {
-        navigation.navigate("ChatsTab", { 
-          screen: "Chat",
-          params: { 
-            conversationId: "new", 
-            conversationType: "DIRECT_INQUIRY", 
-            otherPartyName: profile.fullName || "محامي",
-            targetUserId: lawyerId
-          }
-        });
-        setLoadingMsg(false);
-      }, 500);
+      const res = await apiClient.post("/conversations/direct", { lawyerId });
+      const conv = res.data;
+      navigation.navigate("ChatsTab", {
+        screen: "Chat",
+        params: {
+          conversationId: conv.id,
+          conversationType: "DIRECT_INQUIRY",
+          otherPartyName: profile.fullName || "محامي",
+          targetUserId: lawyerId,
+        },
+      });
     } catch (err: any) {
+      Alert.alert("خطأ", err.message || "فشل في بدء المحادثة.");
+    } finally {
       setLoadingMsg(false);
-      Alert.alert("خطأ", "فشل في بدء المحادثة.");
     }
   };
 

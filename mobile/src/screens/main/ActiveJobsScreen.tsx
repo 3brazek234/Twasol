@@ -68,7 +68,7 @@ export const ActiveJobsScreen = () => {
         <View style={styles.actions}>
           <TouchableOpacity 
             style={[styles.btn, styles.chatBtn]} 
-            onPress={() => navigation.navigate('Chat', { conversationId: item.conversationId, jobTitle: item.title, otherPartyName: item.poster_name })}
+            onPress={() => navigation.navigate('Chat', { conversationId: item.conversationId, conversationType: 'JOB', jobId: item.id, jobStatus: item.status, jobTitle: item.title, otherPartyName: item.poster_name })}
           >
             <MessageCircle size={18} color="#fff" />
             <Text style={styles.btnText}>فتح المحادثة</Text>

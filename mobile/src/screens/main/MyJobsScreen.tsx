@@ -103,6 +103,8 @@ export const MyJobsScreen = () => {
           if (job?.conversationId) {
             navigation.navigate('Chat', {
               conversationId: job.conversationId,
+              conversationType: 'JOB',
+              jobId: job.id,
               jobStatus: job.status,
               jobTitle: job.title,
             });
@@ -142,6 +144,8 @@ export const MyJobsScreen = () => {
           if (job?.conversationId) {
             navigation.navigate('Chat', {
               conversationId: job.conversationId,
+              conversationType: 'JOB',
+              jobId: job.id,
               jobStatus: job.status,
               jobTitle: job.title,
             });

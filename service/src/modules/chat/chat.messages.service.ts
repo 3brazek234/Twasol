@@ -20,16 +20,22 @@ export class ChatMessagesService {
 
     if (data.type === 'OFFER') {
       if (!data.offerAmount) {
-        throw AppError.badRequest('Offer amount is required for offer messages');
+        throw new AppError('OFFER_AMOUNT_REQUIRED', 400, 'Offer amount is required for offer messages');
       }
-      if (conversation.type === 'SUPPORT') {
-        throw AppError.badRequest('Offers cannot be sent in support conversations.');
+      if (conversation.type !== 'JOB' || !conversation.jobId) {
+        throw new AppError(
+          'OFFER_NOT_ALLOWED_IN_CONVERSATION',
+          400,
+          'Offers can only be sent in job conversations'
+        );
       }
-      if (conversation.jobId) {
-        const job = await prisma.job.findUnique({ where: { id: conversation.jobId } });
-        if (job?.status !== 'NEGOTIATING' && job?.status !== 'OPEN') {
-          throw AppError.badRequest('Offers can only be sent when the job is OPEN or NEGOTIATING');
-        }
+      const job = await prisma.job.findUnique({ where: { id: conversation.jobId } });
+      if (!job || (job.status !== 'NEGOTIATING' && job.status !== 'OPEN')) {
+        throw new AppError(
+          'JOB_NOT_OFFERABLE',
+          400,
+          'Offers can only be sent when the job is OPEN or NEGOTIATING'
+        );
       }
     }
 

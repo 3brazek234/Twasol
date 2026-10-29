@@ -6,45 +6,47 @@ export class SupportController {
   static async createConversation(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.userId;
+      const lockKey = `support:${userId}`;
 
-      // Check if there is already an OPEN support conversation for this user
-      const existing = await prisma.conversation.findFirst({
-        where: {
-          type: 'SUPPORT',
-          supportStatus: 'OPEN',
-          participants: {
-            some: {
-              userId: userId
-            }
-          }
-        },
-        include: {
-          participants: true
+      const { conversation, created } = await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+
+        const existing = await tx.conversation.findFirst({
+          where: {
+            type: 'SUPPORT',
+            supportStatus: 'OPEN',
+            participants: {
+              some: {
+                userId: userId,
+              },
+            },
+          },
+          include: {
+            participants: true,
+          },
+        });
+
+        if (existing) {
+          return { conversation: existing, created: false };
         }
+
+        const newConv = await tx.conversation.create({
+          data: {
+            type: 'SUPPORT',
+            supportStatus: 'OPEN',
+            participants: {
+              create: [{ userId }],
+            },
+          },
+          include: {
+            participants: true,
+          },
+        });
+
+        return { conversation: newConv, created: true };
       });
 
-      if (existing) {
-        res.json({ success: true, data: existing });
-        return;
-      }
-
-      // Create a new support conversation with only the lawyer as a participant
-      const conversation = await prisma.conversation.create({
-        data: {
-          type: 'SUPPORT',
-          supportStatus: 'OPEN',
-          participants: {
-            create: [
-              { userId }
-            ]
-          }
-        },
-        include: {
-          participants: true
-        }
-      });
-
-      res.status(201).json({ success: true, data: conversation });
+      res.status(created ? 201 : 200).json({ success: true, data: conversation });
     } catch (error) {
       next(error);
     }

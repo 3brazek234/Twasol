@@ -93,6 +93,89 @@ describe("JobsLifecycleService", () => {
     });
   });
 
+  describe("apply idempotency (concurrent double submit)", () => {
+    it("returns the same applicationId and conversationId on concurrent P2002 race and creates only one conversation", async () => {
+      const job = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });
+      prismaMock.user.findUnique.mockResolvedValue(makeUser({
+        isActive: true,
+        verificationStatus: "APPROVED",
+        subscriptionStatus: "ACTIVE",
+        subscriptionExpiresAt: new Date(Date.now() + 60_000),
+      }) as any);
+      prismaMock.job.findUnique.mockResolvedValue(job);
+      // Both concurrent calls see null on the pre-transaction check
+      prismaMock.jobApplication.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        // Third call is the post-P2002 fallback outside the transaction
+        .mockResolvedValueOnce({ id: "app-1", jobId, lawyerId, status: "PENDING" } as any);
+
+      prismaMock.conflictDeclaration.findUnique.mockResolvedValue(null);
+      prismaMock.conflictDeclaration.upsert.mockResolvedValue({
+        id: "decl-1",
+        jobId,
+        lawyerId,
+        hasConflict: false,
+      } as any);
+
+      // First call creates the application; second call hits P2002 unique constraint violation on jobId_lawyerId
+      prismaMock.jobApplication.create
+        .mockResolvedValueOnce({ id: "app-1", jobId, lawyerId, status: "PENDING" } as any)
+        .mockRejectedValueOnce(
+          Object.assign(new Error("Unique constraint failed"), {
+            code: "P2002",
+            meta: { target: ["job_id", "lawyer_id"] },
+          })
+        );
+
+      // First call inside tx sees no conversation, creates conv-1; second call's fallback finds conv-1
+      prismaMock.conversation.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: "conv-1", jobId, type: "JOB" } as any);
+      prismaMock.conversation.create.mockResolvedValue({ id: "conv-1", jobId, type: "JOB" } as any);
+
+      const [res1, res2] = await Promise.all([
+        JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true),
+        JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true),
+      ]);
+
+      expect(res1.application.id).toBe("app-1");
+      expect(res2.application.id).toBe("app-1");
+      expect(res1.conversationId).toBe("conv-1");
+      expect(res2.conversationId).toBe("conv-1");
+      expect(prismaMock.conversation.create).toHaveBeenCalledTimes(1);
+    });
+
+    it("rethrows P2002 when meta.target is a different constraint", async () => {
+      const job = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });
+      prismaMock.user.findUnique.mockResolvedValue(makeUser({
+        isActive: true,
+        verificationStatus: "APPROVED",
+        subscriptionStatus: "ACTIVE",
+        subscriptionExpiresAt: new Date(Date.now() + 60_000),
+      }) as any);
+      prismaMock.job.findUnique.mockResolvedValue(job);
+      prismaMock.jobApplication.findUnique.mockResolvedValue(null);
+      prismaMock.conflictDeclaration.findUnique.mockResolvedValue(null);
+      prismaMock.conflictDeclaration.upsert.mockResolvedValue({
+        id: "decl-1",
+        jobId,
+        lawyerId,
+        hasConflict: false,
+      } as any);
+
+      const otherP2002 = Object.assign(new Error("Unique constraint failed on conversation_id_user_id"), {
+        code: "P2002",
+        meta: { target: ["conversation_id", "user_id"] },
+      });
+      prismaMock.jobApplication.create.mockRejectedValueOnce(otherP2002);
+
+      await expect(
+        JobsLifecycleService.apply(jobId, lawyerId, "127.0.0.1", true)
+      ).rejects.toThrow("Unique constraint failed on conversation_id_user_id");
+    });
+  });
+
   describe("startNegotiation", () => {
     it("transitions OPEN -> NEGOTIATING and sets negotiatingSince", async () => {
       const mockJob = makeJob({ id: jobId, postedByUserId: posterId, status: "OPEN" });

@@ -90,7 +90,7 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         if (convId) {
           navigation.navigate('ChatsTab', {
             screen: 'Chat',
-            params: { conversationId: convId, conversationType: 'JOB', jobStatus: job?.status, jobTitle: job?.title },
+            params: { conversationId: convId, conversationType: 'JOB', jobId, jobStatus: job?.status, jobTitle: job?.title },
           });
         } else {
           // convId not returned — go to conversations list as fallback
