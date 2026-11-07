@@ -16,18 +16,30 @@ export const AdminSubscriptionDetailScreen = ({ route, navigation }: any) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const isUserSuspended = Boolean(payment.user?.suspendedAt);
+
   const handleApprove = () => {
+    const confirmMessage = isUserSuspended
+      ? "تنبيه: حساب هذا المحامي موقوف إدارياً حالياً. قبول الإيصال سيفعّل اشتراكه فقط ولن يرفع الإيقاف الإداري عن حسابه. هل تريد المتابعة؟"
+      : "هل أنت متأكد من قبول الإيصال وتفعيل اشتراك المحامي؟";
+
     Alert.alert(
-      "تأكيد הקبول",
-      "هل أنت متأكد من قبول الإيصال وتفعيل اشتراك المحامي؟",
+      "تأكيد القبول",
+      confirmMessage,
       [
         { text: "إلغاء", style: "cancel" },
         { 
           text: "تأكيد", 
           onPress: async () => {
             try {
-              await approve({ paymentId: payment.id });
-              Alert.alert("نجاح", "تم تفعيل الاشتراك بنجاح.");
+              const res: any = await approve({ paymentId: payment.id });
+              const warningMsg = res?.data?.warning || res?.warning;
+              Alert.alert(
+                "نجاح",
+                warningMsg || (isUserSuspended
+                  ? "تم تفعيل الاشتراك، لكن حساب المحامي لا يزال موقوفاً إدارياً."
+                  : "تم تفعيل الاشتراك بنجاح.")
+              );
               navigation.goBack();
             } catch (err) {
               Alert.alert("خطأ", getErrorMessage(err));
@@ -64,6 +76,14 @@ export const AdminSubscriptionDetailScreen = ({ route, navigation }: any) => {
       </View>
 
       <ScreenContainer scroll={true} style={styles.content}>
+        {isUserSuspended && (
+          <View style={styles.suspendedWarningBanner}>
+            <AlertTriangle size={18} color={tokens.colors.docket} />
+            <Text style={styles.suspendedWarningText}>
+              تنبيه: حساب هذا المحامي موقوف إدارياً. قبول الدفع لن يرفع الإيقاف عن الحساب.
+            </Text>
+          </View>
+        )}
         <View style={styles.infoCard}>
           <Text style={styles.label}>الاسم</Text>
           <Text style={styles.value}>{payment.user?.fullName}</Text>
@@ -173,7 +193,25 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, backgroundColor: tokens.colors.white, borderBottomWidth: 1, borderBottomColor: tokens.colors.line },
   backBtn: { padding: 4 },
   headerTitle: { fontFamily: tokens.typography.fonts.displayBold, fontSize: 18, color: tokens.colors.ink },
-  content: { flex: 1, padding: 16 },
+  content: { flex: 1, padding: tokens.spacing.md },
+  suspendedWarningBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: tokens.spacing.xs,
+    backgroundColor: tokens.colors.amberBg,
+    borderWidth: 1,
+    borderColor: tokens.colors.docket,
+    borderRadius: tokens.radius.lg,
+    padding: tokens.spacing.sm,
+    marginBottom: tokens.spacing.md,
+  },
+  suspendedWarningText: {
+    flex: 1,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+    color: tokens.colors.docket,
+    textAlign: "right",
+  },
   infoCard: { backgroundColor: tokens.colors.white, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: tokens.colors.line, marginBottom: 24 },
   label: { fontFamily: tokens.typography.fonts.body, fontSize: 13, color: tokens.colors.muted, marginBottom: 4 },
   value: { fontFamily: tokens.typography.fonts.bodySemibold, fontSize: 15, color: tokens.colors.ink, marginBottom: 16, textAlign: "left" },

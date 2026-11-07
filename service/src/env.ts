@@ -35,6 +35,9 @@ const envSchema = z.object({
   GOOGLE_WEB_CLIENT_ID: z.string().optional(),
   GOOGLE_IOS_CLIENT_ID: z.string().optional(),
   GOOGLE_ANDROID_CLIENT_ID: z.string().optional(),
+
+  // Free Trial Allowance
+  FREE_JOBS_LIMIT: z.coerce.number().int().min(0).default(3),
 });
 
 // Fail fast if env is missing/malformed

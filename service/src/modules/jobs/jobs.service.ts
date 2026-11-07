@@ -15,6 +15,6 @@ export class JobsService {
   static declareConflict = JobsLifecycleService.declareConflict;
   static updateStatus = JobsLifecycleService.updateStatus;
   static complete = JobsLifecycleService.complete;
-  static delete = JobsLifecycleService.delete;
   static translate = JobsLifecycleService.translate;
 }
+

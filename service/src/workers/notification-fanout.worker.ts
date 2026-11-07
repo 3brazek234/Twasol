@@ -15,7 +15,8 @@ export function buildMatchingQuery(
     courtId: { in: courtIds },
     isActive: true,
     user: {
-      isActive: true,
+      deletedAt: null,
+      suspendedAt: null,
       verificationStatus: VerificationStatus.APPROVED,
       id: { not: postedByUserId },
     }

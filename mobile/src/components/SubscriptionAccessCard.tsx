@@ -20,27 +20,27 @@ export const SubscriptionAccessCard = ({
   const content = isLoading
     ? {
         title: 'جارٍ التحقق من الاشتراك',
-        body: 'انتظر لحظة قبل نشر مهمة جديدة.',
+        body: 'انتظر لحظة قبل التقديم على مهمة جديدة.',
         action: null,
         icon: <ActivityIndicator size="small" color={tokens.colors.navy} />,
       }
     : isError
       ? {
           title: 'تعذّر التحقق من الاشتراك',
-          body: 'أعد المحاولة للتحقق من إمكانية نشر المهام.',
+          body: 'أعد المحاولة للتحقق من إمكانية التقديم على المهام.',
           action: 'إعادة المحاولة',
           icon: <AlertCircle size={20} color={tokens.colors.docket} />,
         }
       : hasPendingPayment
         ? {
             title: 'طلب الاشتراك قيد المراجعة',
-            body: 'سيتم تفعيل إمكانية نشر المهام بعد مراجعة الإيصال.',
+            body: 'سيتم تفعيل التقديم غير المحدود على المهام بعد مراجعة الإيصال.',
             action: 'عرض حالة الاشتراك',
             icon: <Clock3 size={20} color={tokens.colors.docket} />,
           }
         : {
-            title: 'فعّل اشتراكك لنشر المهام',
-            body: 'اختر باقة اشتراك وأرسل إيصال الدفع لبدء نشر المهام.',
+            title: 'فعّل اشتراكك للتقديم على المهام',
+            body: 'اختر باقة اشتراك وأرسل إيصال الدفع للتقديم على المهام بلا حدود.',
             action: 'تفعيل الاشتراك',
             icon: <CreditCard size={20} color={tokens.colors.navy} />,
           };

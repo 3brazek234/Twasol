@@ -4,6 +4,7 @@ import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { paginate } from '../../common/schemas/pagination.schema';
 import { generateUploadUrl, generateDownloadUrl, deleteFromR2 } from '../../common/utils/r2';
+import { getTrialStatus } from '../../common/utils/subscription-access';
 
 // ─── خطط الاشتراك المتاحة ──────────────────────────────────────────────────────
 export const SUBSCRIPTION_PLANS = [
@@ -73,18 +74,22 @@ export class SubscriptionService {
         subscriptionStatus: true,
         subscriptionExpiresAt: true,
         isActive: true,
+        suspendedAt: true,
         barId: true,
       },
     });
     if (!user) throw AppError.notFound('المستخدم غير موجود');
 
-    const pendingPayment = await prisma.subscriptionPayment.findFirst({
-      where: { userId, status: 'PENDING' },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, status: true, paymentMethod: true, createdAt: true },
-    });
+    const [pendingPayment, { limit, used, remaining }] = await Promise.all([
+      prisma.subscriptionPayment.findFirst({
+        where: { userId, status: 'PENDING' },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, status: true, paymentMethod: true, createdAt: true },
+      }),
+      getTrialStatus(userId),
+    ]);
 
-    return { ...user, pendingPayment };
+    return { ...user, pendingPayment, trial: { limit, used, remaining } };
   }
 
   // ─── طلب رابط رفع الإيصال ──────────────────────────────────────────────────
@@ -164,7 +169,16 @@ export class SubscriptionService {
       prisma.subscriptionPayment.findMany({
         where,
         include: {
-          user: { select: { id: true, fullName: true, email: true, barNumber: true, barId: true } },
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              barNumber: true,
+              barId: true,
+              suspendedAt: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -190,7 +204,7 @@ export class SubscriptionService {
   static async approvePayment(paymentId: string, adminId: string, notes?: string) {
     const payment = await prisma.subscriptionPayment.findUnique({
       where: { id: paymentId },
-      include: { user: { select: { fullName: true, subscriptionExpiresAt: true } } },
+      include: { user: { select: { fullName: true, subscriptionExpiresAt: true, suspendedAt: true } } },
     });
     if (!payment) throw AppError.notFound('طلب الاشتراك غير موجود');
     if (payment.status !== 'PENDING') {
@@ -204,6 +218,8 @@ export class SubscriptionService {
     
     const newExpiresAt = new Date(baseDate);
     newExpiresAt.setMonth(newExpiresAt.getMonth() + payment.durationMonths);
+
+    const userSuspendedWarning = payment.user.suspendedAt !== null && payment.user.suspendedAt !== undefined;
 
     await prisma.$transaction(async (tx) => {
       await tx.subscriptionPayment.update({
@@ -221,12 +237,15 @@ export class SubscriptionService {
         data: {
           subscriptionStatus: 'ACTIVE',
           subscriptionExpiresAt: newExpiresAt,
-          isActive: true,
         },
       });
 
       const { auditLog } = await import('../../common/utils/audit');
-      await auditLog(tx as any, adminId, 'SUBSCRIPTION_PAYMENT_APPROVED', 'SubscriptionPayment', paymentId, null, { newExpiresAt, extendedFrom: baseDate });
+      await auditLog(tx as any, adminId, 'SUBSCRIPTION_PAYMENT_APPROVED', 'SubscriptionPayment', paymentId, null, {
+        newExpiresAt,
+        extendedFrom: baseDate,
+        userSuspendedWarning,
+      });
 
       await tx.notification.create({
         data: buildNotification({
@@ -239,7 +258,15 @@ export class SubscriptionService {
       });
     });
 
-    return { paymentId, userId: payment.userId, expiresAt: newExpiresAt };
+    return {
+      paymentId,
+      userId: payment.userId,
+      expiresAt: newExpiresAt,
+      userSuspendedWarning,
+      warning: userSuspendedWarning
+        ? 'تنبيه: هذا المحامي موقوف إدارياً. تم تسجيل الاشتراك ولكن الحساب سيبقى موقوفاً حتى يتم تفعيله يدوياً.'
+        : null,
+    };
   }
 
   // ─── [أدمن] رفض طلب الاشتراك ───────────────────────────────────────────────
@@ -289,6 +316,7 @@ export class SubscriptionService {
 
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + plan.durationMonths);
+    const userSuspendedWarning = user.suspendedAt !== null && user.suspendedAt !== undefined;
 
     await prisma.$transaction(async (tx) => {
       await tx.subscriptionPayment.create({
@@ -310,7 +338,6 @@ export class SubscriptionService {
         data: {
           subscriptionStatus: 'ACTIVE',
           subscriptionExpiresAt: expiresAt,
-          isActive: true,
         },
       });
 
@@ -325,6 +352,6 @@ export class SubscriptionService {
       });
     });
 
-    return { userId, expiresAt };
+    return { userId, expiresAt, userSuspendedWarning };
   }
 }

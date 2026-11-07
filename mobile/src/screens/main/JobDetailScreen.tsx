@@ -9,7 +9,7 @@ import { useSubscriptionAccess } from '../../hooks/useSubscription';
 import { VerificationStatusBanner } from '../../components/VerificationStatusBanner';
 import { UserTrustSummary } from '../../components/UserTrustSummary';
 import { tokens } from '../../theme/tokens';
-import { Landmark, Users, Calendar, Gavel, CheckCircle, AlertTriangle, ChevronRight } from 'lucide-react-native';
+import { Landmark, Users, Calendar, Gavel, CheckCircle, LockKeyhole, ChevronRight } from 'lucide-react-native';
 import { useCompleteJob } from '../../hooks/useJobs';
 import { safeFormatDate } from '../../utils/dateUtils';
 import JobLifecycleStepper from '../../components/JobLifecycleStepper';
@@ -32,7 +32,10 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   // Backend uses uppercase APPROVED
   const isVerified = (user?.verificationStatus as string) === 'APPROVED';
   const isOwnJob = user?.id === job?.posterId;
-  const hasActiveSubscription = subscription.hasActiveSubscription;
+  const myExistingApplication = (job as any)?.applications?.find(
+    (application: any) => application.lawyerId === user?.id && application.status !== 'REJECTED',
+  );
+  const canApply = subscription.canApply || Boolean(myExistingApplication);
 
   const [translatedTitle, setTranslatedTitle] = React.useState<string | null>(null);
   const [translatedDescription, setTranslatedDescription] = React.useState<string | null>(null);
@@ -66,15 +69,11 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
   const handleApply = () => {
     if (!jobId) return;
     
-    if (!hasActiveSubscription) {
-      Alert.alert(
-        "يتطلب التقديم اشتراكاً فعالاً",
-        "لتقديم عروض على المهام، يجب عليك تفعيل اشتراكك.",
-        [
-          { text: "إلغاء", style: "cancel" },
-          { text: "الاشتراك الآن", onPress: () => navigation.navigate('SettingsStack', { screen: 'Subscription' }) }
-        ]
-      );
+    if (!canApply) {
+      navigation.navigate('SettingsStack', {
+        screen: 'Subscription',
+        params: { isTrialExhausted: true },
+      });
       return;
     }
 
@@ -98,7 +97,16 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
         }
       },
       onError: (err: any) => {
-        Alert.alert('تنبيه النظام', err.message || 'تعذر تقديم العرض.');
+        const errorCode = err?.response?.data?.code ?? err?.response?.data?.error?.code;
+        if (errorCode === 'SUBSCRIPTION_REQUIRED') {
+          setShowApplyModal(false);
+          navigation.navigate('SettingsStack', {
+            screen: 'Subscription',
+            params: { isTrialExhausted: true },
+          });
+          return;
+        }
+        Alert.alert('تنبيه النظام', err?.response?.data?.message || err.message || 'تعذر تقديم العرض.');
       },
     });
   };
@@ -316,9 +324,13 @@ export const JobDetailScreen = ({ route, navigation }: any) => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  {hasActiveSubscription ? <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} /> : <AlertTriangle size={18} color="#fff" style={{ marginEnd: 8 }} />}
+                  {canApply ? (
+                    <Gavel size={18} color="#fff" style={{ marginEnd: 8 }} />
+                  ) : (
+                    <LockKeyhole size={18} color="#fff" style={{ marginEnd: 8 }} />
+                  )}
                   <Text style={styles.applyButtonText}>
-                    {hasActiveSubscription ? 'تقديم عرض تمثيل قانوني' : 'اشترك للتقديم على المهام'}
+                    {canApply ? 'تقديم عرض تمثيل قانوني' : 'اشترك للتقديم'}
                   </Text>
                 </>
               )}

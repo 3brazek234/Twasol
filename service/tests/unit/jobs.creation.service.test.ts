@@ -17,36 +17,19 @@ describe('JobsCreationService', () => {
       taskType: 'ATTEND_SESSION',
     };
 
-    it.each(['HIRING', 'GIG'] as const)(
-      'rejects job creation for %s mode before subscription approval',
-      async (accountMode) => {
-        prismaMock.user.findUnique.mockResolvedValue({
-          accountMode,
-          isActive: true,
-          verificationStatus: 'APPROVED',
-          subscriptionStatus: 'PENDING_PAYMENT',
-          subscriptionExpiresAt: null,
-        } as any);
-
-        await expect(
-          JobsCreationService.create('user-1', createJobData),
-        ).rejects.toMatchObject({ code: 'FORBIDDEN' });
-
-        expect(prismaMock.job.findFirst).not.toHaveBeenCalled();
-        expect(prismaMock.job.create).not.toHaveBeenCalled();
-      },
-    );
-
-    it.each(['HIRING', 'GIG'] as const)(
-      'creates a job for %s mode after subscription approval',
+    it.each(['HIRING', 'GIG', 'BOTH'] as const)(
+      'allows a verified %s lawyer with PENDING_PAYMENT and 0 trial remaining to post a job for free (D4)',
       async (accountMode) => {
         prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
         prismaMock.user.findUnique.mockResolvedValue({
+          id: 'user-1',
           accountMode,
-          isActive: true,
+          isActive: false,
+          suspendedAt: null,
+          deletedAt: null,
           verificationStatus: 'APPROVED',
-          subscriptionStatus: 'ACTIVE',
-          subscriptionExpiresAt: new Date(Date.now() + 60_000),
+          subscriptionStatus: 'PENDING_PAYMENT',
+          subscriptionExpiresAt: null,
         } as any);
         prismaMock.job.findFirst.mockResolvedValue(null);
         const mockJob = { id: 'job-1', status: 'OPEN' };
@@ -64,10 +47,46 @@ describe('JobsCreationService', () => {
       },
     );
 
+    it('rejects job creation for a banned user (suspendedAt set) even if APPROVED and ACTIVE', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        isActive: true,
+        suspendedAt: new Date(),
+        deletedAt: null,
+        verificationStatus: 'APPROVED',
+        subscriptionStatus: 'ACTIVE',
+        subscriptionExpiresAt: new Date(Date.now() + 86_400_000),
+      } as any);
+
+      await expect(
+        JobsCreationService.create('user-1', createJobData),
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(prismaMock.job.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects job creation for an unverified user', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        isActive: true,
+        suspendedAt: null,
+        deletedAt: null,
+        verificationStatus: 'PENDING',
+        subscriptionStatus: 'PENDING_PAYMENT',
+        subscriptionExpiresAt: null,
+      } as any);
+
+      await expect(
+        JobsCreationService.create('user-1', createJobData),
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(prismaMock.job.create).not.toHaveBeenCalled();
+    });
+
     it('creates jobs for users exempt from subscription requirements', async () => {
       prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
       prismaMock.user.findUnique.mockResolvedValue({
         isActive: true,
+        suspendedAt: null,
+        deletedAt: null,
         verificationStatus: 'APPROVED',
         subscriptionStatus: 'NOT_REQUIRED',
         subscriptionExpiresAt: null,
@@ -85,6 +104,8 @@ describe('JobsCreationService', () => {
       prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
       prismaMock.user.findUnique.mockResolvedValue({
         isActive: true,
+        suspendedAt: null,
+        deletedAt: null,
         verificationStatus: 'APPROVED',
         subscriptionStatus: 'ACTIVE',
         subscriptionExpiresAt: new Date(Date.now() + 60_000),
@@ -110,3 +131,4 @@ describe('JobsCreationService', () => {
     });
   });
 });
+

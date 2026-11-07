@@ -6,6 +6,8 @@ import * as SecureStore from 'expo-secure-store';
 import { SettingsRow } from '../../components/SettingsRow';
 import { tokens } from '../../theme/tokens';
 import { useAuthStore } from '../../stores/authStore';
+import { useSubscriptionAccess } from '../../hooks/useSubscription';
+import { formatRemainingFreeJobs } from '../../utils/arabicPlural';
 
 // Legal URLs have been moved to native LegalScreen
 
@@ -26,6 +28,11 @@ export const SettingsScreen = ({ navigation }: any) => {
   };
 
   const { logout, user } = useAuthStore();
+  const subscription = useSubscriptionAccess();
+  const remainingTrialLabel = formatRemainingFreeJobs(subscription.trial?.remaining);
+  const subscriptionLabel = subscription.hasActiveSubscription
+    ? 'نشط'
+    : remainingTrialLabel ?? 'يتطلب تفعيل';
   
   // Local state for notification preferences (stubbing backend)
   const [matchNotifications, setMatchNotifications] = useState(true);
@@ -98,7 +105,7 @@ export const SettingsScreen = ({ navigation }: any) => {
           />
           <SettingsRow
             label="حالة الاشتراك"
-            value={user?.subscriptionStatus === 'ACTIVE' ? 'نشط' : 'يتطلب تفعيل'}
+            value={subscriptionLabel}
             onPress={() => navigation.navigate('SettingsStack', { screen: 'Subscription' })}
           />
           {(user as any)?.role === 'LAWYER' && (

@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Activity, Briefcase, ClipboardList, LockKeyhole, Plus } from 'lucide-react-native';
+import { Activity, Briefcase, ClipboardList, Plus } from 'lucide-react-native';
 import { tokens } from '../../theme/tokens';
 import { useMyPostedJobs } from '../../hooks/useJobs';
-import { useSubscriptionAccess } from '../../hooks/useSubscription';
 import { JobCard } from '../../components/jobs/JobCard';
 import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 import { EmptyState } from '../../components/EmptyState';
-import { SubscriptionAccessCard } from '../../components/SubscriptionAccessCard';
 
 export const HiringHomeScreen = ({ navigation }: any) => {
   const {
@@ -28,8 +26,6 @@ export const HiringHomeScreen = ({ navigation }: any) => {
     fetchNextPage,
     isFetchingNextPage,
   } = useMyPostedJobs();
-  const subscription = useSubscriptionAccess();
-  const openSubscription = () => navigation.navigate('SettingsStack', { screen: 'Subscription' });
 
   const jobs = useMemo(
     () => data?.pages.flatMap((page: any) => page.data || page) ?? [],
@@ -37,15 +33,6 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   );
   const openJobsCount = jobs.filter((job: any) => job.status === 'OPEN' || job.status === 'NEGOTIATING').length;
   const activeAssignmentsCount = jobs.filter((job: any) => job.status === 'AGREED' || job.status === 'IN_PROGRESS').length;
-  const subscriptionAccessCard = !subscription.hasActiveSubscription ? (
-    <SubscriptionAccessCard
-      isLoading={subscription.isLoading}
-      isError={subscription.isError}
-      hasPendingPayment={subscription.hasPendingPayment}
-      onPress={openSubscription}
-      onRetry={() => subscription.refetch()}
-    />
-  ) : null;
 
   const listHeader = (
     <View style={styles.listHeader}>
@@ -70,24 +57,13 @@ export const HiringHomeScreen = ({ navigation }: any) => {
         </View>
       </View>
 
-      {subscriptionAccessCard}
-
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
-        style={[styles.postButton, !subscription.hasActiveSubscription && styles.postButtonDisabled]}
-        disabled={!subscription.hasActiveSubscription}
+        style={styles.postButton}
         onPress={() => navigation.navigate('PostJob')}
       >
-        {subscription.hasActiveSubscription
-          ? <Plus size={18} color={tokens.colors.white} />
-          : <LockKeyhole size={18} color={tokens.colors.muted} />}
-        <Text style={[
-          styles.postButtonText,
-          !subscription.hasActiveSubscription && styles.postButtonTextDisabled,
-        ]}>
-          {subscription.hasActiveSubscription ? 'نشر مهمة جديدة' : 'النشر متاح بعد تفعيل الاشتراك'}
-        </Text>
+        <Plus size={18} color={tokens.colors.white} />
+        <Text style={styles.postButtonText}>نشر مهمة جديدة</Text>
       </TouchableOpacity>
 
       <View style={styles.sectionHeading}>
@@ -102,7 +78,6 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        {subscriptionAccessCard}
         {[1, 2, 3].map((item) => <JobCardSkeleton key={item} variant="compact" />)}
       </View>
     );
@@ -111,7 +86,6 @@ export const HiringHomeScreen = ({ navigation }: any) => {
   if (isError) {
     return (
       <View style={styles.errorContainer}>
-        {subscriptionAccessCard}
         <Text style={styles.errorTitle}>تعذّر تحميل مهامك</Text>
         <Text style={styles.errorMessage}>
           {(error as Error)?.message || 'تحقّق من اتصالك بالإنترنت ثم حاول مجدداً.'}
@@ -141,10 +115,8 @@ export const HiringHomeScreen = ({ navigation }: any) => {
             icon={<Briefcase size={48} color={tokens.colors.muted} />}
             headline="ابدأ بإسناد مهامك"
             body="انشر مهمة لتتابع الطلبات والتكليفات من مكان واحد."
-            ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة' : undefined}
-            onCtaPress={subscription.hasActiveSubscription
-              ? () => navigation.navigate('PostJob')
-              : undefined}
+            ctaText="نشر مهمة جديدة"
+            onCtaPress={() => navigation.navigate('PostJob')}
           />
         ) : null
       }

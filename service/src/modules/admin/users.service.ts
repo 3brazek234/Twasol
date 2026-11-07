@@ -22,7 +22,7 @@ export class AdminUsersService {
       where.role = role as any;
     }
     if (status) {
-      where.isActive = status === 'ACTIVE';
+      where.suspendedAt = status === 'ACTIVE' ? null : { not: null };
     }
     if (verificationStatus) {
       where.verificationStatus = verificationStatus as any;
@@ -47,6 +47,7 @@ export class AdminUsersService {
           fullName: true,
           role: true,
           isActive: true,
+          suspendedAt: true,
           verificationStatus: true,
           createdAt: true,
           isOnline: true,
@@ -62,10 +63,11 @@ export class AdminUsersService {
     if (!user) throw AppError.notFound('User');
     if (user.role === 'SUPER_ADMIN') throw AppError.forbidden('Cannot deactivate a SUPER_ADMIN');
 
+    const now = new Date();
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { isActive: false },
+        data: { suspendedAt: now, isActive: false },
         select: SAFE_USER_SELECT,
       });
       await auditLog(
@@ -74,8 +76,8 @@ export class AdminUsersService {
         'user.deactivated',
         'User',
         userId,
-        { isActive: user.isActive },
-        { isActive: false, reason }
+        { isActive: user.isActive, suspendedAt: user.suspendedAt },
+        { isActive: false, suspendedAt: now, reason }
       );
       return updated;
     });
@@ -90,7 +92,7 @@ export class AdminUsersService {
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id: userId },
-        data: { isActive: true },
+        data: { suspendedAt: null, isActive: true },
         select: SAFE_USER_SELECT,
       });
       await auditLog(
@@ -99,8 +101,8 @@ export class AdminUsersService {
         'user.activated',
         'User',
         userId,
-        { isActive: user.isActive },
-        { isActive: true, reason }
+        { isActive: user.isActive, suspendedAt: user.suspendedAt },
+        { isActive: true, suspendedAt: null, reason }
       );
       return updated;
     });
@@ -117,10 +119,7 @@ export class AdminUsersService {
       if (status === 'APPROVED') {
         extraData = {
           subscriptionStatus: 'PENDING_PAYMENT',
-          isActive: false
         };
-      } else if (status === 'REJECTED') {
-        extraData = { isActive: false };
       }
 
       const updated = await tx.user.update({

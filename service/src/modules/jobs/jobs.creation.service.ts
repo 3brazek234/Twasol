@@ -3,22 +3,18 @@ import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
 import { pushNotificationQueue, jobAlertQueue } from '../../common/utils/queue';
 import { auditLog } from '../../common/utils/audit';
-import { hasSubscriptionAccess } from '../../common/utils/subscription-access';
+import { canUseApp } from '../../common/utils/subscription-access';
 
 export class JobsCreationService {
   static async create(userId: string, data: any) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user?.isActive) {
+    if (!canUseApp(user)) {
       throw AppError.forbidden("Account is not active");
     }
 
-    if (user?.verificationStatus !== "APPROVED") {
+    if (user.verificationStatus !== "APPROVED") {
       throw AppError.forbidden("Account must be verified to post jobs");
-    }
-
-    if (!hasSubscriptionAccess(user)) {
-      throw AppError.forbidden("يتطلب نشر المهام اشتراكاً فعالاً. يرجى تفعيل اشتراكك.");
     }
 
     // Idempotency guard: reject a near-identical submission from the same user within 10 seconds

@@ -4,7 +4,11 @@ import { prisma } from '../../prisma';
 import { AppError } from '../../common/errors/AppError';
 import { JobStatus, Prisma } from '@prisma/client';
 import { auditLog } from '../../common/utils/audit';
-import { hasSubscriptionAccess } from '../../common/utils/subscription-access';
+import {
+  canUseApp,
+  getTrialStatus,
+  hasSubscriptionAccess,
+} from '../../common/utils/subscription-access';
 
 export class JobsLifecycleService {
   private static assertValidTransition(current: JobStatus, target: JobStatus) {
@@ -27,19 +31,16 @@ export class JobsLifecycleService {
     const user = await prisma.user.findUnique({
       where: { id: lawyerId },
       select: {
-        isActive: true,
+        deletedAt: true,
+        suspendedAt: true,
         verificationStatus: true,
         subscriptionStatus: true,
         subscriptionExpiresAt: true,
       },
     });
 
-    if (!user?.isActive) throw AppError.forbidden("Account is not active");
-    if (user?.verificationStatus !== "APPROVED") throw AppError.forbidden("Account must be verified to apply for jobs");
-
-    if (!hasSubscriptionAccess(user)) {
-      throw AppError.forbidden("يتطلب التقديم على المهام اشتراكاً فعالاً. يرجى تجديد اشتراكك.");
-    }
+    if (!canUseApp(user)) throw AppError.forbidden("Account is not active");
+    if (user.verificationStatus !== "APPROVED") throw AppError.forbidden("Account must be verified to apply for jobs");
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job) throw AppError.notFound("Job");
@@ -51,11 +52,11 @@ export class JobsLifecycleService {
       throw AppError.badRequest("Cannot apply to your own job");
     }
 
-    return job;
+    return { job, user };
   }
 
   static async declareConflict(jobId: string, lawyerId: string, ipAddress?: string) {
-    const job = await JobsLifecycleService.assertCanApply(jobId, lawyerId);
+    await JobsLifecycleService.assertCanApply(jobId, lawyerId);
 
     return prisma.$transaction(async (tx) => {
       const declaration = await tx.conflictDeclaration.upsert({
@@ -79,9 +80,11 @@ export class JobsLifecycleService {
   }
 
   static async apply(jobId: string, lawyerId: string, ipAddress: string | undefined, conflictsCheckPassed: boolean) {
-    const job = await JobsLifecycleService.assertCanApply(jobId, lawyerId);
+    const { job, user } = await JobsLifecycleService.assertCanApply(jobId, lawyerId);
     if (!conflictsCheckPassed) throw AppError.badRequest("A conflicts check confirmation is required");
 
+    // C1: Check existingApplication BEFORE subscription/trial check so re-taps on a job
+    // the lawyer already applied to remain idempotent even after the trial reaches 0.
     const existingApplication = await prisma.jobApplication.findUnique({
       where: { jobId_lawyerId: { jobId, lawyerId } },
     });
@@ -104,6 +107,8 @@ export class JobsLifecycleService {
       return { application: existingApplication, conversationId: existingConversation?.id ?? null };
     }
 
+    const isSubscribed = hasSubscriptionAccess(user);
+
     try {
       return await prisma.$transaction(async (tx) => {
         const existingDeclaration = await tx.conflictDeclaration.findUnique({
@@ -111,6 +116,21 @@ export class JobsLifecycleService {
         });
         if (existingDeclaration?.hasConflict) {
           throw AppError.forbidden("A declared conflict prevents applying to this job");
+        }
+
+        // B3 + B6: If not subscribed, serialize concurrent trial applies per lawyer
+        // with a transaction-scoped advisory lock and check the remaining trial allowance.
+        if (!isSubscribed) {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'trial:' + lawyerId}))`;
+          const trial = await getTrialStatus(lawyerId, tx);
+          if (trial.remaining <= 0) {
+            throw new AppError(
+              'SUBSCRIPTION_REQUIRED',
+              403,
+              'انتهت مهامك المجانية. يرجى الاشتراك للمتابعة.',
+              { trial },
+            );
+          }
         }
 
         const declaration = await tx.conflictDeclaration.upsert({
@@ -408,13 +428,5 @@ export class JobsLifecycleService {
     // Simplistic stub for translation logic as before
     return { title: job.title + ' (Translated)', description: job.description + ' (Translated)' };
   }
-
-  static async delete(jobId: string, userId: string) {
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!job) throw AppError.notFound("Job");
-    if (job.postedByUserId !== userId) throw AppError.forbidden();
-    if (job.status !== "OPEN") throw AppError.badRequest("Can only delete OPEN jobs");
-    
-    return prisma.job.delete({ where: { id: jobId } });
-  }
 }
+

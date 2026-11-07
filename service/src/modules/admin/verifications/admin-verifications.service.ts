@@ -88,7 +88,6 @@ export class AdminVerificationsService {
         data: { 
           verificationStatus: 'APPROVED',
           subscriptionStatus: 'PENDING_PAYMENT',
-          isActive: false
         },
         select: ADMIN_PENDING_USER_SELECT,
       });
