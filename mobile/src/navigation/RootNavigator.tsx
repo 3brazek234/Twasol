@@ -191,7 +191,7 @@ export const RootNavigator = () => {
     );
   }
 
-  // Gate 3: subscriptions restrict job posting/applying, not app navigation.
+  // Gate 3: subscriptions restrict job applying (after free trial), not job posting or app navigation.
   return (
     <NavigationContainer key="main" linking={linking as any}>
       <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={hasSeenOnboarding ? 'MainTabs' : 'OnboardingWalkthrough'}>

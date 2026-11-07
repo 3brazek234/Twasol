@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator, I18nManager } from 'react-native';
+import { View, Text, RefreshControl, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useFocusEffect } from '@react-navigation/native';
-import { useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { Sparkles } from 'lucide-react-native';
 import { useJobs } from '../../hooks/useJobs';
+import { useSubscriptionAccess } from '../../hooks/useSubscription';
+import { formatRemainingFreeJobs } from '../../utils/arabicPlural';
 import { JobCard } from '../../components/jobs/JobCard';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
@@ -52,6 +54,10 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   const [taskType, setTaskType] = useState<string | undefined>(route.params?.taskType ?? undefined);
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
 
+  const subscription = useSubscriptionAccess();
+  const remainingTrialLabel = formatRemainingFreeJobs(subscription.trial?.remaining);
+  const showTrialBanner = !subscription.hasActiveSubscription && remainingTrialLabel !== null;
+  const isApplyLocked = !subscription.canApply;
 
   const {
     data,
@@ -92,8 +98,23 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
   }, [data]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: tokens.colors.paper }}>
-
+    <View style={styles.screen}>
+      {showTrialBanner && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={styles.trialBanner}
+          onPress={() => navigation.navigate('SettingsStack', { screen: 'Subscription' })}
+          activeOpacity={0.85}
+        >
+          <View style={styles.trialBannerRow}>
+            <Sparkles size={16} color={tokens.colors.gold} />
+            <Text style={styles.trialBannerText}>
+              {remainingTrialLabel}
+            </Text>
+          </View>
+          <Text style={styles.trialBannerAction}>تفعيل الاشتراك</Text>
+        </TouchableOpacity>
+      )}
 
       <View className="bg-white border-b border-line py-2">
         <ScrollView
@@ -165,8 +186,18 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
             <JobCard
               job={item}
               variant="feed"
+              isApplyLocked={isApplyLocked}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
-              onApply={() => navigation.navigate('JobDetail', { jobId: item.id })}
+              onApply={() => {
+                if (isApplyLocked) {
+                  navigation.navigate('SettingsStack', {
+                    screen: 'Subscription',
+                    params: { isTrialExhausted: true },
+                  });
+                  return;
+                }
+                navigation.navigate('JobDetail', { jobId: item.id });
+              }}
             />
           )}
           contentInsetAdjustmentBehavior="never"
@@ -215,3 +246,40 @@ export const JobsFeedScreen = ({ navigation, route }: any) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: tokens.colors.paper,
+    direction: 'rtl',
+  },
+  trialBanner: {
+    flexDirection: 'row',
+    direction: 'rtl',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: tokens.colors.goldLight,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.line,
+    paddingHorizontal: tokens.spacing.md,
+    paddingVertical: tokens.spacing.xs,
+  },
+  trialBannerRow: {
+    flexDirection: 'row',
+    direction: 'rtl',
+    alignItems: 'center',
+    gap: tokens.spacing.xs,
+  },
+  trialBannerText: {
+    color: tokens.colors.navy,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.sm,
+    textAlign: 'right',
+  },
+  trialBannerAction: {
+    color: tokens.colors.signal,
+    fontFamily: tokens.typography.fonts.bodySemibold,
+    fontSize: tokens.typography.sizes.xs,
+  },
+});
+

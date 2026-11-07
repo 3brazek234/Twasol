@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+export const TrialStatusSchema = z.object({
+  limit: z.number(),
+  used: z.number(),
+  remaining: z.number(),
+});
+export type TrialStatus = z.infer<typeof TrialStatusSchema>;
+
 export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
@@ -7,6 +14,7 @@ export const UserSchema = z.object({
   name: z.string().nullable().optional(),
   fullName: z.string().nullable().optional(),
   isActive: z.boolean().default(false),
+  suspendedAt: z.string().nullable().optional(),
   role: z.enum(['USER', 'LAWYER', 'ADMIN', 'SUPER_ADMIN']).optional(),
   verificationStatus: z.enum(['UNVERIFIED', 'PENDING_UPLOAD', 'PENDING', 'APPROVED', 'REJECTED']).default('UNVERIFIED'),
   subscriptionStatus: z.enum(['NOT_REQUIRED', 'PENDING_PAYMENT', 'ACTIVE', 'EXPIRED', 'SUSPENDED']).default('PENDING_PAYMENT'),
@@ -14,6 +22,7 @@ export const UserSchema = z.object({
   accountMode: z.enum(['GIG', 'HIRING', 'BOTH']).default('BOTH'),
   governorateId: z.string().nullable().optional(),
   verificationRejectionReason: z.string().nullable().optional(),
+  trial: TrialStatusSchema.optional(),
 });
 export type User = z.infer<typeof UserSchema>;
 

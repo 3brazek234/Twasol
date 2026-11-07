@@ -10,7 +10,8 @@ export class UsersService {
       const user = await prisma.user.findFirst({
         where: {
           id: userId,
-          deletedAt: null
+          deletedAt: null,
+          suspendedAt: null,
         },
         select: {
           id: true,
@@ -19,6 +20,7 @@ export class UsersService {
           role: true,
           barNumber: true,
           isActive: true,
+          suspendedAt: true,
           isOnline: true,
           verificationStatus: true,
           bio: true,

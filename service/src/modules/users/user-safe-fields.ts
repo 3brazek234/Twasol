@@ -11,6 +11,7 @@ export const SAFE_USER_SELECT = {
   isActive: true,
   canActivate: true,
   isOnline: true,
+  suspendedAt: true,
   deletedAt: true,
   createdAt: true,
   updatedAt: true,

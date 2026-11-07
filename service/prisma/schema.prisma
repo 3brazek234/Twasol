@@ -188,9 +188,11 @@ model User {
   verificationRejectionReason String?            @map("verification_rejection_reason")
   preferredLocale       Locale             @default(EN) @map("preferred_locale")
   bio                   String?
+  // @deprecated For access checks use deletedAt == null && suspendedAt == null (canUseApp). To be dropped in a later migration.
   isActive              Boolean            @default(false) @map("is_active")
   canActivate           Boolean            @default(true) @map("can_activate")
   isOnline              Boolean            @default(false) @map("is_online")
+  suspendedAt           DateTime?          @map("suspended_at")
   deletedAt             DateTime?          @map("deleted_at")
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")

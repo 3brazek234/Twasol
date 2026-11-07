@@ -145,7 +145,6 @@ export class VerificationService {
             data: {
               verificationStatus: 'APPROVED',
               subscriptionStatus: 'PENDING_PAYMENT',
-              isActive: false,
             },
           });
 

@@ -1,4 +1,4 @@
-import { ConversationSummary } from '../api/conversations.api';
+import type { ConversationSummary } from '../api/conversations.api';
 
 export interface PartnerConversationGroup {
   groupKey: string;

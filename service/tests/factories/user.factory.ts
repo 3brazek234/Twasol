@@ -14,10 +14,12 @@ export function makeUser(overrides: Partial<User> = {}): User {
     verificationStatus: "APPROVED",
     expoPushToken: null,
     deletedAt: null,
+    suspendedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     resetToken: null,
     resetTokenExpiry: null,
     ...overrides,
-  };
+  } as any;
 }
+

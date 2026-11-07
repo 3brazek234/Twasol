@@ -1,11 +1,20 @@
 import { expect } from "vitest";
 
-export function expectAppError(
+export async function expectAppError(
   fn: () => Promise<any>,
   expectedCode: string,
-  expectedStatus?: number
+  expectedStatus?: number,
 ) {
+  let caught: any;
+  try {
+    await fn();
+  } catch (err) {
+    caught = err;
+  }
+  expect(caught).toBeDefined();
   const matcher: any = { code: expectedCode };
-  if (expectedStatus) matcher.status = expectedStatus;
-  return expect(fn()).rejects.toMatchObject(matcher);
+  if (expectedStatus !== undefined) matcher.statusCode = expectedStatus;
+  expect(caught).toMatchObject(matcher);
+  return caught;
 }
+

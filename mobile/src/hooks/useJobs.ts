@@ -1,5 +1,6 @@
 import { Alert } from "react-native";
 import { getErrorMessage } from "../utils/errorMessages";
+import { useAuthStore } from "../stores/authStore";
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { fetchJobs, createJob, applyToJob, declareJobConflict, updateJobStatus, fetchJobById, translateJob, fetchMyPostedJobs, fetchMyActiveJobs, completeJob } from '../api/jobs.api';
@@ -40,10 +41,18 @@ export const useApplyToJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: applyToJob,
-    onError: (err: any) => { Alert.alert('خطأ', getErrorMessage(err)); },
+    onError: (err: any) => {
+      const errorCode = err?.response?.data?.code ?? err?.response?.data?.error?.code;
+      if (errorCode === 'SUBSCRIPTION_REQUIRED') {
+        useAuthStore.getState().refreshUserProfile();
+        return;
+      }
+      Alert.alert('خطأ', getErrorMessage(err));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      useAuthStore.getState().refreshUserProfile();
     },
   });
 };

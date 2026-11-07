@@ -22,6 +22,7 @@ import {
   useSubscriptionStatus,
 } from '../../hooks/useSubscription';
 import { uploadFileToR2 } from '../../utils/upload';
+import { formatFreeJobsCount } from '../../utils/arabicPlural';
 import { tokens } from '../../theme/tokens';
 
 type SubscriptionPlan = {
@@ -97,6 +98,9 @@ const PendingSubscriptionView = () => (
 
 interface PaywallViewProps {
   isRenewal: boolean;
+  isTrialExhausted: boolean;
+  trialLimit?: number;
+  trialRemaining?: number;
   plans: SubscriptionPlan[];
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
@@ -113,6 +117,9 @@ interface PaywallViewProps {
 
 const PaywallView = ({
   isRenewal,
+  isTrialExhausted,
+  trialLimit,
+  trialRemaining,
   plans,
   selectedPlanId,
   onSelectPlan,
@@ -127,6 +134,32 @@ const PaywallView = ({
   onSubmit,
 }: PaywallViewProps) => {
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+  const formattedLimit = formatFreeJobsCount(trialLimit);
+  const formattedRemaining = formatFreeJobsCount(trialRemaining);
+  const hasTrialFeature = formattedLimit !== null;
+
+  const pitchTitle = isRenewal
+    ? 'انتهت صلاحية اشتراكك'
+    : isTrialExhausted && hasTrialFeature
+      ? 'انتهت مهامك المجانية'
+      : 'فعّل اشتراكك للوصول إلى المنصة';
+
+  const pitchDescription = isRenewal
+    ? 'لمواصلة التقديم على المهام، يرجى تجديد اشتراكك'
+    : isTrialExhausted && hasTrialFeature
+      ? `استخدمت باقة التجربة (${formattedLimit}). فعّل اشتراكك للتقديم على المهام بلا حدود والتواصل مع الموكلين.`
+      : hasTrialFeature
+        ? `تبدأ بـ ${formattedLimit} للتجربة${formattedRemaining ? ` (المتبقي لك: ${formattedRemaining})` : ''}. فعّل اشتراكك للتقديم على المهام بلا حدود.`
+        : 'للتقديم على المهام بلا حدود والتواصل مع الموكلين، فعّل اشتراكك الآن.';
+
+  const benefits = [
+    ...(formattedLimit !== null
+      ? [`${formattedLimit} للتجربة فور توثيق الحساب، ثم تقديم غير محدود بالاشتراك`]
+      : []),
+    'تصفّح المهام المحلية حسب المحاكم المسجلة ونشر المهام مجاناً',
+    'قدّم على المهام وتفاوض مباشرةً داخل التطبيق',
+    'تواصل مع شبكة محامين موثقة',
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -135,22 +168,12 @@ const PaywallView = ({
           <View style={styles.pitchIcon}>
             <CreditCard size={28} color={tokens.colors.navy} />
           </View>
-          <Text style={styles.pitchTitle}>
-            {isRenewal ? 'انتهت صلاحية اشتراكك' : 'فعّل اشتراكك للوصول إلى المنصة'}
-          </Text>
-          <Text style={styles.pitchDescription}>
-            {isRenewal
-              ? 'لمواصلة استخدام المنصة، يرجى تجديد اشتراكك'
-              : 'للتقديم على المهام والتواصل مع الموكلين، يجب تفعيل اشتراكك أولاً'}
-          </Text>
+          <Text style={styles.pitchTitle}>{pitchTitle}</Text>
+          <Text style={styles.pitchDescription}>{pitchDescription}</Text>
         </View>
 
         <View style={styles.benefitList}>
-          {[
-            'تصفّح المهام المحلية حسب المحاكم المسجلة',
-            'قدّم على المهام وتفاوض مباشرةً داخل التطبيق',
-            'تواصل مع شبكة محامين موثقة',
-          ].map((benefit) => (
+          {benefits.map((benefit) => (
             <View key={benefit} style={styles.benefitRow}>
               <Check size={16} color={tokens.colors.signal} />
               <Text style={styles.benefitText}>{benefit}</Text>
@@ -308,8 +331,14 @@ const PaymentMethodOption = ({
 );
 
 export const SubscriptionScreen = () => {
-  const route = useRoute<RouteProp<{ SubscriptionGate: { isRenewal?: boolean } }, 'SubscriptionGate'>>();
+  const route = useRoute<
+    RouteProp<
+      { SubscriptionGate: { isRenewal?: boolean; isTrialExhausted?: boolean } },
+      'SubscriptionGate'
+    >
+  >();
   const routeIsRenewal = route.params?.isRenewal;
+  const routeIsTrialExhausted = route.params?.isTrialExhausted;
   const { user, hydrate, refreshUserProfile } = useAuthStore();
   const { data: subscriptionData, isLoading: plansLoading, error } = useSubscriptionPlans();
   const {
@@ -424,6 +453,7 @@ export const SubscriptionScreen = () => {
   const hasPendingPayment = statusData?.pendingPayment?.status === 'PENDING'
     || statusData?.status === 'PENDING';
   const expiresAt = statusData?.subscriptionExpiresAt ?? user?.subscriptionExpiresAt;
+  const isSuspended = Boolean(statusData?.suspendedAt ?? user?.suspendedAt);
   const isRenewal =
     routeIsRenewal ??
     (subscriptionStatus === 'EXPIRED' ||
@@ -432,11 +462,16 @@ export const SubscriptionScreen = () => {
         expiresAt !== undefined &&
         new Date(expiresAt) <= new Date()));
   const isActive =
-    user?.isActive === true &&
-    subscriptionStatus === 'ACTIVE' &&
-    expiresAt !== null &&
-    expiresAt !== undefined &&
-    new Date(expiresAt) > new Date();
+    !isSuspended &&
+    (subscriptionStatus === 'NOT_REQUIRED' ||
+      (subscriptionStatus === 'ACTIVE' &&
+        expiresAt !== null &&
+        expiresAt !== undefined &&
+        new Date(expiresAt) > new Date()));
+  const trial = statusData?.trial ?? user?.trial;
+  const isTrialExhausted =
+    Boolean(routeIsTrialExhausted) ||
+    (!isRenewal && trial !== undefined && trial.remaining <= 0);
 
   if (isLoading) {
     return (
@@ -452,6 +487,9 @@ export const SubscriptionScreen = () => {
   return (
     <PaywallView
       isRenewal={isRenewal}
+      isTrialExhausted={isTrialExhausted}
+      trialLimit={trial?.limit}
+      trialRemaining={trial?.remaining}
       plans={plans}
       selectedPlanId={selectedPlanId}
       onSelectPlan={setSelectedPlanId}

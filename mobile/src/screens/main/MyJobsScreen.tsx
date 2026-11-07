@@ -20,9 +20,7 @@ import { JobCardSkeleton } from '../../components/jobs/JobCardSkeleton';
 import { CompleteJobModal } from '../../components/jobs/CompleteJobModal';
 import { FilterChipRow } from '../../components/FilterChipRow';
 import { EmptyState } from '../../components/EmptyState';
-import { Briefcase, Activity, LockKeyhole, Plus } from 'lucide-react-native';
-import { useSubscriptionAccess } from '../../hooks/useSubscription';
-import { SubscriptionAccessCard } from '../../components/SubscriptionAccessCard';
+import { Briefcase, Activity, Plus } from 'lucide-react-native';
 
 const FILTER_OPTIONS = [
   { label: 'الكل', value: undefined },
@@ -38,7 +36,6 @@ const FILTER_OPTIONS = [
 export const MyJobsScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
-  const subscription = useSubscriptionAccess();
   const accountMode = user?.accountMode || 'BOTH';
   
   const showPosterTab = accountMode === 'HIRING' || accountMode === 'BOTH';
@@ -173,7 +170,6 @@ export const MyJobsScreen = () => {
   const postedCount =
     (postedJobsQuery.data?.pages?.[0] as any)?.meta?.totalAll ?? postedJobs.length;
   const activeCount = activeJobs.length;
-  const openSubscription = () => navigation.navigate('SettingsStack', { screen: 'Subscription' });
 
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
@@ -182,38 +178,17 @@ export const MyJobsScreen = () => {
         {activeTab === 'posted' && showPosterTab && (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityState={{ disabled: !subscription.hasActiveSubscription }}
-            style={[styles.postJobBtn, !subscription.hasActiveSubscription && styles.postJobBtnDisabled]}
-            disabled={!subscription.hasActiveSubscription}
+            style={styles.postJobBtn}
             onPress={() => navigation.navigate('PostJob')}
             activeOpacity={0.8}
           >
-            {subscription.hasActiveSubscription ? (
-              <View style={styles.postJobBtnInner}>
-                <Plus size={15} color={tokens.colors.white} strokeWidth={2.5} />
-                <Text style={styles.postJobBtnText}>نشر مهمة جديدة</Text>
-              </View>
-            ) : (
-              <View style={styles.lockedPostLabel}>
-                <LockKeyhole size={14} color={tokens.colors.muted} />
-                <Text style={styles.postJobBtnTextDisabled}>يتطلب اشتراكاً</Text>
-              </View>
-            )}
+            <View style={styles.postJobBtnInner}>
+              <Plus size={15} color={tokens.colors.white} strokeWidth={2.5} />
+              <Text style={styles.postJobBtnText}>نشر مهمة جديدة</Text>
+            </View>
           </TouchableOpacity>
         )}
       </View>
-
-      {showPosterTab && !subscription.hasActiveSubscription && (
-        <View style={styles.subscriptionCardContainer}>
-          <SubscriptionAccessCard
-            isLoading={subscription.isLoading}
-            isError={subscription.isError}
-            hasPendingPayment={subscription.hasPendingPayment}
-            onPress={openSubscription}
-            onRetry={() => subscription.refetch()}
-          />
-        </View>
-      )}
 
       {hasBothTabs && (
         <View style={styles.tabBar}>
@@ -307,10 +282,8 @@ export const MyJobsScreen = () => {
                     icon={<Briefcase size={48} color={tokens.colors.muted} />}
                     headline="لا توجد مهام منشورة"
                     body={postedJobsQuery.isError ? "حدث خطأ أثناء تحميل المهام. يرجى سحب الشاشة للأسفل للمحاولة مرة أخرى." : "لم تقم بنشر أي مهام مطابقة لهذا التصنيف حتى الآن."}
-                    ctaText={subscription.hasActiveSubscription ? 'نشر مهمة جديدة +' : undefined}
-                    onCtaPress={subscription.hasActiveSubscription
-                      ? () => navigation.navigate('PostJob')
-                      : undefined}
+                    ctaText="نشر مهمة جديدة +"
+                    onCtaPress={() => navigation.navigate('PostJob')}
                   />
                 ) : null
               }

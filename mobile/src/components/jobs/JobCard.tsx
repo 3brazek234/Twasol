@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   interpolateColor,
 } from "react-native-reanimated";
-import { Landmark, Gavel, Clock, Users } from "lucide-react-native";
+import { Landmark, Gavel, Clock, Users, LockKeyhole } from "lucide-react-native";
 import { tokens } from "../../theme/tokens";
 import { StatusPill } from "../StatusPill";
 import { Avatar } from "../Avatar";
@@ -31,6 +31,7 @@ interface JobCardProps {
   variant: "feed" | "posted" | "active" | "compact";
   onPress?: (jobId: string) => void;
   onApply?: (jobId: string) => void;
+  isApplyLocked?: boolean;
   onViewApplications?: (jobId: string) => void;
   onOpenChat?: (job: any) => void;
   onCancel?: (jobId: string) => void;
@@ -85,6 +86,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   variant,
   onPress,
   onApply,
+  isApplyLocked = false,
   onViewApplications,
   onOpenChat,
   onCancel,
@@ -237,7 +239,14 @@ export const JobCard: React.FC<JobCardProps> = ({
             style={styles.feedApplyButton}
             activeOpacity={0.8}
           >
-            <Text style={styles.feedApplyText}>التفاصيل والتقديم</Text>
+            {isApplyLocked ? (
+              <>
+                <LockKeyhole size={13} color={tokens.colors.white} />
+                <Text style={styles.feedApplyText}>اشترك للتقديم</Text>
+              </>
+            ) : (
+              <Text style={styles.feedApplyText}>التفاصيل والتقديم</Text>
+            )}
           </TouchableOpacity>
         </View>
       </AnimatedTouchableOpacity>
@@ -657,6 +666,7 @@ export default React.memo(JobCard, (prev, next) => {
     prev.job.status === next.job.status &&
     prev.job.version === next.job.version &&
     prev.variant === next.variant &&
+    prev.isApplyLocked === next.isApplyLocked &&
     prev.hasReviewed === next.hasReviewed &&
     prev.ratingGiven === next.ratingGiven &&
     (prev.job.reviews?.length ?? 0) === (next.job.reviews?.length ?? 0)

@@ -5,6 +5,7 @@ import { CompleteProfileService } from './complete-profile.service';
 import { AppError } from '../../common/errors/AppError';
 import { prisma } from '../../prisma';
 import { SAFE_USER_SELECT } from '../users/user-safe-fields';
+import { getTrialStatus } from '../../common/utils/subscription-access';
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -93,14 +94,18 @@ export class AuthController {
   static async me(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.userId;
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: SAFE_USER_SELECT,
-      });
+      const [user, trial] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: SAFE_USER_SELECT,
+        }),
+        getTrialStatus(userId),
+      ]);
       if (!user) throw AppError.notFound('User');
-      res.json({ success: true, data: { user } });
+      res.json({ success: true, data: { user: { ...user, trial } } });
     } catch (error) {
       next(error);
     }
   }
 }
+

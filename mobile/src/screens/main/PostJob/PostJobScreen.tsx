@@ -6,11 +6,8 @@ import { FileText, DollarSign, ChevronRight, Edit2, Check } from 'lucide-react-n
 import { MotiView, AnimatePresence } from 'moti';
 import { usePostJob } from './usePostJob';
 import { PostJobStepCourts } from './PostJobStepCourts';
-import { useSubscriptionAccess } from '../../../hooks/useSubscription';
-import { SubscriptionAccessCard } from '../../../components/SubscriptionAccessCard';
 
 export const PostJobScreen = ({ navigation }: any) => {
-  const subscription = useSubscriptionAccess();
   const {
     step, setStep,
     selectedCourt, handleCourtSelected,
@@ -19,21 +16,6 @@ export const PostJobScreen = ({ navigation }: any) => {
   } = usePostJob();
 
   const onSubmit = (data: any) => {
-    if (!subscription.hasActiveSubscription) {
-      Alert.alert(
-        'يتطلب النشر اشتراكاً فعالاً',
-        'فعّل اشتراكك قبل نشر مهمة جديدة.',
-        [
-          { text: 'إلغاء', style: 'cancel' },
-          {
-            text: 'تفعيل الاشتراك',
-            onPress: () => navigation.navigate('SettingsStack', { screen: 'Subscription' }),
-          },
-        ],
-      );
-      return;
-    }
-
     const formattedAmount = data.salaryMax ? parseFloat(data.salaryMax) : (data.salaryMin ? parseFloat(data.salaryMin) : undefined);
     
     let expiresAt: string | undefined;
@@ -330,20 +312,6 @@ export const PostJobScreen = ({ navigation }: any) => {
       </View>
     </MotiView>
   );
-
-  if (!subscription.hasActiveSubscription) {
-    return (
-      <View style={styles.subscriptionGate}>
-        <SubscriptionAccessCard
-          isLoading={subscription.isLoading}
-          isError={subscription.isError}
-          hasPendingPayment={subscription.hasPendingPayment}
-          onPress={() => navigation.navigate('SettingsStack', { screen: 'Subscription' })}
-          onRetry={() => subscription.refetch()}
-        />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>

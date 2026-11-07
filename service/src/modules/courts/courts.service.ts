@@ -3,6 +3,7 @@ import { AppError } from '../../common/errors/AppError';
 import { paginate } from '../../common/schemas/pagination.schema';
 import { getCached, invalidateCachePrefix } from '../../common/utils/cache';
 import { CourtType } from '@prisma/client';
+import { canUseApp } from '../../common/utils/subscription-access';
 
 export class CourtsService {
   static async getGovernorates() {
@@ -57,7 +58,7 @@ export class CourtsService {
                     isActive: true,
                     user: {
                       verificationStatus: 'APPROVED',
-                      isActive: true,
+                      suspendedAt: null,
                       deletedAt: null,
                     },
                   },
@@ -108,7 +109,7 @@ export class CourtsService {
     // Use raw query for aggregating averageRating and totalReviews optimally
     const offset = (page - 1) * limit;
     
-    // We only fetch lawyers whose LawyerCourt record is active AND user is active/verified/not deleted
+    // We only fetch lawyers whose LawyerCourt record is active AND user is not suspended/verified/not deleted
     const lawyers = await prisma.$queryRaw`
       SELECT 
         u.id, 
@@ -122,7 +123,7 @@ export class CourtsService {
       WHERE lc.court_id = ${courtId}
         AND lc.is_active = true
         AND u.verification_status = 'APPROVED'
-        AND u.is_active = true
+        AND u.suspended_at IS NULL
         AND u.deleted_at IS NULL
       GROUP BY u.id
       ORDER BY "averageRating" DESC, "totalReviews" DESC
@@ -137,7 +138,7 @@ export class CourtsService {
       WHERE lc.court_id = ${courtId}
         AND lc.is_active = true
         AND u.verification_status = 'APPROVED'
-        AND u.is_active = true
+        AND u.suspended_at IS NULL
         AND u.deleted_at IS NULL
     `;
     const total = Number(totalResult[0]?.count || 0);
@@ -161,7 +162,7 @@ export class CourtsService {
   static async registerLawyer(userId: string, courtId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw AppError.notFound('User');
-    if (!user.isActive) throw AppError.forbidden('Your account is deactivated');
+    if (!canUseApp(user)) throw AppError.forbidden('Your account is deactivated');
     const court = await prisma.court.findUnique({ where: { id: courtId } });
     if (!court) throw AppError.notFound('Court');
     const existing = await prisma.lawyerCourt.findUnique({
