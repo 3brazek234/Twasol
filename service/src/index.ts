@@ -16,7 +16,9 @@ assertDatabaseSchemaReady()
     });
   })
   .catch(err => {
-    logger.error({ err }, '❌ Startup database schema assertion failed — aborting boot');
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(`❌ Startup database schema assertion failed — aborting boot: ${reason}`, err);
+    logger.error({ err }, `❌ Startup database schema assertion failed — aborting boot: ${reason}`);
     process.exit(1);
   });
 
